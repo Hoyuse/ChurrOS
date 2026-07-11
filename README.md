@@ -12,4 +12,5 @@ Una distribucion de Linux basada en Arch enfocada en rendimiento, simplicidad y 
 
 ## Estado
 
-🚧 Desarollo
+🚧 En desarollo🚀
+
