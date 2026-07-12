@@ -159,3 +159,6 @@ Esperamos que ChurrOS inspire a otras personas a explorar el mundo del software 
 > Se construyen con tiempo, dedicación, curiosidad y una comunidad que comparte la misma visión."
 
 **Bienvenido a ChurrOS.**
+
+
+....hoyuse....
