@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034
 
 iso_name="ChurrOS"
-iso_label="ARCH_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
+iso_label="ChurrOS_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
 iso_publisher="Arch Linux <https://archlinux.org>"
 iso_application="Arch Linux Live/Rescue DVD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
