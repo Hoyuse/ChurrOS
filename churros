@@ -50,4 +50,30 @@ case "$1" in
         echo "  ./churros build    Build the ISO"
         echo "  ./churros clean    Clean build files"
         ;;
+
+run)
+    echo "==> Building ChurrOS..."
+    "$0" build
+
+    ISO=$(find out -name "*.iso" | head -n1)
+
+    if [ -z "$ISO" ]; then
+        echo "No ISO found."
+        exit 1
+    fi
+
+    echo
+    echo "==> Launching QEMU..."
+    echo
+
+    qemu-system-x86_64 \
+        -enable-kvm \
+        -m 4096 \
+        -smp 4 \
+        -cpu host \
+        -cdrom "$ISO" \
+        -boot d \
+        -display gtk
+
+    ;;
 esac
