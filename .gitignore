@@ -4,3 +4,7 @@
 *.log
 *.tmp
 .cache/
+work/
+out/
+build/
+*.iso
