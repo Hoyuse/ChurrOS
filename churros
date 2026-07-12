@@ -43,13 +43,6 @@ case "$1" in
         mkdir -p out
         ;;
 
-    *)
-        echo "ChurrOS Development Tool"
-        echo
-        echo "Usage:"
-        echo "  ./churros build    Build the ISO"
-        echo "  ./churros clean    Clean build files"
-        ;;
 
 run)
     echo "==> Building ChurrOS..."
@@ -76,4 +69,14 @@ run)
         -display gtk
 
     ;;
+
+    *)
+        echo "ChurrOS Development Tool"
+        echo
+        echo "Usage:"
+        echo "  ./churros build    Build the ISO"
+        echo "  ./churros clean    Clean build files"
+        ;;
+
+
 esac
