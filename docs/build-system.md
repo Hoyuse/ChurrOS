@@ -1,0 +1,6 @@
+- archiso
+- mkarchiso
+- work/
+- out/
+- branding temporal
+- limpieza
