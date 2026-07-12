@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -e
+
+case "$1" in
+    build)
+        echo "==> Building ChurrOS..."
+        sudo rm -rf work
+        mkdir -p out
+
+        sudo mkarchiso -v \
+            -w work \
+            -o out \
+            archiso
+        ;;
+
+    clean)
+        echo "==> Cleaning..."
+        sudo rm -rf work out
+        mkdir -p out
+        ;;
+
+    *)
+        echo "ChurrOS Development Tool"
+        echo
+        echo "Usage:"
+        echo "  ./churros build    Build the ISO"
+        echo "  ./churros clean    Clean build files"
+        ;;
+esac

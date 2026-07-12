@@ -1,3 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Applying ChurrOS branding..."
+
+cat > /etc/os-release <<EOF
+NAME="ChurrOS"
+PRETTY_NAME="ChurrOS Rolling"
+ID=churros
+BUILD_ID=rolling
+HOME_URL="https://github.com/Hoyuse/ChurrOS"
+DOCUMENTATION_URL="https://github.com/Hoyuse/ChurrOS/wiki"
+SUPPORT_URL="https://github.com/Hoyuse/ChurrOS/issues"
+BUG_REPORT_URL="https://github.com/Hoyuse/ChurrOS/issues"
+LOGO=churros
+EOF
+
+cat > /etc/issue <<EOF
 ██████╗██╗  ██╗██╗   ██╗██████╗ ██████╗  ██████╗ ███████╗
 ██╔════╝██║  ██║██║   ██║██╔══██╗██╔══██╗██╔═══██╗██╔════╝
 ██║     ███████║██║   ██║██████╔╝██████╔╝██║   ██║███████╗
@@ -6,8 +24,9 @@
  ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 
 Welcome to ChurrOS
+EOF
 
-Built with ❤️ in Colombia
-Powered by Arch Linux
+chmod 644 /etc/os-release
+chmod 644 /etc/issue
 
-https://github.com/Hoyuse/ChurrOS	
+echo "Branding applied."
