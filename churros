@@ -2,81 +2,92 @@
 
 set -e
 
+show_logo() {
+cat << "EOF"
+
+██████╗██╗  ██╗██╗   ██╗██████╗ ██████╗  ██████╗ ███████╗
+██╔════╝██║  ██║██║   ██║██╔══██╗██╔══██╗██╔═══██╗██╔════╝
+██║     ███████║██║   ██║██████╔╝██████╔╝██║   ██║███████╗
+██║     ██╔══██║██║   ██║██╔══██╗██╔══██╗██║   ██║╚════██║
+╚██████╗██║  ██║╚██████╔╝██║  ██║██║  ██║╚██████╔╝███████║
+ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+
+EOF
+}
+
+show_help() {
+
+show_logo
+
+echo "ChurrOS Development CLI"
+echo "Version 0.1.0 Alpha"
+echo
+
+echo "Usage:"
+echo "  ./churros <command>"
+echo
+
+echo "Available commands:"
+echo
+
+printf "  %-12s %s\n" "build"   "Build the ChurrOS ISO"
+printf "  %-12s %s\n" "run"     "Build (if needed) and launch QEMU"
+printf "  %-12s %s\n" "clean"   "Remove build artifacts"
+printf "  %-12s %s\n" "doctor"  "Check development environment"
+printf "  %-12s %s\n" "info"    "Display project information"
+printf "  %-12s %s\n" "version" "Display CLI version"
+printf "  %-12s %s\n" "logo"    "Print ChurrOS logo"
+
+echo
+
+echo "Examples:"
+echo
+
+echo "  ./churros build"
+echo "  ./churros run"
+echo "  ./churros doctor"
+echo
+}
+
 case "$1" in
-    build)
-    echo "======================================"
-    echo "      ChurrOS Build System"
-    echo "======================================"
-    echo
 
-    echo "[1/5] Cleaning previous build..."
-    sudo rm -rf work out
-    mkdir -p out
-
-    echo "[2/5] Preparing branding..."
-    rm -rf archiso/airootfs/root/branding
-    mkdir -p archiso/airootfs/root/branding
-
-    cp -r branding/files archiso/airootfs/root/branding/
-    cp branding/customize_airootfs.sh archiso/airootfs/root/
-
-    echo "[3/5] Building ChurrOS ISO..."
-    sudo mkarchiso -v \
-        -w work \
-        -o out \
-        archiso
-
-    echo "[4/5] Cleaning temporary branding..."
-    rm -rf archiso/airootfs/root/branding
-    rm -f archiso/airootfs/root/customize_airootfs.sh
-
-    echo "[5/5] Done!"
-    echo
-
-    find out -name "*.iso"
-    
-        ;;
-
-    clean)
-        echo "==> Cleaning..."
-        sudo rm -rf work out
-        mkdir -p out
-        ;;
-
-
-run)
-    echo "==> Building ChurrOS..."
-    "$0" build
-
-    ISO=$(find out -name "*.iso" | head -n1)
-
-    if [ -z "$ISO" ]; then
-        echo "No ISO found."
-        exit 1
-    fi
-
-    echo
-    echo "==> Launching QEMU..."
-    echo
-
-    qemu-system-x86_64 \
-        -enable-kvm \
-        -m 4096 \
-        -smp 4 \
-        -cpu host \
-        -cdrom "$ISO" \
-        -boot d \
-        -display gtk
-
+build)
+    bash scripts/cli/build.sh
     ;;
 
-    *)
-        echo "ChurrOS Development Tool"
-        echo
-        echo "Usage:"
-        echo "  ./churros build    Build the ISO"
-        echo "  ./churros clean    Clean build files"
-        ;;
+run)
+    bash scripts/cli/run.sh
+    ;;
 
+clean)
+    bash scripts/cli/clean.sh
+    ;;
 
+doctor)
+    bash scripts/cli/doctor.sh
+    ;;
+
+info)
+    bash scripts/cli/info.sh
+    ;;
+
+version)
+    bash scripts/cli/version.sh
+    ;;
+
+logo)
+    bash scripts/cli/logo.sh
+    ;;
+
+""|-h|--help|help)
+    show_help
+    ;;
+
+*)
+    echo
+    echo "Unknown command: $1"
+    echo
+    show_help
+    exit 1
+    ;;
 esac
