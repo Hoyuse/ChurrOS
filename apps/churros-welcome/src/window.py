@@ -53,7 +53,7 @@ class ChurrOSWelcome(Adw.Application):
 
         logo = Gtk.Picture.new_for_filename(str(LOGO))
 
-        logo.set_size_request(140, 140)
+        logo.set_size_request(100, 100)
         logo.set_halign(Gtk.Align.CENTER)
 
         # ==========================
