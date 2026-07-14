@@ -7,40 +7,43 @@ from gi.repository import Gtk
 
 class ActionCard(Gtk.Button):
 
-    def __init__(self, icon, title, description, callback=None):
+    def __init__(self, icon, title, description, callback):
+
         super().__init__()
 
-        self.set_size_request(260, 160)
-        self.set_margin_top(10)
-        self.set_margin_bottom(10)
-        self.set_margin_start(10)
-        self.set_margin_end(10)
+        self.add_css_class("action-card")
 
-        box = Gtk.Box(
+        self.connect("clicked", callback)
+
+        content = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=8
+            spacing=10
         )
 
-        box.set_margin_top(20)
-        box.set_margin_bottom(20)
-        box.set_margin_start(20)
-        box.set_margin_end(20)
+        content.set_margin_top(20)
+        content.set_margin_bottom(20)
+        content.set_margin_start(20)
+        content.set_margin_end(20)
+
+        content.set_halign(Gtk.Align.CENTER)
+        content.set_valign(Gtk.Align.CENTER)
 
         icon_label = Gtk.Label(label=icon)
-        icon_label.set_markup(f"<span size='24000'>{icon}</span>")
+        icon_label.add_css_class("action-card-icon")
 
-        title_label = Gtk.Label()
-        title_label.set_markup(f"<b>{title}</b>")
+        title_label = Gtk.Label(label=title)
+        title_label.add_css_class("action-card-title")
 
         description_label = Gtk.Label(label=description)
+        description_label.add_css_class("action-card-description")
+
         description_label.set_wrap(True)
         description_label.set_justify(Gtk.Justification.CENTER)
 
-        box.append(icon_label)
-        box.append(title_label)
-        box.append(description_label)
+        content.append(icon_label)
+        content.append(title_label)
+        content.append(description_label)
 
-        self.set_child(box)
+        self.set_child(content)
 
-        if callback:
-            self.connect("clicked", callback)
+        self.set_size_request(220, 180)
