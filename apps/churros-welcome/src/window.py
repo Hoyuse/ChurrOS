@@ -7,6 +7,7 @@ from gi.repository import Gtk, Adw
 
 from widgets.action_card import ActionCard
 
+from pathlib import Path
 
 def documentation_clicked(button):
     print("Documentation clicked")
@@ -46,7 +47,11 @@ class ChurrOSWelcome(Adw.Application):
         # Logo
         # ==========================
 
-        logo = Gtk.Picture.new_for_filename("assets/logo.svg")
+        BASE_DIR = Path(__file__).resolve().parent.parent
+
+        LOGO = BASE_DIR / "assets" / "logo.svg"
+
+        logo = Gtk.Picture.new_for_filename(str(LOGO))
 
         logo.set_size_request(140, 140)
         logo.set_halign(Gtk.Align.CENTER)
