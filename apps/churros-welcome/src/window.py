@@ -9,11 +9,11 @@ from widgets.action_card import ActionCard
 
 
 def documentation_clicked(button):
-     print("Documentation clicked")
+    print("Documentation clicked")
 
 
 def applications_clicked(button):
-     print("Applications clicked")
+    print("Applications clicked")
 
 
 class ChurrOSWelcome(Adw.Application):
@@ -25,13 +25,16 @@ class ChurrOSWelcome(Adw.Application):
 
         window = Adw.ApplicationWindow(application=self)
 
-        window.set_title("ChurrOS Welcome")
-        window.set_default_size(1000, 650)
+        window.set_title("Welcome — ChurrOS")
+        window.set_default_size(1000, 700)
 
+        # ==========================
         # Contenedor principal
+        # ==========================
+
         content = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=30
+            spacing=25
         )
 
         content.set_margin_top(40)
@@ -39,13 +42,31 @@ class ChurrOSWelcome(Adw.Application):
         content.set_margin_start(40)
         content.set_margin_end(40)
 
+        # ==========================
+        # Logo
+        # ==========================
+
+        logo = Gtk.Picture.new_for_filename("assets/logo.svg")
+
+        logo.set_size_request(140, 140)
+        logo.set_halign(Gtk.Align.CENTER)
+
+        # ==========================
         # Título
+        # ==========================
+
         title = Gtk.Label()
-        title.set_markup("<span size='xx-large' weight='bold'>ChurrOS</span>")
+
+        title.set_markup(
+            "<span size='xx-large' weight='bold'>ChurrOS</span>"
+        )
 
         title.set_halign(Gtk.Align.CENTER)
 
+        # ==========================
         # Subtítulo
+        # ==========================
+
         subtitle = Gtk.Label(
             label="Bienvenido a ChurrOS\nUna distribución Linux creada por la comunidad."
         )
@@ -53,7 +74,10 @@ class ChurrOSWelcome(Adw.Application):
         subtitle.set_halign(Gtk.Align.CENTER)
         subtitle.set_justify(Gtk.Justification.CENTER)
 
-        # Contenedor de tarjetas
+        # ==========================
+        # Tarjetas
+        # ==========================
+
         cards = Gtk.Box(
             orientation=Gtk.Orientation.HORIZONTAL,
             spacing=20
@@ -61,7 +85,6 @@ class ChurrOSWelcome(Adw.Application):
 
         cards.set_halign(Gtk.Align.CENTER)
 
-        # Tarjeta Documentación
         docs_card = ActionCard(
             "📖",
             "Documentación",
@@ -69,7 +92,6 @@ class ChurrOSWelcome(Adw.Application):
             documentation_clicked
         )
 
-        # Tarjeta Aplicaciones
         apps_card = ActionCard(
             "📦",
             "Aplicaciones",
@@ -80,7 +102,11 @@ class ChurrOSWelcome(Adw.Application):
         cards.append(docs_card)
         cards.append(apps_card)
 
-        # Construcción de la interfaz
+        # ==========================
+        # Construcción
+        # ==========================
+
+        content.append(logo)
         content.append(title)
         content.append(subtitle)
         content.append(cards)
