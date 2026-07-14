@@ -24,7 +24,12 @@ def build_header():
     logo.set_size_request(110, 110)
     logo.add_css_class("logo")
 
-    title = Gtk.Label(label="ChurrOS")
+    title = Gtk.Label()
+
+    title.set_markup(
+        "<span>Churr</span><span foreground='#ff8a00'>OS</span>"
+)
+
     title.add_css_class("title")
 
     subtitle = Gtk.Label(

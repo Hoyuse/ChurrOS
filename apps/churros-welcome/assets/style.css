@@ -9,11 +9,10 @@ window {
 }
 
 .title {
-    color: #ff8a00;
     font-size: 34pt;
     font-weight: bold;
+    color: white;
 }
-
 .subtitle {
     color: #bdbdbd;
     font-size: 13pt;
