@@ -1,0 +1,61 @@
+/* ==========================================
+   ChurrOS Welcome
+   ========================================== */
+
+
+/* Window */
+
+window {
+    background: #151515;
+}
+
+
+/* Titles */
+
+.title {
+    font-size: 34px;
+    font-weight: bold;
+    color: #ff8a00;
+}
+
+.subtitle {
+    color: #bdbdbd;
+    font-size: 15px;
+}
+
+
+/* Footer */
+
+.footer {
+    color: #7d7d7d;
+    font-size: 12px;
+}
+
+
+/* Logo */
+
+.logo {
+    margin-bottom: 12px;
+}
+
+
+/* Action Cards */
+
+.action-card {
+
+    border-radius: 18px;
+
+    padding: 18px;
+
+    transition: 200ms;
+
+}
+
+
+/* Hover */
+
+.action-card:hover {
+
+    background: rgba(255,255,255,.05);
+
+}
