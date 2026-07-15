@@ -3,9 +3,14 @@ import subprocess
 
 def launch_application(command: str):
 
-    try:
-        subprocess.Popen(command.split())
+    subprocess.Popen([command])
 
-    except Exception as error:
 
-        print(f"No se pudo abrir la aplicación: {error}")
+def open_terminal():
+
+    launch_application("kitty")
+
+
+def open_browser():
+
+    launch_application("firefox")

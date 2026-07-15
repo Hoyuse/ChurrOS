@@ -1,51 +1,139 @@
+/* ==========================================================
+   ChurrOS Welcome
+   ========================================================== */
+
+
+/* ==========================================================
+   Window
+   ========================================================== */
+
 window {
-    background: #545050;
+
+    background: #1b1b1b;
+
 }
 
-/* Header */
+
+/* ==========================================================
+   Logo
+   ========================================================== */
 
 .logo {
+
     margin-bottom: 10px;
+
 }
+
+
+/* ==========================================================
+   Header
+   ========================================================== */
 
 .title {
-    font-size: 34pt;
-    font-weight: bold;
-    color: white;
+
+    font-size: 44px;
+
+    font-weight: 800;
+
 }
+
 .subtitle {
+
     color: #bdbdbd;
-    font-size: 13pt;
+
+    font-size: 15px;
+
+    margin-bottom: 8px;
+
 }
 
-/* Footer */
 
-.footer {
-    color: #777777;
-    font-size: 10pt;
-}
-
-/* Cards */
+/* ==========================================================
+   Cards
+   ========================================================== */
 
 .action-card {
+
+    background: #252525;
+
     border-radius: 18px;
-    padding: 18px;
+
+    border: 1px solid #3b3b3b;
+
+    min-width: 240px;
+
+    min-height: 190px;
+
+    padding: 15px;
+
+    transition: 200ms;
+
 }
 
 .action-card:hover {
-    background: alpha(white, 0.05);
+
+    background: #303030;
+
+    border-color: #ff8c00;
+
 }
 
-.action-card-icon {
-    font-size: 34pt;
+.action-card:active {
+
+    background: #363636;
+
 }
 
-.action-card-title {
-    font-size: 15pt;
+
+/* ==========================================================
+   Icon
+   ========================================================== */
+
+.card-icon {
+
+    margin-bottom: 12px;
+
+}
+
+
+/* ==========================================================
+   Card Title
+   ========================================================== */
+
+.card-title {
+
+    color: white;
+
+    font-size: 18px;
+
     font-weight: bold;
+
 }
 
-.action-card-description {
-    color: #bdbdbd;
-    font-size: 11pt;
+
+/* ==========================================================
+   Card Description
+   ========================================================== */
+
+.card-description {
+
+    color: #b0b0b0;
+
+    font-size: 13px;
+
+}
+
+
+/* ==========================================================
+   Footer
+   ========================================================== */
+
+.footer {
+
+    color: #8a8a8a;
+
+    font-size: 12px;
+
+    margin-top: 25px;
+
 }

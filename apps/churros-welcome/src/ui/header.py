@@ -1,69 +1,79 @@
-from pathlib import Path
-
-import gi
-
-gi.require_version("Gtk", "4.0")
-
 from gi.repository import Gtk
 
-from utils.system import (
-    get_username,
-    get_hostname,
-    get_kernel
-)
+from config.paths import ICONS
 
-
-# ==========================================
-# Paths
-# ==========================================
-
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-LOGO = BASE_DIR / "assets" / "logo.svg"
-
-
-# ==========================================
-# Header
-# ==========================================
 
 def build_header():
 
     container = Gtk.Box(
         orientation=Gtk.Orientation.VERTICAL,
-        spacing=15
+        spacing=18
     )
 
     container.set_halign(Gtk.Align.CENTER)
 
+    # =====================================
     # Logo
-    logo = Gtk.Picture.new_for_filename(str(LOGO))
-    logo.set_size_request(120, 120)
+    # =====================================
+
+    logo = Gtk.Picture.new_for_filename(
+        str(ICONS / "logo.svg")
+    )
+
+    logo.set_size_request(140, 140)
+
+    logo.set_halign(Gtk.Align.CENTER)
+
     logo.add_css_class("logo")
 
+    # =====================================
     # Título
+    # =====================================
+
     title = Gtk.Label()
 
     title.set_markup(
-        "<span>Churr</span><span foreground='#ff8a00'>OS</span>"
+        "<span foreground='white'>Churr</span>"
+        "<span foreground='#ff8c00'>OS</span>"
     )
 
     title.add_css_class("title")
 
+    title.set_halign(Gtk.Align.CENTER)
+
+    # =====================================
     # Subtítulo
+    # =====================================
+
     subtitle = Gtk.Label(
-        label=(
-            f"Bienvenido {get_username()}\n\n"
-            f"Equipo: {get_hostname()}\n"
-            f"Kernel: {get_kernel()}"
-        )
+        label="Bienvenido a ChurrOS\nUna distribución Linux moderna basada en Arch Linux."
     )
 
-    subtitle.set_justify(Gtk.Justification.CENTER)
     subtitle.set_halign(Gtk.Align.CENTER)
+
+    subtitle.set_justify(Gtk.Justification.CENTER)
+
     subtitle.add_css_class("subtitle")
 
+    # =====================================
+    # Separador
+    # =====================================
+
+    separator = Gtk.Separator(
+        orientation=Gtk.Orientation.HORIZONTAL
+    )
+
+    separator.set_margin_top(15)
+
+    separator.set_margin_bottom(15)
+
+    # =====================================
     # Construcción
+    # =====================================
+
     container.append(logo)
     container.append(title)
     container.append(subtitle)
+    container.append(separator)
 
     return container

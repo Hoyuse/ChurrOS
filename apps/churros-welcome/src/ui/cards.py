@@ -1,13 +1,16 @@
-import gi
-
-gi.require_version("Gtk", "4.0")
-
 from gi.repository import Gtk
 
 from widgets.action_card import ActionCard
 
-from utils.browser import open_url
-from utils.desktop import launch_application
+from utils.browser import (
+    open_wiki,
+    open_repository,
+)
+
+from utils.desktop import (
+    open_terminal,
+)
+
 
 # ==========================================
 # Callbacks
@@ -15,17 +18,22 @@ from utils.desktop import launch_application
 
 def documentation_clicked(button):
 
-    open_url("https://github.com/Hoyuse/ChurrOS/wiki")
-
-
-def github_clicked(button):
-
-    open_url("https://github.com/Hoyuse/ChurrOS")
+    open_wiki()
 
 
 def applications_clicked(button):
 
-    launch_application("kitty")
+    open_terminal()
+
+
+def github_clicked(button):
+
+    open_repository()
+
+
+def community_clicked(button):
+
+    print("Community")
 
 
 def customize_clicked(button):
@@ -38,76 +46,92 @@ def update_clicked(button):
     print("Update")
 
 
-def community_clicked(button):
+# ==========================================
+# Cards
+# ==========================================
 
-    print("Community")
+CARDS = [
+
+    {
+        "icon": "documentation.svg",
+        "title": "Documentación",
+        "description": "Aprende a utilizar ChurrOS.",
+        "callback": documentation_clicked,
+    },
+
+    {
+        "icon": "applications.svg",
+        "title": "Aplicaciones",
+        "description": "Instala nuevo software.",
+        "callback": applications_clicked,
+    },
+
+    {
+        "icon": "github.svg",
+        "title": "GitHub",
+        "description": "Repositorio oficial del proyecto.",
+        "callback": github_clicked,
+    },
+
+    {
+        "icon": "community.svg",
+        "title": "Comunidad",
+        "description": "Únete a la comunidad.",
+        "callback": community_clicked,
+    },
+
+    {
+        "icon": "customize.svg",
+        "title": "Personalizar",
+        "description": "Configura tu escritorio.",
+        "callback": customize_clicked,
+    },
+
+    {
+        "icon": "update.svg",
+        "title": "Actualizar",
+        "description": "Mantén ChurrOS actualizado.",
+        "callback": update_clicked,
+    },
+
+]
 
 
 # ==========================================
-# UI
+# Build Cards
 # ==========================================
 
 def build_cards():
 
-    container = Gtk.Box(
-        orientation=Gtk.Orientation.HORIZONTAL,
-        spacing=20
-    )
+    flow = Gtk.FlowBox()
 
-    container.set_halign(Gtk.Align.CENTER)
+    flow.set_selection_mode(Gtk.SelectionMode.NONE)
 
-    container.append(
-        ActionCard(
-            "📖",
-            "Documentación",
-            "Aprende a utilizar ChurrOS.",
-            documentation_clicked
+    flow.set_max_children_per_line(3)
+
+    flow.set_min_children_per_line(2)
+
+    flow.set_row_spacing(20)
+
+    flow.set_column_spacing(20)
+
+    flow.set_halign(Gtk.Align.CENTER)
+
+    for card in CARDS:
+
+        flow.insert(
+
+            ActionCard(
+
+                card["icon"],
+                card["title"],
+                card["description"],
+                card["callback"],
+
+            ),
+
+            -1,
+
         )
-    )
 
-    container.append(
-        ActionCard(
-            "🌐",
-            "GitHub",
-            "Visita el repositorio oficial.",
-            github_clicked
-        )
-    )
-
-    container.append(
-        ActionCard(
-            "📦",
-            "Aplicaciones",
-            "Instala nuevo software.",
-            applications_clicked
-        )
-    )
-
-    container.append(
-        ActionCard(
-            "🎨",
-            "Personalizar",
-            "Configura tu escritorio.",
-            customize_clicked
-        )
-    )
-
-    container.append(
-        ActionCard(
-            "⬆️",
-            "Actualizar",
-            "Mantén ChurrOS al día.",
-            update_clicked
-        )
-    )
-
-    container.append(
-        ActionCard(
-            "❤️",
-            "Comunidad",
-            "Únete a la comunidad.",
-            community_clicked
-        )
-    )
-
-    return container
+    return flow
