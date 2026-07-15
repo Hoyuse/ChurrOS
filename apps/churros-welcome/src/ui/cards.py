@@ -7,7 +7,7 @@ from gi.repository import Gtk
 from widgets.action_card import ActionCard
 
 from utils.browser import open_url
-
+from utils.desktop import launch_application
 
 # ==========================================
 # Callbacks
@@ -25,7 +25,7 @@ def github_clicked(button):
 
 def applications_clicked(button):
 
-    print("Applications")
+    launch_application("kitty")
 
 
 def customize_clicked(button):
