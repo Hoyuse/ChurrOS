@@ -1,4 +1,13 @@
 from window import ChurrOSWelcome
 
-app = ChurrOSWelcome()
-app.run()
+
+def main():
+
+    app = ChurrOSWelcome()
+
+    app.run()
+
+
+if __name__ == "__main__":
+
+    main()

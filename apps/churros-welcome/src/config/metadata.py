@@ -11,3 +11,5 @@ WEBSITE = "https://github.com/Hoyuse/ChurrOS"
 REPOSITORY = "https://github.com/Hoyuse/ChurrOS"
 
 WIKI = "https://github.com/Hoyuse/ChurrOS/wiki"
+
+SYSTEM_CARD_TITLE = "Sistema"

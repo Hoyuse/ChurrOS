@@ -1,6 +1,7 @@
 from gi.repository import Gtk
 
 from widgets.action_card import ActionCard
+from widgets.system_card import SystemCard
 
 from utils.browser import (
     open_wiki,
@@ -12,9 +13,9 @@ from utils.desktop import (
 )
 
 
-# ==========================================
+# ==========================================================
 # Callbacks
-# ==========================================
+# ==========================================================
 
 def documentation_clicked(button):
 
@@ -46,9 +47,9 @@ def update_clicked(button):
     print("Update")
 
 
-# ==========================================
+# ==========================================================
 # Cards
-# ==========================================
+# ==========================================================
 
 CARDS = [
 
@@ -97,9 +98,9 @@ CARDS = [
 ]
 
 
-# ==========================================
+# ==========================================================
 # Build Cards
-# ==========================================
+# ==========================================================
 
 def build_cards():
 
@@ -117,20 +118,33 @@ def build_cards():
 
     flow.set_halign(Gtk.Align.CENTER)
 
+    #
+    # Tarjeta Sistema
+    #
+
+    flow.insert(
+        SystemCard(),
+        -1
+    )
+
+    #
+    # Tarjetas normales
+    #
+
     for card in CARDS:
 
         flow.insert(
 
             ActionCard(
 
-                card["icon"],
-                card["title"],
-                card["description"],
-                card["callback"],
+                icon=card["icon"],
+                title=card["title"],
+                description=card["description"],
+                callback=card["callback"],
 
             ),
 
-            -1,
+            -1
 
         )
 

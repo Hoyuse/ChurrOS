@@ -1,16 +1,10 @@
-import os
 import platform
-import getpass
+import psutil
 
 
-def get_username():
+def get_cpu():
 
-    return getpass.getuser()
-
-
-def get_hostname():
-
-    return platform.node()
+    return platform.processor()
 
 
 def get_kernel():
@@ -18,16 +12,13 @@ def get_kernel():
     return platform.release()
 
 
-def get_architecture():
+def get_hostname():
 
-    return platform.machine()
-
-
-def get_python_version():
-
-    return platform.python_version()
+    return platform.node()
 
 
-def get_home():
+def get_memory():
 
-    return os.path.expanduser("~")
+    memory = psutil.virtual_memory()
+
+    return f"{round(memory.total / (1024**3), 1)} GiB"

@@ -137,3 +137,37 @@ window {
     margin-top: 25px;
 
 }
+
+.system-card{
+
+    background:#252525;
+
+    border-radius:18px;
+
+    border:1px solid #3b3b3b;
+
+    padding:18px;
+
+    min-width:260px;
+
+    min-height:190px;
+
+}
+
+.system-row{
+
+    margin-top:4px;
+
+}
+
+.system-key{
+
+    font-weight:bold;
+
+}
+
+.system-value{
+
+    color:#bdbdbd;
+
+}
