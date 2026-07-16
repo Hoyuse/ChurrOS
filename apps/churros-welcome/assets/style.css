@@ -8,9 +8,8 @@
    ========================================================== */
 
 window {
-
-    background: #1b1b1b;
-
+    background: #1f1f1f;
+    color: #f5f5f5;
 }
 
 
@@ -19,9 +18,7 @@ window {
    ========================================================== */
 
 .logo {
-
-    margin-bottom: 10px;
-
+    margin-bottom: 18px;
 }
 
 
@@ -30,21 +27,16 @@ window {
    ========================================================== */
 
 .title {
-
-    font-size: 44px;
-
+    font-size: 52px;
     font-weight: 800;
-
+    letter-spacing: -0.04em;
 }
 
 .subtitle {
-
-    color: #bdbdbd;
-
+    color: #a8a8a8;
     font-size: 15px;
-
-    margin-bottom: 8px;
-
+    margin-bottom: 16px;
+    line-height: 1.6;
 }
 
 
@@ -52,36 +44,23 @@ window {
    Cards
    ========================================================== */
 
-.action-card {
-
-    background: #252525;
-
-    border-radius: 18px;
-
-    border: 1px solid #3b3b3b;
-
+.action-card,
+.system-card {
+    background: #2a2a2a;
+    border-radius: 24px;
+    border: 1px solid rgba(249, 115, 22, 0.14);
     min-width: 240px;
-
     min-height: 190px;
-
-    padding: 15px;
-
-    transition: 200ms;
-
+    padding: 20px;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.24);
 }
 
-.action-card:hover {
-
+.action-card:hover,
+.system-card:hover {
     background: #303030;
-
-    border-color: #ff8c00;
-
-}
-
-.action-card:active {
-
-    background: #363636;
-
+    border-color: rgba(251, 146, 60, 0.32);
+    transform: translateY(-1px);
 }
 
 
@@ -90,9 +69,7 @@ window {
    ========================================================== */
 
 .card-icon {
-
-    margin-bottom: 12px;
-
+    margin-bottom: 14px;
 }
 
 
@@ -101,13 +78,9 @@ window {
    ========================================================== */
 
 .card-title {
-
-    color: white;
-
+    color: #f5f5f5;
     font-size: 18px;
-
     font-weight: bold;
-
 }
 
 
@@ -116,11 +89,9 @@ window {
    ========================================================== */
 
 .card-description {
-
-    color: #b0b0b0;
-
+    color: #a8a8a8;
     font-size: 13px;
-
+    line-height: 1.6;
 }
 
 

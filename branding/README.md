@@ -53,6 +53,7 @@ colors.md
 typography.md
 logo-guidelines.md
 mascot.md
+ui-guidelines.md
 ```
 
 ---
