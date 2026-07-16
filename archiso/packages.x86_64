@@ -126,3 +126,41 @@ xdg-utils
 xfsprogs
 xl2tpd
 zsh
+# ===========================
+# ChurrOS Desktop
+# ===========================
+
+hyprland
+hyprpaper
+hyprlock
+hypridle
+
+kitty
+
+waybar
+
+wofi
+
+sddm
+
+qt6-wayland
+qt5-wayland
+
+xdg-desktop-portal
+xdg-desktop-portal-hyprland
+
+polkit
+polkit-gnome
+
+networkmanager
+
+pipewire
+pipewire-pulse
+wireplumber
+
+grim
+slurp
+wl-clipboard
+
+ttf-dejavu
+noto-fonts
