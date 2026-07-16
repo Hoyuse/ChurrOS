@@ -4,15 +4,17 @@
     border: none;
 }
 
-window#waybar {
-    background: rgba(31, 31, 31, 0.94);
+window#waybar, window {
+    background: rgba(31, 31, 31, 0.96);
     color: #f5f5f5;
     border-radius: 18px;
     border: 1px solid rgba(249, 115, 22, 0.20);
     margin: 10px;
     padding: 6px 10px;
+    min-height: 44px;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.30);
 }
+/* Waybar panel should stay visible across displays and resolutions. */
 
 #workspaces button {
     color: #a8a8a8;

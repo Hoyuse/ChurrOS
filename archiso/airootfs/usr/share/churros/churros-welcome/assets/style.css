@@ -5,6 +5,12 @@
 window {
     background: #1f1f1f;
     color: #f5f5f5;
+    min-width: 320px;
+    min-height: 320px;
+}
+
+.content-scroller {
+    min-height: 100%;
 }
 
 .logo {
@@ -34,7 +40,8 @@ window {
     background: #2a2a2a;
     border-radius: 24px;
     border: 1px solid rgba(249, 115, 22, 0.14);
-    min-width: 240px;
+    min-width: 220px;
+    max-width: 100%;
     min-height: 190px;
     padding: 20px;
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;

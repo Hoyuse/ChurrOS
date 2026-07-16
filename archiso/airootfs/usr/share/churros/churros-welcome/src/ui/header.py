@@ -53,6 +53,8 @@ def build_header():
 
     subtitle.set_justify(Gtk.Justification.CENTER)
 
+    subtitle.set_wrap(True)  # wrap text on smaller displays so the subtitle does not overflow
+
     subtitle.add_css_class("subtitle")
 
     # =====================================

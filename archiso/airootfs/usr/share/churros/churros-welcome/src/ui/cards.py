@@ -110,7 +110,7 @@ def build_cards():
 
     flow.set_max_children_per_line(4)
 
-    flow.set_min_children_per_line(4)
+    flow.set_min_children_per_line(1)  # allow cards to stack on narrow screens
 
     flow.set_row_spacing(20)
 
