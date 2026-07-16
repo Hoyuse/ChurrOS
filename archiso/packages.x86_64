@@ -170,3 +170,6 @@ python-gobject
 gtk4
 libadwaita
 gobject-introspection
+waybar
+ttf-jetbrains-mono-nerd
+otf-font-awesome
