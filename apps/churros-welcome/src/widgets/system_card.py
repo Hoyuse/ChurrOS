@@ -23,6 +23,8 @@ class SystemCard(Gtk.Box):
             spacing=12,
         )
 
+        self.set_size_request(280, 340)  # enforce equal card sizes for the system card
+
         self.add_css_class("system-card")
 
         self.set_margin_top(20)

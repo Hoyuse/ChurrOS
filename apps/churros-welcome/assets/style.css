@@ -55,9 +55,11 @@ window {
     background: #2a2a2a;
     border-radius: 24px;
     border: 1px solid rgba(249, 115, 22, 0.14);
-    min-width: 220px;
-    max-width: 100%;
-    min-height: 190px;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    min-height: 340px;
+    height: 340px;
     padding: 20px;
     transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
     box-shadow: 0 20px 54px rgba(0, 0, 0, 0.24);
@@ -113,39 +115,5 @@ window {
     font-size: 12px;
 
     margin-top: 25px;
-
-}
-
-.system-card{
-
-    background:#252525;
-
-    border-radius:18px;
-
-    border:1px solid #3b3b3b;
-
-    padding:18px;
-
-    min-width:260px;
-
-    min-height:190px;
-
-}
-
-.system-row{
-
-    margin-top:4px;
-
-}
-
-.system-key{
-
-    font-weight:bold;
-
-}
-
-.system-value{
-
-    color:#bdbdbd;
 
 }

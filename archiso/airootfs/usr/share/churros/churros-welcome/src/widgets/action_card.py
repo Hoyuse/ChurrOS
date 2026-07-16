@@ -19,6 +19,7 @@ class ActionCard(Gtk.Button):
 
         super().__init__()
 
+        self.set_size_request(280, 340)  # enforce equal card sizes for all action cards
         self.add_css_class("action-card")
 
         if callback is not None:
