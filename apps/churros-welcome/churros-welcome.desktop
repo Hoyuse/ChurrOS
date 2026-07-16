@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ChurrOS Welcome
+Comment=Welcome to ChurrOS
+Exec=/home/hoyuse/ChurrOS/apps/churros-welcome/churros-welcome.sh
+Terminal=false
+Categories=System;
+StartupNotify=true

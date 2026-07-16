@@ -4,8 +4,14 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk
 
-import platform
-import psutil
+from utils.system import (
+    get_cpu,
+    get_kernel,
+    get_memory,
+    get_hostname,
+    get_os,
+    get_architecture,
+)
 
 
 class SystemCard(Gtk.Box):
@@ -14,19 +20,19 @@ class SystemCard(Gtk.Box):
 
         super().__init__(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=10
+            spacing=12,
         )
 
         self.add_css_class("system-card")
 
-        self.set_margin_top(15)
-        self.set_margin_bottom(15)
-        self.set_margin_start(15)
-        self.set_margin_end(15)
+        self.set_margin_top(20)
+        self.set_margin_bottom(20)
+        self.set_margin_start(20)
+        self.set_margin_end(20)
 
-        # -------------------------
+        #
         # Título
-        # -------------------------
+        #
 
         title = Gtk.Label(label="Sistema")
 
@@ -36,57 +42,65 @@ class SystemCard(Gtk.Box):
 
         self.append(title)
 
-        # -------------------------
+        #
         # Información
-        # -------------------------
+        #
+
+        self.append(self.create_row("CPU", get_cpu()))
+
+        self.append(self.create_row("RAM", get_memory()))
+
+        self.append(self.create_row("Kernel", get_kernel()))
+
+        self.append(self.create_row("SO", get_os()))
 
         self.append(
-            self.row(
-                "CPU",
-                platform.processor()
+            self.create_row(
+                "Arquitectura",
+                get_architecture()
             )
         )
 
         self.append(
-            self.row(
-                "Kernel",
-                platform.release()
-            )
-        )
-
-        self.append(
-            self.row(
-                "RAM",
-                f"{round(psutil.virtual_memory().total / (1024**3),1)} GiB"
-            )
-        )
-
-        self.append(
-            self.row(
+            self.create_row(
                 "Hostname",
-                platform.node()
+                get_hostname()
             )
         )
 
+    #
+    # =====================================
+    # Filas
+    # =====================================
+    #
 
-    def row(self, left, right):
+    def create_row(self, key, value):
 
-        box = Gtk.Box(
-            orientation=Gtk.Orientation.HORIZONTAL
+        row = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=10,
         )
 
-        left_label = Gtk.Label(label=left)
+        row.add_css_class("system-row")
 
-        left_label.set_halign(Gtk.Align.START)
+        key_label = Gtk.Label(label=key)
 
-        left_label.set_hexpand(True)
+        key_label.add_css_class("system-key")
 
-        right_label = Gtk.Label(label=right)
+        key_label.set_halign(Gtk.Align.START)
 
-        right_label.set_halign(Gtk.Align.END)
+        key_label.set_hexpand(True)
 
-        box.append(left_label)
+        value_label = Gtk.Label(label=value)
 
-        box.append(right_label)
+        value_label.add_css_class("system-value")
 
-        return box
+        value_label.set_halign(Gtk.Align.END)
+
+        value_label.set_wrap(True)
+
+        row.append(key_label)
+
+        row.append(value_label)
+
+        return row

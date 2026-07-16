@@ -14,27 +14,23 @@ class ActionCard(Gtk.Button):
         icon_name: str,
         title: str,
         description: str,
-        callback=None
+        callback=None,
     ):
 
         super().__init__()
-
-        # ===============================
-        # Estilo del botón
-        # ===============================
 
         self.add_css_class("action-card")
 
         if callback is not None:
             self.connect("clicked", callback)
 
-        # ===============================
+        # =====================================
         # Contenedor principal
-        # ===============================
+        # =====================================
 
         content = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=12
+            spacing=12,
         )
 
         content.set_halign(Gtk.Align.CENTER)
@@ -45,9 +41,9 @@ class ActionCard(Gtk.Button):
         content.set_margin_start(20)
         content.set_margin_end(20)
 
-        # ===============================
+        # =====================================
         # Icono
-        # ===============================
+        # =====================================
 
         icon = Gtk.Picture.new_for_filename(
             str(ICONS / icon_name)
@@ -59,25 +55,21 @@ class ActionCard(Gtk.Button):
 
         icon.add_css_class("card-icon")
 
-        # ===============================
+        # =====================================
         # Título
-        # ===============================
+        # =====================================
 
-        title_label = Gtk.Label(
-            label=title
-        )
-
-        title_label.set_halign(Gtk.Align.CENTER)
+        title_label = Gtk.Label(label=title)
 
         title_label.add_css_class("card-title")
 
-        # ===============================
-        # Descripción
-        # ===============================
+        title_label.set_halign(Gtk.Align.CENTER)
 
-        description_label = Gtk.Label(
-            label=description
-        )
+        # =====================================
+        # Descripción
+        # =====================================
+
+        description_label = Gtk.Label(label=description)
 
         description_label.set_wrap(True)
 
@@ -87,17 +79,13 @@ class ActionCard(Gtk.Button):
             Gtk.Justification.CENTER
         )
 
-        description_label.set_halign(
-            Gtk.Align.CENTER
-        )
+        description_label.set_halign(Gtk.Align.CENTER)
 
-        description_label.add_css_class(
-            "card-description"
-        )
+        description_label.add_css_class("card-description")
 
-        # ===============================
+        # =====================================
         # Construcción
-        # ===============================
+        # =====================================
 
         content.append(icon)
         content.append(title_label)

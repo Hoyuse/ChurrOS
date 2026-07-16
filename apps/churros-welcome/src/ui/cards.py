@@ -13,9 +13,9 @@ from utils.desktop import (
 )
 
 
-# ==========================================================
+# =====================================
 # Callbacks
-# ==========================================================
+# =====================================
 
 def documentation_clicked(button):
 
@@ -47,9 +47,9 @@ def update_clicked(button):
     print("Update")
 
 
-# ==========================================================
-# Cards
-# ==========================================================
+# =====================================
+# Tarjetas
+# =====================================
 
 CARDS = [
 
@@ -63,7 +63,7 @@ CARDS = [
     {
         "icon": "applications.svg",
         "title": "Aplicaciones",
-        "description": "Instala nuevo software.",
+        "description": "Instala y administra software.",
         "callback": applications_clicked,
     },
 
@@ -84,23 +84,23 @@ CARDS = [
     {
         "icon": "customize.svg",
         "title": "Personalizar",
-        "description": "Configura tu escritorio.",
+        "description": "Configura ChurrOS.",
         "callback": customize_clicked,
     },
 
     {
         "icon": "update.svg",
         "title": "Actualizar",
-        "description": "Mantén ChurrOS actualizado.",
+        "description": "Mantén el sistema actualizado.",
         "callback": update_clicked,
     },
 
 ]
 
 
-# ==========================================================
-# Build Cards
-# ==========================================================
+# =====================================
+# Construcción
+# =====================================
 
 def build_cards():
 
@@ -108,9 +108,9 @@ def build_cards():
 
     flow.set_selection_mode(Gtk.SelectionMode.NONE)
 
-    flow.set_max_children_per_line(3)
+    flow.set_max_children_per_line(4)
 
-    flow.set_min_children_per_line(2)
+    flow.set_min_children_per_line(4)
 
     flow.set_row_spacing(20)
 
@@ -118,18 +118,14 @@ def build_cards():
 
     flow.set_halign(Gtk.Align.CENTER)
 
-    #
     # Tarjeta Sistema
-    #
 
     flow.insert(
         SystemCard(),
         -1
     )
 
-    #
     # Tarjetas normales
-    #
 
     for card in CARDS:
 
@@ -137,14 +133,14 @@ def build_cards():
 
             ActionCard(
 
-                icon=card["icon"],
+                icon_name=card["icon"],
                 title=card["title"],
                 description=card["description"],
                 callback=card["callback"],
 
             ),
 
-            -1
+            -1,
 
         )
 
