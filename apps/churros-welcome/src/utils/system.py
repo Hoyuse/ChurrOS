@@ -1,6 +1,10 @@
 import os
 import platform
-import psutil
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 # ==========================================
@@ -50,10 +54,19 @@ def get_hostname():
 
 def get_memory():
 
+    if psutil is None:
+        try:
+            with open("/proc/meminfo") as meminfo:
+                for line in meminfo:
+                    if line.startswith("MemTotal:"):
+                        total_kib = int(line.split()[1])
+                        total = total_kib / 1024 / 1024
+                        return f"{total:.1f} GiB"
+        except Exception:
+            return "Desconocido"
+
     memory = psutil.virtual_memory()
-
     total = memory.total / (1024 ** 3)
-
     return f"{total:.1f} GiB"
 
 

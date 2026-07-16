@@ -5,7 +5,7 @@ Type=Application
 Name=ChurrOS Welcome
 Comment=Welcome to ChurrOS
 
-Exec=/usr/share/churros/churros-welcome/churros-welcome.sh
+Exec=churros-welcome
 
 Terminal=false
 

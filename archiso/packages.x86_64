@@ -148,6 +148,7 @@ qt5-wayland
 
 xdg-desktop-portal
 xdg-desktop-portal-hyprland
+python-psutil
 
 polkit
 polkit-gnome
@@ -164,3 +165,8 @@ wl-clipboard
 
 ttf-dejavu
 noto-fonts
+python
+python-gobject
+gtk4
+libadwaita
+gobject-introspection
