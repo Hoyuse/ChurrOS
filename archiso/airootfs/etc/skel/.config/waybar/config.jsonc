@@ -7,11 +7,10 @@
     "margin-left": 16,
     "margin-right": 16,
 
-    "modules-left": [
-        "custom/logo",
-        "hyprland/workspaces"
-    ],
-
+   "modules-left": [
+    "image#logo",
+    "hyprland/workspaces"
+   ],
     "modules-center": [
         "hyprland/window"
     ],
@@ -23,9 +22,10 @@
         "clock"
     ],
 
-    "custom/logo": {
-        "format": "ChurrOS",
-        "tooltip": false
+    "image#logo": {
+    "path": "/usr/share/churros/churros-welcome/assets/icons/logo.svg",
+    "size": 28,
+    "tooltip": false
     },
 
     "hyprland/window": {
