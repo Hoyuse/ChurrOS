@@ -7,59 +7,69 @@
 window#waybar {
     background: rgba(31, 31, 31, 0.96);
     color: #f5f5f5;
-    border-radius: 18px;
-    border: 1px solid rgba(249, 115, 22, 0.20);
+
+    border: 1px solid rgba(249, 115, 22, 0.25);
+    border-radius: 16px;
+
     margin: 10px;
-    padding: 6px 10px;
-    min-height: 44px;
-    height: 44px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.30);
+    padding: 6px;
 }
 
-/* Waybar panel should stay visible across displays and resolutions. */
+#custom-logo,
+#workspaces,
+#window,
+#clock,
+#network,
+#pulseaudio {
 
-#workspaces {
-    display: flex;
-    flex-grow: 0;
-}
+    background: rgba(255,255,255,0.05);
 
-#workspaces button {
-    color: #a8a8a8;
-    padding: 0 12px;
-    margin: 0 4px;
-    border-radius: 12px;
-    background: transparent;
-    transition: all 0.3s ease;
-}
-
-#workspaces button:hover {
-    background: rgba(249, 115, 22, 0.10);
     color: #f5f5f5;
+
+    border-radius: 10px;
+
+    margin: 4px;
+    padding: 6px 12px;
 }
 
-#workspaces button.active {
-    background: rgba(249, 115, 22, 0.18);
-    color: #f5f5f5;
+#custom-logo {
+    color: #f97316;
+    font-weight: bold;
 }
 
 #window {
     color: #f97316;
-    font-weight: bold;
-    margin: 0 10px;
-    flex-grow: 1;
 }
 
-#clock,
-#network,
-#pulseaudio,
-#custom-logo {
-    padding-left: 14px;
-    padding-right: 14px;
-    margin: 6px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #f5f5f5;
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
+#workspaces button {
+
+    color: #b0b0b0;
+
+    padding: 0 8px;
+
+    border-radius: 8px;
+
+    background: transparent;
+}
+
+#workspaces button:hover {
+
+    background: rgba(249,115,22,0.15);
+
+    color: white;
+}
+
+#workspaces button.active {
+
+    background: #f97316;
+
+    color: white;
+}
+
+#clock:hover,
+#network:hover,
+#pulseaudio:hover,
+#custom-logo:hover {
+
+    background: rgba(249,115,22,0.15);
 }

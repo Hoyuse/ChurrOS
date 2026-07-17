@@ -7,12 +7,7 @@
     "margin-right": 16,
 
     "modules-left": [
-        "custom/logo",
-        "hyprland/workspaces"
-    ],
-
-    "modules-center": [
-        "hyprland/window"
+        "custom/logo"
     ],
 
     "modules-right": [
@@ -26,19 +21,9 @@
         "tooltip": false
     },
 
-    "hyprland/workspaces": {
-        "format": "{id}",
-        "on-scroll-up": "hyprctl dispatch workspace e+1",
-        "on-scroll-down": "hyprctl dispatch workspace e-1"
-    },
-
-    "hyprland/window": {
-        "format": "{title}",
-        "max-length": 50
-    },
-
     "clock": {
-        "format": "{:%H:%M}"
+        "format": "{:%H:%M}",
+        "tooltip": false
     },
 
     "network": {
@@ -55,6 +40,7 @@
             "󰕿",
             "󰖀",
             "󰕾"
-        ]
+        ],
+        "tooltip": false
     }
 }
