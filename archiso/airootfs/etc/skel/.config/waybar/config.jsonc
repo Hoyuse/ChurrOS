@@ -20,14 +20,13 @@
     "modules-right": [
         "tray",
         "network",
-        "bluetooth",
         "pulseaudio",
         "clock"
     ],
 
     "image#logo": {
         "path": "/usr/share/churros/churros-welcome/assets/icons/logo.svg",
-        "size": 28,
+        "size": 26,
         "tooltip": false
     },
 
@@ -37,7 +36,7 @@
     },
 
     "hyprland/window": {
-        "max-length": 45
+        "max-length": 50
     },
 
     "tray": {
@@ -45,31 +44,42 @@
     },
 
     "network": {
-        "format-ethernet": "󰈀 Ethernet",
-        "format-wifi": "󰖩 {essid}",
-        "format-disconnected": "󰖪 Offline",
-        "tooltip": true
-    },
+        "format-ethernet": "󰈀",
+        "format-wifi": "󰖩",
+        "format-disconnected": "󰖪",
 
-    "bluetooth": {
-        "format": "",
-        "format-disabled": "",
         "tooltip": true
     },
 
     "pulseaudio": {
         "format": "{icon} {volume}%",
-        "format-muted": "󰖁 Muted",
+        "format-muted": "󰖁",
+
         "format-icons": [
             "󰕿",
             "󰖀",
             "󰕾"
         ],
-        "tooltip": false
+
+        "tooltip": false,
+
+        "on-click": "pavucontrol",
+
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
+
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
     },
 
     "clock": {
         "format": "󰥔 {:%H:%M}",
-        "tooltip": false
+
+        "tooltip-format": "<tt>{calendar}</tt>",
+
+        "calendar": {
+            "mode": "month",
+            "weeks-pos": "right"
+        }
     }
 }
