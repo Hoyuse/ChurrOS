@@ -5,22 +5,85 @@
 }
 
 window#waybar {
-    background: rgba(31, 31, 31, 0.96);
+
+    background: rgba(31,31,31,0.96);
+
     color: #f5f5f5;
 
-    border: 1px solid rgba(249, 115, 22, 0.25);
     border-radius: 16px;
 
+    border: 1px solid rgba(249,115,22,0.25);
+
     margin: 10px;
+
     padding: 6px;
 }
 
-#custom-logo,
-#workspaces,
-#window,
-#clock,
+/* ---------- LOGO ---------- */
+
+#image-logo {
+
+    margin-left: 8px;
+
+    margin-right: 14px;
+
+    padding: 4px;
+}
+
+/* ---------- WORKSPACES ---------- */
+
+#workspaces {
+
+    background: rgba(255,255,255,0.05);
+
+    border-radius: 10px;
+
+    padding: 2px 6px;
+
+    margin: 4px;
+}
+
+#workspaces button {
+
+    color: #b0b0b0;
+
+    padding: 0 10px;
+
+    margin: 2px;
+
+    border-radius: 8px;
+}
+
+#workspaces button:hover {
+
+    background: rgba(249,115,22,0.20);
+
+    color: white;
+}
+
+#workspaces button.active {
+
+    background: #f97316;
+
+    color: white;
+}
+
+/* ---------- VENTANA ---------- */
+
+#window {
+
+    color: #f5f5f5;
+
+    font-weight: 600;
+}
+
+/* ---------- MÓDULOS ---------- */
+
+#tray,
 #network,
-#pulseaudio {
+#bluetooth,
+#pulseaudio,
+#clock {
 
     background: rgba(255,255,255,0.05);
 
@@ -29,83 +92,17 @@ window#waybar {
     border-radius: 10px;
 
     margin: 4px;
-    padding: 6px 12px;
+
+    padding: 6px 14px;
 }
 
-#custom-logo {
-    color: #f97316;
-    font-weight: bold;
-}
+/* ---------- HOVER ---------- */
 
-#window {
-    color: #f97316;
-}
-
-#workspaces button {
-
-    color: #b0b0b0;
-
-    padding: 0 8px;
-
-    border-radius: 8px;
-
-    background: transparent;
-}
-
-#workspaces button:hover {
-
-    background: rgba(249,115,22,0.15);
-
-    color: white;
-}
-
-#workspaces button.active {
-
-    background: #f97316;
-
-    color: white;
-}
-
-#clock:hover,
 #network:hover,
+#bluetooth:hover,
 #pulseaudio:hover,
-#custom-logo:hover {
+#clock:hover,
+#tray:hover {
 
     background: rgba(249,115,22,0.15);
-}
-#workspaces {
-    background: rgba(255,255,255,0.05);
-    border-radius: 10px;
-    margin: 4px;
-    padding: 2px 6px;
-}
-
-#workspaces button {
-    color: #b0b0b0;
-    border-radius: 8px;
-    padding: 0 10px;
-    margin: 2px;
-}
-
-#workspaces button:hover {
-    background: rgba(249,115,22,0.20);
-    color: white;
-}
-
-#workspaces button.active {
-    background: #f97316;
-    color: white;
-}
-
-#tray {
-    background: rgba(255,255,255,0.05);
-    border-radius: 10px;
-    padding: 0 10px;
-    margin: 4px;
-}
-
-#image-logo {
-    margin-left: 8px;
-    margin-right: 12px;
-    padding: 4px;
 }

@@ -1,16 +1,18 @@
 {
     "layer": "top",
     "position": "top",
+
     "height": 40,
 
     "margin-top": 12,
     "margin-left": 16,
     "margin-right": 16,
 
-   "modules-left": [
-    "image#logo",
-    "hyprland/workspaces"
-   ],
+    "modules-left": [
+        "image#logo",
+        "hyprland/workspaces"
+    ],
+
     "modules-center": [
         "hyprland/window"
     ],
@@ -18,18 +20,15 @@
     "modules-right": [
         "tray",
         "network",
+        "bluetooth",
         "pulseaudio",
         "clock"
     ],
 
     "image#logo": {
-    "path": "/usr/share/churros/churros-welcome/assets/icons/logo.svg",
-    "size": 28,
-    "tooltip": false
-    },
-
-    "hyprland/window": {
-        "max-length": 60
+        "path": "/usr/share/churros/churros-welcome/assets/icons/logo.svg",
+        "size": 28,
+        "tooltip": false
     },
 
     "hyprland/workspaces": {
@@ -37,28 +36,40 @@
         "all-outputs": true
     },
 
+    "hyprland/window": {
+        "max-length": 45
+    },
+
     "tray": {
         "spacing": 8
     },
 
-    "clock": {
-        "format": "{:%H:%M}",
-        "tooltip": false
+    "network": {
+        "format-ethernet": "󰈀 Ethernet",
+        "format-wifi": "󰖩 {essid}",
+        "format-disconnected": "󰖪 Offline",
+        "tooltip": true
     },
 
-    "network": {
-        "format-wifi": "󰖩",
-        "format-ethernet": "󰈀",
-        "format-disconnected": "󰖪"
+    "bluetooth": {
+        "format": "",
+        "format-disabled": "",
+        "tooltip": true
     },
 
     "pulseaudio": {
-        "format": "{icon}",
-        "format-muted": "󰖁",
+        "format": "{icon} {volume}%",
+        "format-muted": "󰖁 Muted",
         "format-icons": [
             "󰕿",
             "󰖀",
             "󰕾"
-        ]
+        ],
+        "tooltip": false
+    },
+
+    "clock": {
+        "format": "󰥔 {:%H:%M}",
+        "tooltip": false
     }
 }
