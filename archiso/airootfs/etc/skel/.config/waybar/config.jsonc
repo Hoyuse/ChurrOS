@@ -2,23 +2,43 @@
     "layer": "top",
     "position": "top",
     "height": 40,
+
     "margin-top": 12,
     "margin-left": 16,
     "margin-right": 16,
 
     "modules-left": [
-        "custom/logo"
+        "custom/logo",
+        "hyprland/workspaces"
+    ],
+
+    "modules-center": [
+        "hyprland/window"
     ],
 
     "modules-right": [
+        "tray",
         "network",
         "pulseaudio",
         "clock"
     ],
 
     "custom/logo": {
-        "format": "🟧 ChurrOS",
+        "format": "ChurrOS",
         "tooltip": false
+    },
+
+    "hyprland/window": {
+        "max-length": 60
+    },
+
+    "hyprland/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true
+    },
+
+    "tray": {
+        "spacing": 8
     },
 
     "clock": {
@@ -29,8 +49,7 @@
     "network": {
         "format-wifi": "󰖩",
         "format-ethernet": "󰈀",
-        "format-disconnected": "󰖪",
-        "tooltip": true
+        "format-disconnected": "󰖪"
     },
 
     "pulseaudio": {
@@ -40,7 +59,6 @@
             "󰕿",
             "󰖀",
             "󰕾"
-        ],
-        "tooltip": false
+        ]
     }
 }

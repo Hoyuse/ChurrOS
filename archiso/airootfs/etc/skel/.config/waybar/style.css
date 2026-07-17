@@ -73,3 +73,33 @@ window#waybar {
 
     background: rgba(249,115,22,0.15);
 }
+#workspaces {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    margin: 4px;
+    padding: 2px 6px;
+}
+
+#workspaces button {
+    color: #b0b0b0;
+    border-radius: 8px;
+    padding: 0 10px;
+    margin: 2px;
+}
+
+#workspaces button:hover {
+    background: rgba(249,115,22,0.20);
+    color: white;
+}
+
+#workspaces button.active {
+    background: #f97316;
+    color: white;
+}
+
+#tray {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 0 10px;
+    margin: 4px;
+}
