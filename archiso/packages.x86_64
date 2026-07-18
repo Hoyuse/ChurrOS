@@ -131,7 +131,7 @@ zsh
 # ===========================
 
 hyprland
-hyprpaper
+
 hyprlock
 hypridle
 
@@ -177,3 +177,4 @@ firefox
 wofi
 pavucontrol
 network-manager-applet
+awww
