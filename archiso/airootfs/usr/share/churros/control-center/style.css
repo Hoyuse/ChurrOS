@@ -1,0 +1,61 @@
+window{
+
+    background:transparent;
+
+}
+
+.root{
+
+    background:#202020;
+
+    border-radius:18px;
+
+    padding:18px;
+
+}
+
+.title{
+
+    color:white;
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+.card{
+
+    background:#2b2b2b;
+
+    border-radius:16px;
+
+    padding:16px;
+
+}
+
+.card-title{
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:700;
+
+}
+
+.card-value{
+
+    color:#8ec5ff;
+
+    font-weight:700;
+
+}
+
+.card-subtitle{
+
+    color:#bdbdbd;
+
+    font-size:13px;
+
+}

@@ -10,7 +10,7 @@ def main():
     stdout=subprocess.DEVNULL,
     stderr=subprocess.DEVNULL,
 ).returncode != 0:
-    time.sleep(0.2)
+     time.sleep(0.2)
 
     subprocess.Popen(
         [

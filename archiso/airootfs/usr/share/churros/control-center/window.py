@@ -1,14 +1,18 @@
+from pathlib import Path
+
 import gi
 
 gi.require_version("Gtk", "4.0")
-gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Adw
+from gi.repository import Gtk, Gdk
+
+from widgets.audio import AudioCard
 
 
-class ControlCenterWindow(Adw.Application):
+class ControlCenter(Gtk.Application):
 
     def __init__(self):
+
         super().__init__(
             application_id="org.churros.ControlCenter"
         )
@@ -17,41 +21,42 @@ class ControlCenterWindow(Adw.Application):
 
     def on_activate(self, app):
 
-        window = Adw.ApplicationWindow(application=app)
+        provider = Gtk.CssProvider()
+
+        provider.load_from_path(
+            str(Path(__file__).parent / "style.css")
+        )
+
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+        window = Gtk.ApplicationWindow(application=app)
 
         window.set_title("ChurrOS Control Center")
 
-        window.set_default_size(340, 220)
+        window.set_default_size(420, 620)
 
         window.set_resizable(False)
 
-        box = Gtk.Box(
+        window.set_decorated(False)
+
+        root = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=18,
-            margin_top=20,
-            margin_bottom=20,
-            margin_start=20,
-            margin_end=20,
+            spacing=12
         )
 
-        title = Gtk.Label(
-            label="🔊 Audio"
-        )
+        root.set_margin_top(16)
+        root.set_margin_bottom(16)
+        root.set_margin_start(16)
+        root.set_margin_end(16)
 
-        title.set_xalign(0)
+        root.add_css_class("root")
 
-        slider = Gtk.Scale.new_with_range(
-            Gtk.Orientation.HORIZONTAL,
-            0,
-            100,
-            1,
-        )
+        root.append(AudioCard())
 
-        slider.set_value(80)
-
-        box.append(title)
-        box.append(slider)
-
-        window.set_content(box)
+        window.set_child(root)
 
         window.present()

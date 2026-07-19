@@ -1,12 +1,13 @@
-import sys
-
-from window import ControlCenterWindow
+from window import ControlCenter
 
 
 def main():
-    app = ControlCenterWindow()
+
+    app = ControlCenter()
+
     app.run()
 
 
 if __name__ == "__main__":
+
     main()
