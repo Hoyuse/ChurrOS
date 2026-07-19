@@ -3,51 +3,49 @@ import subprocess
 
 class BatteryService:
 
+    DEVICE = "/org/freedesktop/UPower/devices/DisplayDevice"
+
     @staticmethod
-    def has_battery():
+    def _info():
 
         try:
 
-            devices = subprocess.check_output(
-                ["upower", "-e"],
+            return subprocess.check_output(
+                [
+                    "upower",
+                    "-i",
+                    BatteryService.DEVICE
+                ],
                 text=True
             )
 
-            return "DisplayDevice" in devices
-
         except Exception:
 
-            return False
+            return ""
+
+    @staticmethod
+    def has_battery():
+
+        info = BatteryService._info()
+
+        return "power supply:         yes" in info
 
     @staticmethod
     def get_percentage():
 
         if not BatteryService.has_battery():
 
-            return None
-
-        try:
-
-            output = subprocess.check_output(
-                [
-                    "upower",
-                    "-i",
-                    "/org/freedesktop/UPower/devices/DisplayDevice"
-                ],
-                text=True
-            )
-
-            for line in output.splitlines():
-
-                if "percentage:" in line:
-
-                    return line.split(":")[1].strip()
-
             return "--"
 
-        except Exception:
+        info = BatteryService._info()
 
-            return "--"
+        for line in info.splitlines():
+
+            if "percentage:" in line:
+
+                return line.split(":")[1].strip()
+
+        return "--"
 
     @staticmethod
     def get_state():
@@ -56,25 +54,43 @@ class BatteryService:
 
             return "Desktop PC"
 
+        info = BatteryService._info()
+
+        for line in info.splitlines():
+
+            if "state:" in line:
+
+                return line.split(":")[1].strip().capitalize()
+
+        return "Unknown"
+
+    @staticmethod
+    def get_icon():
+
+        if not BatteryService.has_battery():
+
+            return "battery-missing-symbolic"
+
+        percentage = BatteryService.get_percentage().replace("%", "")
+
         try:
 
-            output = subprocess.check_output(
-                [
-                    "upower",
-                    "-i",
-                    "/org/freedesktop/UPower/devices/DisplayDevice"
-                ],
-                text=True
-            )
+            value = int(percentage)
 
-            for line in output.splitlines():
+        except ValueError:
 
-                if "state:" in line:
+            return "battery-symbolic"
 
-                    return line.split(":")[1].strip().capitalize()
+        if value >= 90:
+            return "battery-full-symbolic"
 
-            return "Unknown"
+        if value >= 60:
+            return "battery-good-symbolic"
 
-        except Exception:
+        if value >= 30:
+            return "battery-medium-symbolic"
 
-            return "Unknown"
+        if value >= 10:
+            return "battery-low-symbolic"
+
+        return "battery-caution-symbolic"

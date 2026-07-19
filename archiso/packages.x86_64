@@ -178,3 +178,12 @@ wofi
 pavucontrol
 network-manager-applet
 awww
+
+python
+python-gobject
+gtk4
+networkmanager
+wireplumber
+upower
+bluez
+bluez-utils

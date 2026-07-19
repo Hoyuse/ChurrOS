@@ -29,7 +29,7 @@ class BatteryCard(Card):
 
         self.header = Header(
 
-            "battery-symbolic",
+            BatteryService.get_icon(),
 
             "Battery",
 

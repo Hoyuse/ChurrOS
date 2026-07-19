@@ -1,61 +1,201 @@
-window{
+/* ==========================================================
+   Ventana
+========================================================== */
 
-    background:transparent;
+window {
 
-}
-
-.root{
-
-    background:#202020;
-
-    border-radius:18px;
-
-    padding:18px;
+    background: transparent;
 
 }
 
-.title{
 
-    color:white;
+/* ==========================================================
+   Contenedor principal
+========================================================== */
 
-    font-size:24px;
+.root {
 
-    font-weight:700;
+    background: #1f1f1f;
 
-}
+    border-radius: 18px;
 
-.card{
-
-    background:#2b2b2b;
-
-    border-radius:16px;
-
-    padding:16px;
+    padding: 18px;
 
 }
 
-.card-title{
 
-    color:white;
+/* ==========================================================
+   Tarjetas
+========================================================== */
 
-    font-size:16px;
+.card {
 
-    font-weight:700;
+    background: #2b2b2b;
 
-}
+    border-radius: 16px;
 
-.card-value{
-
-    color:#8ec5ff;
-
-    font-weight:700;
+    padding: 16px;
 
 }
 
-.card-subtitle{
 
-    color:#bdbdbd;
+/* ==========================================================
+   Header
+========================================================== */
 
-    font-size:13px;
+.card-title {
 
+    color: #ffffff;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+}
+
+.card-value {
+
+    color: #ff8c00;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+}
+
+.card-subtitle {
+
+    color: #bdbdbd;
+
+    font-size: 13px;
+
+}
+
+
+/* ==========================================================
+   Labels
+========================================================== */
+
+label {
+
+    color: white;
+
+}
+
+
+/* ==========================================================
+   Slider
+========================================================== */
+
+scale {
+
+    margin-top: 4px;
+
+}
+
+scale trough {
+
+    min-height: 8px;
+
+    background: #3a3a3a;
+
+    border-radius: 999px;
+
+}
+
+scale highlight {
+
+    background: #ff8c00;
+
+    border-radius: 999px;
+
+}
+
+scale slider {
+
+    min-width: 18px;
+
+    min-height: 18px;
+
+    background: #ff8c00;
+
+    border-radius: 999px;
+
+}
+
+
+/* ==========================================================
+   Calendar
+========================================================== */
+
+calendar {
+
+    background: #2b2b2b;
+
+    color: white;
+
+    border-radius: 12px;
+
+    padding: 8px;
+
+}
+
+calendar:selected {
+
+    background: #ff8c00;
+
+    color: black;
+
+}
+
+
+/* ==========================================================
+   Switch (para Bluetooth después)
+========================================================== */
+
+switch:checked {
+
+    background: #ff8c00;
+
+}
+
+
+/* ==========================================================
+   Hover
+========================================================== */
+
+.card:hover {
+
+    background: #333333;
+
+}
+
+calendar {
+    background: #2b2b2b;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+calendar header {
+    background: #2b2b2b;
+    color: #ff8c00;
+}
+
+calendar button {
+    color: #ffffff;
+    background: transparent;
+}
+
+calendar button:hover {
+    background: #3a3a3a;
+}
+
+calendar:selected {
+    background: #ff8c00;
+    color: #ffffff;
+}
+
+calendar.highlight {
+    color: #ff8c00;
 }
