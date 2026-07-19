@@ -13,6 +13,4 @@ class Label(Gtk.Label):
 
         self.set_xalign(0)
 
-        self.set_wrap(True)
-
         self.add_css_class(css)
