@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -11,31 +13,50 @@ class Header(Gtk.Box):
 
         super().__init__(
             orientation=Gtk.Orientation.HORIZONTAL,
-            spacing=8
+            spacing=10
         )
 
-        image = Gtk.Image.new_from_icon_name(icon)
+        if icon.endswith(".svg"):
 
-        image.set_pixel_size(20)
+            base_dir = Path(__file__).parent.parent
+
+            image = Gtk.Image.new_from_file(
+                str(base_dir / "assets" / "icons" / icon)
+            )
+
+        else:
+
+            image = Gtk.Image.new_from_icon_name(icon)
+
+        image.set_pixel_size(24)
 
         self.append(image)
 
-        self.title = Gtk.Label(label=title)
+        texts = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=2
+        )
 
-        self.title.set_hexpand(True)
+        texts.set_hexpand(True)
 
-        self.title.set_xalign(0)
+        title_label = Gtk.Label(
+            label=title,
+            xalign=0
+        )
 
-        self.title.add_css_class("card-title")
+        title_label.add_css_class("card-title")
 
-        self.append(self.title)
+        texts.append(title_label)
 
-        self.value = Gtk.Label(label=value)
+        self.append(texts)
 
-        self.value.add_css_class("card-value")
+        if value:
 
-        self.append(self.value)
+            value_label = Gtk.Label(
+                label=value,
+                xalign=1
+            )
 
-    def set_value(self, value):
+            value_label.add_css_class("card-value")
 
-        self.value.set_label(value)
+            self.append(value_label)

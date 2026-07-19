@@ -24,7 +24,7 @@ class AudioCard(Card):
         volume = PipeWireService.get_volume()
 
         self.header = Header(
-            "audio-volume-high-symbolic",
+            PipeWireService.get_icon(),
             "Audio",
             f"{volume}%"
         )

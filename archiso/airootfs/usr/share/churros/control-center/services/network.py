@@ -34,6 +34,15 @@ class NetworkService:
             return False
 
     @staticmethod
+    def get_status():
+
+        if NetworkService.is_connected():
+
+            return "Connected"
+
+        return "Offline"
+
+    @staticmethod
     def get_name():
 
         try:

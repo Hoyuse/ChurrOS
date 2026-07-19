@@ -48,6 +48,6 @@ class BluetoothService:
 
         if BluetoothService.has_adapter():
 
-            return "bluetooth-active-symbolic"
+            return "bluetooth.svg"
 
-        return "bluetooth-disabled-symbolic"
+        return "bluetooth_disabled.svg"

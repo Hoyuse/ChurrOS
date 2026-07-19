@@ -19,16 +19,23 @@ class CalendarCard(Card):
         now = datetime.now()
 
         self.header = Header(
-            "x-office-calendar-symbolic",
+
+            "calendar.svg",
+
             "Calendar"
+
         )
 
         self.append(self.header)
 
         self.append(
+
             Label(
+
                 now.strftime("%A, %d %B %Y")
+
             )
+
         )
 
         calendar = Gtk.Calendar()

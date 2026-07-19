@@ -26,6 +26,35 @@ class PipeWireService:
             return 0
 
     @staticmethod
+    def is_muted():
+
+        try:
+
+            output = subprocess.check_output(
+                [
+                    "wpctl",
+                    "get-volume",
+                    "@DEFAULT_AUDIO_SINK@"
+                ],
+                text=True
+            ).strip()
+
+            return "MUTED" in output
+
+        except Exception:
+
+            return False
+
+    @staticmethod
+    def get_icon():
+
+        if PipeWireService.is_muted():
+
+            return "audio_muted.svg"
+
+        return "audio.svg"
+
+    @staticmethod
     def set_volume(volume):
 
         try:

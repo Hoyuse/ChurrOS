@@ -24,7 +24,9 @@ class ControlCenter(Gtk.Application):
         self.connect("activate", self.on_activate)
 
     def on_activate(self, app):
+     
 
+        print("1. activate")
         # --------------------------
         # CSS
         # --------------------------

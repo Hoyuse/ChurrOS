@@ -15,20 +15,13 @@ class NetworkCard(Card):
 
         super().__init__()
 
-        connected = NetworkService.is_connected()
-
-        status = "Connected" if connected else "Offline"
-
-        name = NetworkService.get_name()
-
         self.header = Header(
 
-            "network-wired-symbolic" if name == "Ethernet"
-            else "network-wireless-symbolic",
+            "ethernet.svg",
 
             "Network",
 
-            status
+            NetworkService.get_status()
 
         )
 
@@ -36,6 +29,10 @@ class NetworkCard(Card):
 
         self.append(
 
-            Label(name)
+            Label(
+
+                NetworkService.get_name()
+
+            )
 
         )
