@@ -1,0 +1,43 @@
+.launcher {
+    background: rgba(28, 28, 28, 0.95);
+    border-radius: 18px;
+}
+
+.search {
+    margin-bottom: 12px;
+}
+
+.search entry {
+    background: #2b2b2b;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 10px;
+
+    font-size: 15px;
+}
+
+.app-list {
+    background: transparent;
+}
+
+.app-row {
+    background: transparent;
+    border-radius: 12px;
+    margin: 4px;
+}
+
+.app-row:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.app-row:selected {
+    background: #ff9800;
+}
+
+.app-name {
+    color: white;
+    font-size: 14px;
+}

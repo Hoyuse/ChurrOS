@@ -174,7 +174,7 @@ waybar
 ttf-jetbrains-mono-nerd
 otf-font-awesome
 firefox
-wofi
+rofi-wayland
 pavucontrol
 network-manager-applet
 awww
