@@ -4,7 +4,7 @@ import subprocess
 class BluetoothService:
 
     @staticmethod
-    def has_adapter():
+    def is_enabled():
 
         try:
 
@@ -15,8 +15,7 @@ class BluetoothService:
                     "bluetooth"
                 ],
                 capture_output=True,
-                text=True,
-                timeout=2
+                text=True
             )
 
             return result.stdout.strip() == "active"
@@ -28,25 +27,25 @@ class BluetoothService:
     @staticmethod
     def get_status():
 
-        if BluetoothService.has_adapter():
+        if BluetoothService.is_enabled():
 
             return "On"
 
-        return "No adapter"
+        return "Off"
 
     @staticmethod
     def get_description():
 
-        if BluetoothService.has_adapter():
+        if BluetoothService.is_enabled():
 
-            return "Bluetooth available"
+            return "Bluetooth enabled"
 
-        return "No Bluetooth hardware"
+        return "Bluetooth disabled"
 
     @staticmethod
     def get_icon():
 
-        if BluetoothService.has_adapter():
+        if BluetoothService.is_enabled():
 
             return "bluetooth.svg"
 

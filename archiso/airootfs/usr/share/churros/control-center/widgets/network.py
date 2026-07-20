@@ -15,9 +15,13 @@ class NetworkCard(Card):
 
         super().__init__()
 
+        self.build()
+
+    def build(self):
+
         self.header = Header(
 
-            "ethernet.svg",
+            NetworkService.get_icon(),
 
             "Network",
 
@@ -27,12 +31,10 @@ class NetworkCard(Card):
 
         self.append(self.header)
 
-        self.append(
+        self.label = Label(
 
-            Label(
-
-                NetworkService.get_name()
-
-            )
+            NetworkService.get_name()
 
         )
+
+        self.append(self.label)

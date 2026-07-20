@@ -65,32 +65,33 @@ class BatteryService:
         return "Unknown"
 
     @staticmethod
+    def is_charging():
+
+        return BatteryService.get_state().lower() == "charging"
+
+    @staticmethod
     def get_icon():
 
         if not BatteryService.has_battery():
 
-            return "battery-missing-symbolic"
+            return "battery.svg"
+
+        if BatteryService.is_charging():
+
+            return "power_ac.svg"
 
         percentage = BatteryService.get_percentage().replace("%", "")
 
         try:
 
-            value = int(percentage)
+            percentage = int(percentage)
 
         except ValueError:
 
-            return "battery-symbolic"
+            return "battery.svg"
 
-        if value >= 90:
-            return "battery-full-symbolic"
+        if percentage <= 15:
 
-        if value >= 60:
-            return "battery-good-symbolic"
+            return "battery_critical.svg"
 
-        if value >= 30:
-            return "battery-medium-symbolic"
-
-        if value >= 10:
-            return "battery-low-symbolic"
-
-        return "battery-caution-symbolic"
+        return "battery.svg"

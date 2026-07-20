@@ -48,7 +48,9 @@ class PipeWireService:
     @staticmethod
     def get_icon():
 
-        if PipeWireService.is_muted():
+        volume = PipeWireService.get_volume()
+
+        if PipeWireService.is_muted() or volume == 0:
 
             return "audio_muted.svg"
 

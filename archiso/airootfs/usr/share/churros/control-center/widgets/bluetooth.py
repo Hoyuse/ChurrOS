@@ -31,12 +31,10 @@ class BluetoothCard(Card):
 
         self.append(self.header)
 
-        self.append(
+        self.label = Label(
 
-            Label(
-
-                BluetoothService.get_description()
-
-            )
+            BluetoothService.get_description()
 
         )
+
+        self.append(self.label)

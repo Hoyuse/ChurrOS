@@ -15,6 +15,10 @@ class BatteryCard(Card):
 
         super().__init__()
 
+        self.build()
+
+    def build(self):
+
         if BatteryService.has_battery():
 
             value = BatteryService.get_percentage()
@@ -39,8 +43,10 @@ class BatteryCard(Card):
 
         self.append(self.header)
 
-        self.append(
+        self.label = Label(
 
-            Label(subtitle)
+            subtitle
 
         )
+
+        self.append(self.label)

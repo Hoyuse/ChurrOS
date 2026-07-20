@@ -44,6 +44,10 @@ class AudioCard(Card):
 
         volume = int(slider.get_value())
 
+        PipeWireService.set_volume(volume)
+
         self.header.set_value(f"{volume}%")
 
-        PipeWireService.set_volume(volume)
+        self.header.set_icon(
+            PipeWireService.get_icon()
+        )

@@ -16,21 +16,12 @@ class Header(Gtk.Box):
             spacing=10
         )
 
-        if icon.endswith(".svg"):
+        self.icon = Gtk.Image()
+        self.icon.set_pixel_size(24)
 
-            base_dir = Path(__file__).parent.parent
+        self.set_icon(icon)
 
-            image = Gtk.Image.new_from_file(
-                str(base_dir / "assets" / "icons" / icon)
-            )
-
-        else:
-
-            image = Gtk.Image.new_from_icon_name(icon)
-
-        image.set_pixel_size(24)
-
-        self.append(image)
+        self.append(self.icon)
 
         texts = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
@@ -50,13 +41,29 @@ class Header(Gtk.Box):
 
         self.append(texts)
 
-        if value:
+        self.value_label = Gtk.Label(
+            label=value,
+            xalign=1
+        )
 
-            value_label = Gtk.Label(
-                label=value,
-                xalign=1
+        self.value_label.add_css_class("card-value")
+
+        self.append(self.value_label)
+
+    def set_value(self, value):
+
+        self.value_label.set_label(value)
+
+    def set_icon(self, icon):
+
+        if icon.endswith(".svg"):
+
+            base_dir = Path(__file__).parent.parent
+
+            self.icon.set_from_file(
+                str(base_dir / "assets" / "icons" / icon)
             )
 
-            value_label.add_css_class("card-value")
+        else:
 
-            self.append(value_label)
+            self.icon.set_from_icon_name(icon)

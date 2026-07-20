@@ -51,7 +51,7 @@ class ControlCenter(Gtk.Application):
 
         window.set_title("ChurrOS Control Center")
 
-        window.set_default_size(520, 700)
+        window.set_default_size(520, 570)
 
         window.set_resizable(False)
 

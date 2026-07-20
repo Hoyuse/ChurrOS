@@ -4,46 +4,7 @@ import subprocess
 class NetworkService:
 
     @staticmethod
-    def is_connected():
-
-        try:
-
-            output = subprocess.check_output(
-                [
-                    "nmcli",
-                    "-t",
-                    "-f",
-                    "DEVICE,STATE",
-                    "device"
-                ],
-                text=True
-            )
-
-            for line in output.splitlines():
-
-                parts = line.split(":")
-
-                if len(parts) >= 2 and parts[1] == "connected":
-
-                    return True
-
-            return False
-
-        except Exception:
-
-            return False
-
-    @staticmethod
-    def get_status():
-
-        if NetworkService.is_connected():
-
-            return "Connected"
-
-        return "Offline"
-
-    @staticmethod
-    def get_name():
+    def _active_connection():
 
         try:
 
@@ -62,18 +23,60 @@ class NetworkService:
 
             for line in output.splitlines():
 
-                name, conn_type = line.split(":")
+                parts = line.split(":")
 
-                if conn_type == "802-3-ethernet":
+                if len(parts) >= 2:
 
-                    return "Ethernet"
+                    return parts[0], parts[1]
 
-                if conn_type == "wifi":
-
-                    return name
-
-            return "Offline"
+            return None, None
 
         except Exception:
 
-            return "Offline"
+            return None, None
+
+    @staticmethod
+    def is_connected():
+
+        _, conn_type = NetworkService._active_connection()
+
+        return conn_type is not None
+
+    @staticmethod
+    def get_status():
+
+        if NetworkService.is_connected():
+
+            return "Connected"
+
+        return "Offline"
+
+    @staticmethod
+    def get_name():
+
+        name, conn_type = NetworkService._active_connection()
+
+        if conn_type == "802-3-ethernet":
+
+            return "Ethernet"
+
+        if conn_type == "wifi":
+
+            return name
+
+        return "Offline"
+
+    @staticmethod
+    def get_icon():
+
+        _, conn_type = NetworkService._active_connection()
+
+        if conn_type == "wifi":
+
+            return "wifi.svg"
+
+        if conn_type == "802-3-ethernet":
+
+            return "ethernet.svg"
+
+        return "ethernet.svg"
