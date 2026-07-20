@@ -21,6 +21,7 @@ file_permissions=(
   ["/usr/bin/churros-welcome"]="0:0:755"
   ["/usr/share/churros/churros-welcome/churros-welcome.sh"]="0:0:755"
 
+  ["/usr/bin/churros-launcher"]="0:0:755"
+
   ["/usr/local/bin/choose-mirror"]="0:0:755"
-  
 )
