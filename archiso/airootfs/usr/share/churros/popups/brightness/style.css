@@ -1,0 +1,47 @@
+.brightness-widget {
+
+    padding: 8px;
+
+}
+
+.brightness-label {
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+}
+
+scale highlight {
+
+    background: #ff7a00;
+
+}
+
+scale slider {
+
+    background: white;
+
+}
+    
+.brightness-info {
+
+    color: #bdbdbd;
+
+    font-size: 12px;
+
+}
+
+.brightness-slider highlight {
+
+    background: #ff7a00;
+
+}
+
+.brightness-slider slider {
+
+    background: white;
+
+}

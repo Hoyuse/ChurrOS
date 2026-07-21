@@ -20,8 +20,12 @@
     "modules-right": [
         "tray",
         "network",
+        "custom/bluetooth",
         "pulseaudio",
-        "clock"
+        "custom/brightness",
+        "battery",
+        "clock",
+        "custom/power"
     ],
 
     "image#logo": {
@@ -48,11 +52,24 @@
         "format-wifi": "󰖩",
         "format-disconnected": "󰖪",
 
-        "tooltip": true
+        "tooltip": true,
+
+        "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py network"
+    },
+
+    "custom/bluetooth": {
+
+        "format": "",
+
+        "tooltip": false,
+
+        "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py bluetooth"
     },
 
     "pulseaudio": {
+
         "format": "{icon} {volume}%",
+
         "format-muted": "󰖁",
 
         "format-icons": [
@@ -63,7 +80,7 @@
 
         "tooltip": false,
 
-        "on-click": "pavucontrol",
+        "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py audio",
 
         "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
 
@@ -72,14 +89,59 @@
         "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
     },
 
+    "custom/brightness": {
+
+        "format": "󰃠",
+
+        "tooltip": false,
+
+        "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py brightness"
+    },
+
+    "battery": {
+
+        "format": "{icon} {capacity}%",
+
+        "format-icons": [
+            "󰁺",
+            "󰁻",
+            "󰁼",
+            "󰁽",
+            "󰁾",
+            "󰁿",
+            "󰂀",
+            "󰂁",
+            "󰂂",
+            "󰁹"
+        ],
+
+        "format-charging": "󰂄 {capacity}%",
+
+        "tooltip": false,
+
+        "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py battery"
+    },
+
     "clock": {
+
         "format": "󰥔 {:%H:%M}",
 
         "tooltip-format": "<tt>{calendar}</tt>",
 
         "calendar": {
+
             "mode": "month",
+
             "weeks-pos": "right"
         }
+    },
+
+    "custom/power": {
+
+        "format": "⏻",
+
+        "tooltip": false,
+
+        "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py power"
     }
 }

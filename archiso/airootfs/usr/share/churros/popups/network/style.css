@@ -1,0 +1,91 @@
+.network-toggle {
+
+    padding-bottom: 10px;
+
+}
+
+.network-toggle label {
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+}
+
+
+.ethernet-widget,
+.wifi-widget {
+
+    background: rgba(255,255,255,.04);
+
+    border-radius: 12px;
+
+    padding: 14px;
+
+}
+
+.section-title {
+
+    color: #ff7a00;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    margin-bottom: 8px;
+
+}
+
+.network-name {
+
+    color: white;
+
+    font-weight: 600;
+
+}
+
+.network-info {
+
+    color: #cfcfcf;
+
+    font-size: 13px;
+
+}
+
+.network-label {
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+}
+
+.network-widget label {
+
+    color: white;
+
+}
+
+separator {
+
+    margin: 10px 0;
+
+    background: rgba(255,255,255,.08);
+
+}
+
+switch:checked {
+
+    background: #ff7a00;
+
+}
+
+switch slider {
+
+    background: white;
+
+}
