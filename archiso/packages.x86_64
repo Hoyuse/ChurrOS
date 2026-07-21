@@ -34,7 +34,6 @@ fsarchiver
 gpart
 gpm
 gptfdisk
-grml-zsh-config
 grub
 hdparm
 hyperv
@@ -181,6 +180,7 @@ alacritty
 playerctl
 pamixer
 btop
+starship
 
 python
 python-gobject

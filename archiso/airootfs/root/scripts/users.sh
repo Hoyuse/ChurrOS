@@ -6,7 +6,7 @@ echo "==> Creating ChurrOS live user..."
 # Crear usuario
 useradd -m \
     -G wheel,audio,video,input,storage,network \
-    -s /bin/bash \
+    -s /bin/zsh \
     churros
 
 # Sin contraseña para la sesión Live
