@@ -183,7 +183,7 @@ Consulta `docs/contributing.md`.
 
 # Licencia
 
-Este proyecto está distribuido bajo la licencia GPL-3.0.
+Este proyecto está distribuido bajo la licencia MIT.
 
 ---
 

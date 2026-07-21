@@ -19,6 +19,13 @@ Esta documentación está dirigida tanto a desarrolladores como a futuros colabo
 - [Branding](branding.md)
 - [CLI](cli.md)
 - [Development](development.md)
+- [Apps](apps.md)
+- [Popups](popups.md)
+- [Services](services.md)
+- [Desktop Config](desktop-config.md)
+- [Live Services](live-services.md)
+- [Boot](boot.md)
+- [VM](vm.md)
 
 ## Publicación
 
@@ -52,6 +59,13 @@ Cada documento aborda un aspecto específico del proyecto.
 | Branding | Personalización e identidad de ChurrOS. |
 | CLI | Herramienta de desarrollo `./churros`. |
 | Development | Flujo de trabajo recomendado para desarrollar ChurrOS. |
+| Apps | Apps oficiales GTK4 (welcome, control-center, launcher, ui). |
+| Popups | Sistema de popups (audio, battery, bluetooth, brightness, network, power). |
+| Services | Wrappers de servicios del sistema (wpctl, upower, nmcli, brightnessctl, etc). |
+| Desktop Config | Configuración del escritorio live (Hyprland, Waybar, SDDM, usuario). |
+| Live Services | Servicios systemd y hooks del Live ISO. |
+| Boot | Sistema de arranque (GRUB, systemd-boot, Syslinux). |
+| VM | Máquina virtual de desarrollo con QEMU/KVM. |
 | Release | Proceso para generar una versión oficial. |
 | Roadmap | Estado actual y objetivos futuros del proyecto. |
 | Vision | Filosofía y metas de ChurrOS. |
