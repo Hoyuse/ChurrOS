@@ -234,12 +234,12 @@ Usado por:
 
 **Archivo:** `archiso/airootfs/usr/share/churros/services/power.py`
 
-Wrapper sobre `loginctl`, `hyprctl` y `systemctl`.
+Wrapper sobre `loginctl`, `niri msg` y `systemctl`.
 
 | Método | Comando | Acción |
 |--------|---------|--------|
 | `lock()` | `loginctl lock-session` | bloquea la sesión |
-| `logout()` | `hyprctl dispatch exit` | sale de Hyprland |
+| `logout()` | `niri msg action quit` | sale de Niri |
 | `suspend()` | `systemctl suspend` | suspende |
 | `hibernate()` | `systemctl hibernate` | hiberna |
 | `restart()` | `systemctl reboot` | reinicia |

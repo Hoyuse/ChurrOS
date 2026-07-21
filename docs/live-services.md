@@ -353,8 +353,8 @@ Resumen del orden de arranque del Live:
 7. `getty@tty1` hace autologin como root.
 8. `.zlogin` ejecuta `.automated_script.sh`.
 9. SDDM arranca.
-10. Autologin como `churros`, sesión Hyprland.
-11. Hyprland carga autostart (waybar, awww, churros-welcome).
+10. Autologin como `churros`, sesión Niri.
+11. Niri carga autostart (waybar, swaybg, churros-welcome).
 
 ---
 

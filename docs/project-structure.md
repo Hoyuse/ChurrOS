@@ -82,7 +82,7 @@ Ejemplos futuros:
 
 ```text
 configs
-├── hyprland/
+├── niri/
 ├── kitty/
 ├── waybar/
 ├── rofi/

@@ -23,7 +23,7 @@ Las apps se instalan en `/usr/share/churros/<app>/` dentro de la ISO Live y se e
 **Path:** `apps/churros-welcome/`
 **Instalada en:** `/usr/share/churros/churros-welcome/`
 **Wrapper:** `/usr/bin/churros-welcome`
-**Autostart:** `archiso/airootfs/etc/skel/.config/hypr/autostart.conf` (`exec-once = churros-welcome`)
+**Autostart:** `archiso/airootfs/etc/skel/.config/niri/config.kdl` (`spawn-at-startup "churros-welcome"`)
 
 La pantalla de bienvenida que se muestra al iniciar la sesión Live.
 
@@ -169,7 +169,7 @@ Cada tarjeta consulta un servicio (ver `docs/services.md`):
 
 **Path:** `archiso/airootfs/usr/share/churros/launcher/`
 **Wrapper:** `/usr/bin/churros-launcher`
-**Keybind:** `SUPER + SPACE` (definido en `archiso/airootfs/etc/skel/.config/hypr/keybinds.conf`)
+**Keybind:** `SUPER + SPACE` (definido en `archiso/airootfs/etc/skel/.config/niri/config.kdl`)
 
 Launcher de aplicaciones al estilo Spotlight/Rofi, pero GTK4.
 

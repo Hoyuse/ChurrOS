@@ -1,0 +1,141 @@
+// Environment
+environment {
+    QT_QPA_PLATFORM "wayland"
+    GDK_BACKEND "wayland"
+    MOZ_ENABLE_WAYLAND "1"
+}
+
+// Cursor
+cursor {
+    xcursor-size 24
+}
+
+// Ask windows to omit client-side decorations
+prefer-no-csd
+
+// Blur
+blur {
+    passes 2
+    offset 2
+    noise 0
+    saturation 1.2
+}
+
+// Input
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+    }
+}
+
+// Layout
+layout {
+    gaps 8
+    border {
+        on
+        width 2
+        active-color "#DE8636"
+        inactive-color "#766561"
+    }
+}
+
+// Window rules
+window-rule {
+    match app-id="pavucontrol"
+    open-floating true
+}
+
+window-rule {
+    match app-id="kitty"
+    opacity 0.8
+    background-effect {
+        blur true
+    }
+}
+
+window-rule {
+    match app-id="fuzzel"
+    opacity 0.92
+    background-effect {
+        blur true
+    }
+    geometry-corner-radius 0
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id="mako"
+    opacity 0.92
+    background-effect {
+        blur true
+    }
+    geometry-corner-radius 0
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    open-floating true
+}
+
+// Layer rules
+layer-rule {
+    match namespace="^launcher$"
+    background-effect {
+        blur true
+    }
+}
+
+// Keybindings
+binds {
+
+    // Launch
+    Mod+Return { spawn "kitty"; }
+    Mod+Q { close-window; }
+    Mod+M { quit; }
+    Mod+F { maximize-column; }
+    Mod+Space { spawn "fuzzel"; }
+    Mod+C { spawn "python" "/usr/share/churros/control-center/main.py"; }
+
+    // Workspaces
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Shift+1 { move-window-to-workspace 1; }
+    Mod+Shift+2 { move-window-to-workspace 2; }
+    Mod+Shift+3 { move-window-to-workspace 3; }
+    Mod+Shift+4 { move-window-to-workspace 4; }
+    Mod+Shift+5 { move-window-to-workspace 5; }
+    Mod+Shift+6 { move-window-to-workspace 6; }
+    Mod+Shift+7 { move-window-to-workspace 7; }
+    Mod+Shift+8 { move-window-to-workspace 8; }
+    Mod+Shift+9 { move-window-to-workspace 9; }
+
+    // Focus movement
+    Mod+Left { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Up { focus-window-up; }
+    Mod+Down { focus-window-down; }
+
+    // Window movement
+    Mod+Shift+Left { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+Up { move-window-up; }
+    Mod+Shift+Down { move-window-down; }
+}
+
+// Autostart
+spawn-at-startup "awww-daemon"
+spawn-at-startup "awww" "img" "/usr/share/churros/wallpapers/default.jpeg" "--transition-type" "none"
+spawn-at-startup "waybar" "--config" "/home/churros/.config/waybar/config.jsonc"
+spawn-at-startup "mako"
+spawn-at-startup "churros-welcome"

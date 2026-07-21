@@ -18,9 +18,10 @@ class PowerService:
 
         subprocess.run(
             [
-                "hyprctl",
-                "dispatch",
-                "exit"
+                "niri",
+                "msg",
+                "action",
+                "quit"
             ]
         )
 

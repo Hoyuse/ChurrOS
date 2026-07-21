@@ -130,10 +130,7 @@ zsh
 # ChurrOS Desktop
 # ===========================
 
-hyprland
-
-hyprlock
-hypridle
+niri
 
 kitty
 
@@ -147,7 +144,7 @@ qt6-wayland
 qt5-wayland
 
 xdg-desktop-portal
-xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
 python-psutil
 
 polkit
@@ -178,6 +175,12 @@ rofi-wayland
 pavucontrol
 network-manager-applet
 awww
+fuzzel
+mako
+alacritty
+playerctl
+pamixer
+btop
 
 python
 python-gobject

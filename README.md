@@ -155,7 +155,7 @@ Toda la documentación oficial se encuentra en la carpeta `docs/`.
 
 ## Fase 3
 
-- Hyprland
+- Niri
 - Waybar
 - Kitty
 - Rofi

@@ -1,155 +1,101 @@
 # Desktop Config
 
-Este documento describe la configuración del escritorio Live de ChurrOS: Hyprland, Waybar, SDDM y el usuario live.
+Este documento describe la configuración del escritorio Live de ChurrOS: Niri, Waybar, SDDM y el usuario live.
 
 La configuración se aplica a todo usuario nuevo del sistema gracias a que vive en `/etc/skel/.config/`, que el script `desktop.sh` (ver `docs/live-services.md`) copia a `/home/churros/` durante la inicialización del Live.
 
 ---
 
-# Hyprland
+# Niri
 
-**Path:** `archiso/airootfs/etc/skel/.config/hypr/`
+**Path:** `archiso/airootfs/etc/skel/.config/niri/config.kdl`
 
-Hyprland es el compositor Wayland usado por ChurrOS. La configuración está dividida en varios archivos modulares que se incluyen desde `hyprland.conf`.
+Niri es el compositor Wayland usado por ChurrOS. Es un compositor desplazable (scrollable-tiling) escrito en Rust. Toda la configuración vive en un solo archivo `config.kdl` en formato KDL.
 
 ## Structure
 
 ```text
-hypr/
-├── hyprland.conf         # Entry point
-├── monitors.conf         # Configuración de monitores
-├── environment.conf      # Variables de entorno
-├── input.conf            # Teclado, ratón, touchpad
-├── decorations.conf      # Gaps, bordes, redondeo
-├── animations.conf       # Animaciones
-├── keybinds.conf         # Atajos de teclado
-└── autostart.conf        # Programas al iniciar
+niri/
+└── config.kdl           # Único archivo de configuración
 ```
-
-## Entry Point
-
-`hyprland.conf` solo incluye los demás archivos con `source =`:
-
-```text
-source = ~/.config/hypr/monitors.conf
-source = ~/.config/hypr/environment.conf
-source = ~/.config/hypr/input.conf
-source = ~/.config/hypr/decorations.conf
-source = ~/.config/hypr/animations.conf
-source = ~/.config/hypr/keybinds.conf
-source = ~/.config/hypr/autostart.conf
-```
-
-## Monitors
-
-`monitors.conf`:
-
-```text
-monitor = ,preferred,auto,1
-```
-
-Resolución preferida, tasa de refresco automática, escala 1. Se puede sobreescribir por monitor añadiendo su nombre antes de la coma.
 
 ## Environment
 
-`environment.conf`:
+Las variables de entorno se definen en `config.kdl` dentro del bloque `environment`:
 
-```text
-env = XCURSOR_SIZE,24
-env = QT_QPA_PLATFORM,wayland
-env = GDK_BACKEND,wayland
-env = MOZ_ENABLE_WAYLAND,1
+```kdl
+environment {
+    QT_QPA_PLATFORM "wayland"
+    GDK_BACKEND "wayland"
+    MOZ_ENABLE_WAYLAND "1"
+}
+
+cursor {
+    xcursor-size 24
+}
 ```
 
 Fuerza a las apps Qt y GTK a usar Wayland en lugar de XWayland cuando es posible. Firefox usará Wayland nativo gracias a `MOZ_ENABLE_WAYLAND`.
 
 ## Input
 
-`input.conf`:
-
-```text
+```kdl
 input {
-    kb_layout = us
-    follow_mouse = 1
-    touchpad {
-        natural_scroll = false
+    keyboard {
+        xkb {
+            layout "us"
+        }
     }
-    sensitivity = 0
 }
 ```
 
-Layout de teclado US. Scroll natural desactivado en touchpad. Sigue al ratón con el foco.
+Layout de teclado US.
 
-## Decorations
+## Layout
 
-`decorations.conf`:
-
-```text
-general {
-    gaps_in = 5
-    gaps_out = 10
-    border_size = 2
-    resize_on_border = true
-}
-
-decoration {
-    rounding = 8
+```kdl
+layout {
+    gaps 8
+    border {
+        on
+        width 2
+        active-color "#f97316"
+        inactive-color "#4a4a4a"
+    }
 }
 ```
 
-- Gaps internos (entre ventanas) de 5px
-- Gaps externos (al borde de la pantalla) de 10px
-- Borde de 2px
-- Redimensionar arrastrando el borde habilitado
-- Esquinas redondeadas a 8px
-
-## Animations
-
-`animations.conf`:
-
-```text
-animations {
-    enabled = yes
-}
-```
-
-Animaciones activadas. Los valores por defecto de Hyprland son suficientes.
+- Gaps: 8px entre ventanas y bordes
+- Borde de 2px con color naranja ChurrOS en la ventana activa
 
 ## Keybinds
-
-`keybinds.conf`:
 
 | Atajo | Acción |
 |-------|--------|
 | `SUPER + Return` | Abre Kitty (terminal) |
 | `SUPER + Q` | Cierra la ventana activa |
-| `SUPER + M` | Sale de Hyprland |
-| `SUPER + F` | Pantalla completa |
+| `SUPER + M` | Sale de Niri |
+| `SUPER + F` | Maximiza columna |
 | `SUPER + SPACE` | Abre el launcher (churros-launcher) |
 | `SUPER + C` | Abre el centro de control |
-| `SUPER + 1-0` | Cambia al workspace N (1-10) |
-| `SUPER + SHIFT + 1-0` | Mueve la ventana activa al workspace N |
-| `SUPER + ←/→/↑/↓` | Mueve el foco entre ventanas |
-| `SUPER + SHIFT + ←/→/↑/↓` | Mueve la ventana activa |
-
-`$mainMod` está definido como `SUPER` (la tecla Windows) al principio del archivo.
+| `SUPER + 1-9` | Cambia al workspace N (1-9) |
+| `SUPER + SHIFT + 1-9` | Mueve la ventana activa al workspace N |
+| `SUPER + ←/→` | Mueve el foco entre columnas |
+| `SUPER + ↑/↓` | Mueve el foco entre ventanas |
+| `SUPER + SHIFT + ←/→` | Mueve la columna |
+| `SUPER + SHIFT + ↑/↓` | Mueve la ventana |
 
 ## Autostart
 
-`autostart.conf`:
-
-```text
-# Wallpaper daemon
-exec-once = awww-daemon
-
-# Panel
-exec-once = /usr/bin/waybar --config /home/churros/.config/waybar/config.jsonc
-
-# Welcome
-exec-once = churros-welcome
+```kdl
+spawn-at-startup "awww-daemon"
+spawn-at-startup "awww" "img" "/usr/share/churros/wallpapers/default.jpeg" "--transition-type" "none"
+spawn-at-startup "waybar" "--config" "/home/churros/.config/waybar/config.jsonc"
+spawn-at-startup "mako"
+spawn-at-startup "churros-welcome"
 ```
 
-`awww-daemon` carga y anima el wallpaper. `waybar` arranca la barra superior. `churros-welcome` muestra la pantalla de bienvenida.
+`awww-daemon` carga el wallpaper. `waybar` arranca la barra superior. `mako` es el daemon de notificaciones. `churros-welcome` muestra la pantalla de bienvenida.
 
 ---
 
@@ -178,8 +124,8 @@ Waybar es la barra superior de ChurrOS. Configurada con estilo dark y acento nar
 
 | Posición | Módulos |
 |----------|---------|
-| Izquierda | `image#logo`, `hyprland/workspaces` |
-| Centro | `hyprland/window` |
+| Izquierda | `image#logo`, `niri/workspaces` |
+| Centro | `niri/window` |
 | Derecha | `tray`, `network`, `custom/bluetooth`, `pulseaudio`, `custom/brightness`, `battery`, `clock`, `custom/power` |
 
 ### Module Actions
@@ -235,13 +181,13 @@ Tipografía: `JetBrainsMono Nerd Font`, 14px en todo.
 ```ini
 [Autologin]
 User=churros
-Session=hyprland
+Session=niri
 
 [General]
 InputMethod=
 ```
 
-SDDM arranca, autologin con el usuario `churros`, y carga la sesión `hyprland`. Esto permite que el Live entre directamente al escritorio sin pedir credenciales.
+SDDM arranca, autologin con el usuario `churros`, y carga la sesión `niri`. Esto permite que el Live entre directamente al escritorio sin pedir credenciales.
 
 El input method está vacío por defecto. Si añades soporte para otro idioma con caracteres especiales, edita esta línea.
 
@@ -287,8 +233,8 @@ Durante el arranque del Live, los servicios y la configuración se aplican en es
    - Habilita NetworkManager y SDDM (`services.sh`)
    - Copia la configuración de `/etc/skel/` a `/home/churros/` (`desktop.sh`)
    - Limpia la cache de pacman (`cleanup.sh`)
-5. SDDM arranca, autologin como `churros`, carga `hyprland`.
-6. Hyprland lee su config y carga los `exec-once` (waybar, awww, churros-welcome).
+5. SDDM arranca, autologin como `churros`, carga `niri`.
+6. Niri lee `config.kdl` y ejecuta los `spawn-at-startup` (awww-daemon, waybar, churros-welcome).
 7. Waybar arranca y carga los popups de los módulos.
 
 ---
@@ -297,17 +243,31 @@ Durante el arranque del Live, los servicios y la configuración se aplican en es
 
 ## Cambiar el layout de teclado
 
-Edita `archiso/airootfs/etc/skel/.config/hypr/input.conf`:
+Edita `archiso/airootfs/etc/skel/.config/niri/config.kdl`:
 
-```text
+```kdl
 input {
-    kb_layout = es    # o "us,es" para alternar
+    keyboard {
+        xkb {
+            layout "es"    # o "us,es" para alternar
+        }
+    }
 }
 ```
 
 ## Cambiar el wallpaper
 
-Reemplaza `archiso/airootfs/usr/share/churros/wallpapers/default.png` con tu imagen. `awww-daemon` la carga automáticamente al inicio.
+Reemplaza `archiso/airootfs/usr/share/churros/wallpapers/default.jpeg` con tu imagen. `awww-daemon` la carga automáticamente al inicio.
+
+## Cambiar los gaps
+
+Edita `archiso/airootfs/etc/skel/.config/niri/config.kdl`:
+
+```kdl
+layout {
+    gaps 8   // valor único (todos los lados)
+}
+```
 
 ## Añadir un módulo a Waybar
 
@@ -329,8 +289,7 @@ En `config.jsonc`:
 
 # Future Work
 
-- Soporte multi-monitor: `monitors.conf` está pensado para un solo display.
-- Perfiles de energía: cambiar `animations.conf` y decoraciones automáticamente según si el equipo está en batería.
-- Configuración por usuario: hoy `/etc/skel/` aplica a todos. En el sistema instalado se deberá copiar a `~/.config/hypr/` para permitir personalizaciones.
+- Soporte multi-monitor: configuración de outputs pendiente.
+- Perfiles de energía: cambiar decoraciones automáticamente según si el equipo está en batería.
+- Configuración por usuario: hoy `/etc/skel/` aplica a todos. En el sistema instalado se deberá copiar a `~/.config/niri/` para permitir personalizaciones.
 - Integración con `wlogout`: el script de salida que se muestra desde el popup de power.
-- Soporte para otros WMs: XMonad, Sway, etc. Como alternativa a Hyprland.

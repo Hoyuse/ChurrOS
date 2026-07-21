@@ -41,6 +41,8 @@ qemu-system-x86_64 \
     -cpu host \
     -smp 4 \
     -m 4096 \
+    -vga virtio \
+    -display gtk,gl=off \
     -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2/x64/OVMF_CODE.4m.fd \
     -drive if=pflash,format=raw,file="$VARS" \
     -drive file="$DISK",format=qcow2,if=virtio \
