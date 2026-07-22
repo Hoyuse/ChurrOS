@@ -1,0 +1,119 @@
+/* ==========================================================
+   ChurrOS Welcome
+   ========================================================== */
+
+
+/* ==========================================================
+   Window
+   ========================================================== */
+
+window {
+    background: #1f1f1f;
+    color: #f5f5f5;
+    min-width: 320px;
+    min-height: 320px;
+}
+
+.content-scroller {
+    min-height: 100%;
+}
+
+
+/* ==========================================================
+   Logo
+   ========================================================== */
+
+.logo {
+    margin-bottom: 18px;
+}
+
+
+/* ==========================================================
+   Header
+   ========================================================== */
+
+.title {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.subtitle {
+    color: #a8a8a8;
+    font-size: 15px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+
+/* ==========================================================
+   Cards
+   ========================================================== */
+
+.action-card,
+.system-card {
+    background: #2a2a2a;
+    border-radius: 24px;
+    border: 1px solid rgba(249, 115, 22, 0.14);
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    min-height: 340px;
+    height: 340px;
+    padding: 20px;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.24);
+}
+
+.action-card:hover,
+.system-card:hover {
+    background: #303030;
+    border-color: rgba(251, 146, 60, 0.32);
+    transform: translateY(-1px);
+}
+
+
+/* ==========================================================
+   Icon
+   ========================================================== */
+
+.card-icon {
+    margin-bottom: 14px;
+}
+
+
+/* ==========================================================
+   Card Title
+   ========================================================== */
+
+.card-title {
+    color: #f5f5f5;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+
+/* ==========================================================
+   Card Description
+   ========================================================== */
+
+.card-description {
+    color: #a8a8a8;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* ==========================================================
+   Footer
+   ========================================================== */
+
+.footer {
+
+    color: #8a8a8a;
+
+    font-size: 12px;
+
+    margin-top: 25px;
+
+}

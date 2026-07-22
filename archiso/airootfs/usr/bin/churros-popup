@@ -1,0 +1,24 @@
+#!/bin/sh
+# Stable popup entry point for desktop integrations such as Waybar.
+
+set -eu
+
+if [ "$#" -ne 1 ]; then
+    printf '%s\n' "Usage: /usr/bin/churros-popup {network|audio|bluetooth|power|brightness}" >&2
+    exit 64
+fi
+
+case "$1" in
+    network)
+        exec /usr/bin/python3 /usr/share/churros/popups/network/main.py
+        ;;
+    audio|bluetooth|power|brightness)
+        printf '%s\n' "churros-popup: '$1' is not implemented yet" >&2
+        exit 69
+        ;;
+    *)
+        printf '%s\n' "churros-popup: unknown popup '$1'" >&2
+        printf '%s\n' "Usage: /usr/bin/churros-popup {network|audio|bluetooth|power|brightness}" >&2
+        exit 64
+        ;;
+esac

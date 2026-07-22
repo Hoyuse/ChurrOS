@@ -1,0 +1,76 @@
+.bluetooth-toggle {
+
+    margin-top: 10px;
+    margin-bottom: 15px;
+
+}
+
+.bluetooth-toggle label {
+
+    color: white;
+
+}
+
+.device-list {
+
+    margin-top: 10px;
+
+}
+
+.section-title {
+
+    color: #ff7a00;
+
+    font-weight: bold;
+
+    margin-top: 12px;
+    margin-bottom: 6px;
+
+}
+
+.device-item {
+
+    padding: 8px 10px;
+    border-radius: 10px;
+
+}
+
+.device-item label {
+
+    color: white;
+
+}
+
+.device-item:hover {
+
+    background: rgba(255,255,255,.06);
+
+}
+
+/* Switch GTK4 */
+
+switch {
+
+    min-width: 48px;
+    min-height: 26px;
+
+}
+
+switch > slider {
+
+    background: white;
+    border-radius: 999px;
+
+}
+
+switch:checked {
+
+    background: #ff7a00;
+
+}
+
+switch:not(:checked) {
+
+    background: #3a3a3a;
+
+}

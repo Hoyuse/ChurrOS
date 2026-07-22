@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+set -e
+
+show_logo() {
+cat << "EOF"
+
+██████╗██╗  ██╗██╗   ██╗██████╗ ██████╗  ██████╗ ███████╗
+██╔════╝██║  ██║██║   ██║██╔══██╗██╔══██╗██╔═══██╗██╔════╝
+██║     ███████║██║   ██║██████╔╝██████╔╝██║   ██║███████╗
+██║     ██╔══██║██║   ██║██╔══██╗██╔══██╗██║   ██║╚════██║
+╚██████╗██║  ██║╚██████╔╝██║  ██║██║  ██║╚██████╔╝███████║
+ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+
+EOF
+}
+
+CLI_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPTS_DIR="$CLI_DIR/scripts/cli"
+
+run_script() {
+    local name="$1"
+    local script="$SCRIPTS_DIR/$name.sh"
+    if [ ! -f "$script" ]; then
+        echo "Error: script not found — $script" >&2
+        exit 1
+    fi
+    bash "$script"
+}
+
+show_help() {
+
+show_logo
+
+echo "ChurrOS Development CLI"
+echo "Version 0.1.0 Alpha"
+echo
+
+echo "Usage:"
+echo "  ./churros <command>"
+echo
+
+echo "Available commands:"
+echo
+
+printf "  %-12s %s\n" "build"   "Build the ChurrOS ISO"
+printf "  %-12s %s\n" "run"     "Build (if needed) and launch QEMU"
+printf "  %-12s %s\n" "clean"   "Remove build artifacts"
+printf "  %-12s %s\n" "doctor"  "Check development environment"
+printf "  %-12s %s\n" "info"    "Display project information"
+printf "  %-12s %s\n" "version" "Display CLI version"
+printf "  %-12s %s\n" "logo"    "Print ChurrOS logo"
+
+echo
+
+echo "Examples:"
+echo
+
+echo "  ./churros build"
+echo "  ./churros run"
+echo "  ./churros doctor"
+echo
+}
+
+cd "$CLI_DIR"
+
+case "$1" in
+
+build)
+    run_script build
+    ;;
+
+run)
+    run_script run
+    ;;
+
+clean)
+    run_script clean
+    ;;
+
+doctor)
+    run_script doctor
+    ;;
+
+info)
+    run_script info
+    ;;
+
+version)
+    run_script version
+    ;;
+
+logo)
+    run_script logo
+    ;;
+
+""|-h|--help|help)
+    show_help
+    ;;
+
+*)
+    echo
+    echo "Unknown command: $1"
+    echo
+    show_help
+    exit 1
+    ;;
+esac

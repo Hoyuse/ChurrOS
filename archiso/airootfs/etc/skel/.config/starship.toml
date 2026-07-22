@@ -1,0 +1,73 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = "$os$directory$git_branch$git_status$git_metrics$fill$cmd_duration$battery$time$status$line_break$character"
+
+add_newline = true
+continuation_prompt = '▸ '
+
+[fill]
+style = "white"
+
+[os]
+disabled = false
+format = '\[[ ⬡ arch ](bold cyan)\] '
+
+[directory]
+format = '\[[ $path ](bold cyan)\] '
+truncation_length = 3
+truncate_to_repo = true
+
+[directory.substitutions]
+"$HOME" = "~"
+
+[git_branch]
+format = '\[[ $symbol$branch ](bold blue)\] '
+symbol = "⬡ "
+
+[git_status]
+format = '(\[[$all_status$ahead_behind](red)\]) '
+conflicted = " ✖"
+ahead = " ⇡${count}"
+behind = " ⇣${count}"
+diverged = " ⇕${count}"
+up_to_date = ""
+untracked = " ?${count}"
+stashed = " $"
+modified = " ✎${count}"
+staged = " ✓${count}"
+renamed = " »${count}"
+deleted = " ✕${count}"
+
+[git_metrics]
+disabled = false
+format = '(\[[+$added](green)\])(\[[-](red)\][$deleted](red)) '
+added_style = "green"
+deleted_style = "red"
+
+[cmd_duration]
+format = '\[[ ⏱ $duration ](bold yellow)\] '
+min_time = 3000
+
+[time]
+disabled = false
+format = '\[[ ⏣ $time ](bold white)\]'
+time_format = "%H:%M"
+
+[battery]
+disabled = false
+format = '\[[ $symbol$percentage ](bold green)\] '
+charging_symbol = "⚡ "
+discharging_symbol = "▸ "
+
+[status]
+format = ' \[[ ✖ $status ](bold red)\]'
+disabled = false
+
+[hostname]
+ssh_only = true
+format = '\[[ @$hostname ](magenta)\] '
+
+[character]
+success_symbol = "[❯](bold cyan)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[◈](bold green)"

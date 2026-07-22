@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Install ChurrOS
+Name[es]=Instalar ChurrOS
+GenericName=System Installer
+GenericName[es]=Instalador del Sistema
+Comment=Install ChurrOS on your computer
+Comment[es]=Instala ChurrOS en tu computadora
+TryExec=calamares
+Exec=sh -c "pkexec calamares -d"
+Icon=calamares
+Terminal=false
+StartupNotify=true
+Categories=Qt;System;

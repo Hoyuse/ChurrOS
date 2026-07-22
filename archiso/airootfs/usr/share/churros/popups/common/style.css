@@ -1,0 +1,41 @@
+.popup {
+
+    background: rgba(30,30,30,0.95);
+
+    border-radius: 16px;
+
+}
+
+.popup-content {
+
+    padding: 16px;
+
+}
+.popup-header {
+
+    min-height: 42px;
+    margin-bottom: 12px;
+}
+
+.popup-header-icon {
+    color: #ffffff;
+    font-size: 18px;
+
+    margin-right: 10px;
+
+}
+
+.popup-header-title {
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+}
+.audio-label {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}

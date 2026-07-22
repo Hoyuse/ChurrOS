@@ -1,0 +1,35 @@
+.battery-widget {
+
+    margin-top: 12px;
+
+}
+
+.battery-widget label {
+
+    color: white;
+
+}
+
+.battery-percentage {
+
+    font-size: 28px;
+
+    font-weight: bold;
+
+}
+
+.battery-status {
+
+    color: #ff7a00;
+
+    font-size: 15px;
+
+}
+
+.battery-remaining {
+
+    color: #b5b5b5;
+
+    font-size: 14px;
+
+}

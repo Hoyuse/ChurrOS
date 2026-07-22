@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+Name=ChurrOS Welcome
+Comment=Welcome to ChurrOS
+
+Exec=churros-welcome
+
+Terminal=false
+
+StartupNotify=true
+
+Categories=System;
+
+X-GNOME-Autostart-enabled=true

@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+from pathlib import Path
+
+APP_DIR = Path("/usr/share/churros/churros-welcome/src")
+
+os.chdir(APP_DIR)
+sys.path.insert(0, str(APP_DIR))
+
+from main import main
+
+main()
