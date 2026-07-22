@@ -1,0 +1,39 @@
+---
+componentName: churros
+
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+
+windowExpanding: normal
+windowSize: 800px,520px
+windowPlacement: center
+
+sidebar: widget
+navigation: widget
+
+strings:
+  productName: "ChurrOS"
+  shortProductName: ChurrOS
+  version: 2026.01
+  shortVersion: 2026.01
+  versionedName: ChurrOS 2026.01
+  shortVersionedName: ChurrOS 2026.01
+  bootloaderEntryName: ChurrOS
+  productUrl: https://github.com/Hoyuse/ChurrOS
+  supportUrl: https://github.com/Hoyuse/ChurrOS/issues
+  knownIssuesUrl: https://github.com/Hoyuse/ChurrOS/issues
+  releaseNotesUrl: https://github.com/Hoyuse/ChurrOS
+  donateUrl: https://github.com/Hoyuse/ChurrOS
+
+images:
+  productLogo: ""
+  productWelcome: ""
+
+style:
+  SidebarBackground: "#1F2937"
+  SidebarText: "#F8FAFC"
+  SidebarTextCurrent: "#1F2937"
+  SidebarBackgroundCurrent: "#F97316"
+
+slideshow: "show.qml"
+slideshowAPI: 2

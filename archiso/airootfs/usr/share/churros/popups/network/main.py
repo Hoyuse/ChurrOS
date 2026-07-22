@@ -18,10 +18,21 @@ from window import NetworkWindow
 
 class NetworkApplication(Gtk.Application):
 
+    def __init__(self):
+
+        super().__init__(
+            application_id="org.churros.popup.network"
+        )
+
+        self.window = None
+
     def do_activate(self):
 
-        window = NetworkWindow(self)
-        window.present()
+        if self.window is None:
+
+            self.window = NetworkWindow(self)
+
+        self.window.present()
 
 
 app = NetworkApplication()

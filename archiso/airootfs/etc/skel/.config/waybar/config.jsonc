@@ -80,7 +80,7 @@
     "tooltip-format-disconnected": "Disconnected",
     "interval": 3,
     "spacing": 1,
-    "on-click": "nm-connection-editor"
+    "on-click": "churros-popup network"
   },
   "battery": {
     "format": "{capacity}% {icon}",

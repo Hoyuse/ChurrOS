@@ -189,28 +189,15 @@ Características comunes a todos los popups:
 
 # Integration with Waybar
 
-Los popups se invocan desde Waybar mediante `on-click` en cada módulo. Ejemplos de `archiso/airootfs/etc/skel/.config/waybar/config.jsonc`:
+Waybar invoca el punto de entrada estable `/usr/bin/churros-popup`; no conoce las rutas ni la implementación de cada popup. Actualmente Network es el módulo implementado:
 
 ```jsonc
 "network": {
-    "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py network"
-},
-"custom/bluetooth": {
-    "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py bluetooth"
-},
-"pulseaudio": {
-    "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py audio"
-},
-"custom/brightness": {
-    "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py brightness"
-},
-"battery": {
-    "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py battery"
-},
-"custom/power": {
-    "on-click": "/usr/bin/python /usr/share/churros/popups/popup_manager/main.py power"
+    "on-click": "churros-popup network"
 }
 ```
+
+El launcher ya reserva los argumentos `audio`, `bluetooth`, `power` y `brightness`; se activarán cuando sus módulos estén integrados.
 
 Algunos módulos también tienen acciones secundarias:
 
