@@ -89,3 +89,139 @@ switch slider {
     background: white;
 
 }
+
+.network-item {
+
+    background: rgba(255,255,255,.04);
+
+    border-radius: 12px;
+
+    padding: 14px;
+
+    transition: 200ms;
+
+}
+
+.network-item:hover{
+
+    background: rgba(255,122,0,.12);
+
+}
+
+.network-item:active{
+
+    background: rgba(255,122,0,.22);
+
+}
+
+.network-name{
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:bold;
+
+}
+
+.network-status{
+
+    color:#bdbdbd;
+
+    font-size:12px;
+
+}
+
+.connected{
+
+    color:#47d764;
+
+    font-weight:bold;
+
+}
+
+.network-icon{
+
+    color:#ff7a00;
+
+    font-size:18px;
+
+}
+
+.network-lock{
+
+    color:#cfcfcf;
+
+    font-size:14px;
+
+}
+
+.password-dialog{
+
+    background:rgba(255,255,255,.04);
+
+    border-radius:12px;
+
+    padding:16px;
+
+}
+
+.password-dialog entry{
+
+    border-radius:10px;
+
+}
+
+.network-error{
+
+    color:#ff5f56;
+
+    font-size:12px;
+
+}
+.ethernet-widget{
+
+    margin-top:18px;
+
+}
+
+.network-button{
+
+    background:#ff7a00;
+
+    color:white;
+
+    border-radius:10px;
+
+    padding:8px;
+
+}
+
+.network-button:hover{
+
+    background:#ff8d1a;
+
+}
+.popup-title{
+
+    color:white;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+}
+
+.network-widget{
+
+    padding:18px;
+
+}
+
+.network-separator{
+
+    margin-top:8px;
+
+    margin-bottom:8px;
+
+}

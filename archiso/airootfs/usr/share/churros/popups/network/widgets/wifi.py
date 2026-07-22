@@ -2,9 +2,12 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
 from services.wifi import WifiService
+
+from widgets.network_item import NetworkItem
+from widgets.password_dialog import PasswordDialog
 
 
 class WifiWidget(Gtk.Box):
@@ -13,91 +16,247 @@ class WifiWidget(Gtk.Box):
 
         super().__init__(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=8
+            spacing=12
         )
 
-        self.add_css_class("wifi-widget")
+        self.add_css_class(
+            "wifi-widget"
+        )
 
-        wifi = WifiService.get()
+        self.last_state = None
+        self.password_page = None
+
+        self.stack = Gtk.Stack()
+
+        self.stack.set_hexpand(True)
+        self.stack.set_vexpand(True)
+
+        self.stack.set_transition_type(
+            Gtk.StackTransitionType.SLIDE_LEFT_RIGHT
+        )
+
+        self.stack.set_transition_duration(250)
+
+        self.network_page = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10
+        )
+
+        self.stack.add_named(
+            self.network_page,
+            "list"
+        )
+
+        self.stack.set_visible_child_name(
+            "list"
+        )
+
+        self.append(self.stack)
+
+        self.reload()
+
+        GLib.timeout_add_seconds(
+            3,
+            self.auto_refresh
+        )
+
+    def auto_refresh(self):
+
+        if self.stack.get_visible_child_name() != "list":
+
+            return True
+
+        state = WifiService.get()
+
+        if state != self.last_state:
+
+            self.reload()
+
+        return True
+
+    def clear_network_page(self):
+
+        while True:
+
+            child = self.network_page.get_first_child()
+
+            if child is None:
+
+                break
+
+            self.network_page.remove(child)
+
+    def show_message(self, text):
+
+        label = Gtk.Label(
+            label=text
+        )
+
+        label.set_xalign(0)
+
+        label.add_css_class(
+            "network-info"
+        )
+
+        self.network_page.append(label)
+
+    def reload(self):
+
+        WifiService.scan()
+
+        self.last_state = WifiService.get()
+
+        self.clear_network_page()
 
         title = Gtk.Label(
             label="󰤨 Wi-Fi"
         )
 
-        title.add_css_class("section-title")
         title.set_xalign(0)
 
-        self.append(title)
+        title.add_css_class(
+            "section-title"
+        )
 
-        if not wifi["available"]:
+        self.network_page.append(title)
 
-            label = Gtk.Label(
-                label="No Wi-Fi adapter detected"
+        if not self.last_state["available"]:
+
+            self.show_message(
+                "No Wi-Fi adapter detected."
             )
-
-            label.add_css_class("network-info")
-            label.set_xalign(0)
-
-            self.append(label)
 
             return
 
-        if not wifi["enabled"]:
+        if not self.last_state["enabled"]:
 
-            label = Gtk.Label(
-                label="Wi-Fi disabled"
+            self.show_message(
+                "Wi-Fi is disabled."
             )
-
-            label.add_css_class("network-info")
-            label.set_xalign(0)
-
-            self.append(label)
 
             return
 
-        if wifi["connected"]:
+        if not self.last_state["networks"]:
 
-            connected = Gtk.Label(
-                label=f"Connected\n{wifi['connected']}"
+            spinner = Gtk.Spinner()
+
+            spinner.start()
+
+            self.network_page.append(spinner)
+
+            self.show_message(
+                "Searching for networks..."
             )
 
-            connected.add_css_class("network-info")
-            connected.set_xalign(0)
+            return
 
-            self.append(connected)
+        self.show_networks()
 
-        for network in wifi["networks"]:
+    def show_networks(self):
 
-            if network["connected"]:
-                continue
+        refresh = Gtk.Button(
+            label="󰑐 Refresh"
+        )
 
-            row = Gtk.Box(
-                orientation=Gtk.Orientation.HORIZONTAL,
-                spacing=8
+        refresh.add_css_class(
+            "network-button"
+        )
+
+        refresh.connect(
+            "clicked",
+            lambda *_: self.reload()
+        )
+
+        self.network_page.append(refresh)
+
+        for network in self.last_state["networks"]:
+
+            item = NetworkItem(
+                network,
+                self.select_network
             )
 
-            icon = Gtk.Label(
-                label="󰤨"
+            self.network_page.append(item)
+
+    def select_network(self, network):
+
+        if network["connected"]:
+
+            WifiService.disconnect()
+
+            self.reload()
+
+            return
+
+        secured = network["security"] not in ("", "--")
+
+        if secured and not network["saved"]:
+
+            if self.password_page is not None:
+
+                self.stack.remove(
+                    self.password_page
+                )
+
+            self.password_page = Gtk.Box(
+                orientation=Gtk.Orientation.VERTICAL,
+                spacing=12
             )
 
-            name = Gtk.Label(
-                label=network["ssid"]
+            back = Gtk.Button(
+                label="󰅁 Back"
             )
 
-            signal = Gtk.Label(
-                label=f"{network['signal']}%"
+            back.add_css_class(
+                "network-button"
             )
 
-            name.add_css_class("network-name")
-            signal.add_css_class("network-info")
+            back.connect(
+                "clicked",
+                lambda *_: self.back()
+            )
 
-            name.set_hexpand(True)
-            name.set_xalign(0)
+            dialog = PasswordDialog(
+                network,
+                self.back
+            )
 
-            signal.set_xalign(1)
+            self.password_page.append(back)
+            self.password_page.append(dialog)
 
-            row.append(icon)
-            row.append(name)
-            row.append(signal)
+            self.stack.add_named(
+                self.password_page,
+                "password"
+            )
 
-            self.append(row)
+            self.stack.set_visible_child_name(
+                "password"
+            )
+
+            return
+
+        success, message = WifiService.connect(
+            network["ssid"]
+        )
+
+        self.reload()
+
+        if not success:
+
+            self.show_message(message)
+
+    def back(self):
+
+        self.stack.set_visible_child_name(
+            "list"
+        )
+
+        if self.password_page is not None:
+
+            self.stack.remove(
+                self.password_page
+            )
+
+            self.password_page = None
+
+        self.reload()
