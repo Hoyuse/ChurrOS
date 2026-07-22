@@ -183,10 +183,11 @@ Consulta `docs/contributing.md`.
 
 # Licencia
 
-Este proyecto está distribuido bajo la licencia MIT.
+Este proyecto está distribuido bajo la licencia GNU General Public License v3.0 (GPL-3.0).
 
 ---
 
 <p align="center">
 Desarrollado con ❤️ para la comunidad Linux.
 </p>
+
