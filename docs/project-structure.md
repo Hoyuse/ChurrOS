@@ -201,7 +201,7 @@ Es la primera documentación que verá cualquier usuario o colaborador.
 
 ## LICENSE
 
-Licencia oficial del proyecto.
+Licencia oficial del proyecto: GNU General Public License v3.0 (GPL-3.0).
 
 ---
 
