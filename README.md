@@ -191,5 +191,3 @@ Este proyecto está distribuido bajo la licencia GNU General Public License v3.0
 Desarrollado con ❤️ para la comunidad Linux.
 </p>
 
-
-ss
