@@ -7,6 +7,11 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CALAMARES_SRC="$SCRIPT_DIR/calamares"
 CALAMARES_DST="$PROJECT_DIR/archiso/airootfs/etc/calamares"
 
+if [ ! -f "$CALAMARES_SRC/settings.conf" ]; then
+    echo "Error: $CALAMARES_SRC/settings.conf not found." >&2
+    exit 1
+fi
+
 echo "======================================"
 echo "  Applying Calamares config to ISO"
 echo "======================================"

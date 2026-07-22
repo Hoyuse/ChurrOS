@@ -7,7 +7,7 @@ check() {
     if command -v "$1" >/dev/null 2>&1; then
         echo "✓ $1"
     else
-        echo "✗ $1"
+        echo "✗ $1 — missing"
     fi
 }
 
@@ -17,6 +17,7 @@ check qemu-system-x86_64
 check xorriso
 check mksquashfs
 check mcopy
+check mkinitcpio
 
 echo
 echo "Diagnostics complete."

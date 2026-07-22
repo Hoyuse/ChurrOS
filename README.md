@@ -106,7 +106,7 @@ Limpiar archivos temporales
 ChurrOS
 ├── archiso/
 ├── branding/
-├── configs/
+├── apps/
 ├── docs/
 ├── installer/
 ├── scripts/

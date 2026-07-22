@@ -15,6 +15,19 @@ cat << "EOF"
 EOF
 }
 
+CLI_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPTS_DIR="$CLI_DIR/scripts/cli"
+
+run_script() {
+    local name="$1"
+    local script="$SCRIPTS_DIR/$name.sh"
+    if [ ! -f "$script" ]; then
+        echo "Error: script not found — $script" >&2
+        exit 1
+    fi
+    bash "$script"
+}
+
 show_help() {
 
 show_logo
@@ -49,34 +62,36 @@ echo "  ./churros doctor"
 echo
 }
 
+cd "$CLI_DIR"
+
 case "$1" in
 
 build)
-    bash scripts/cli/build.sh
+    run_script build
     ;;
 
 run)
-    bash scripts/cli/run.sh
+    run_script run
     ;;
 
 clean)
-    bash scripts/cli/clean.sh
+    run_script clean
     ;;
 
 doctor)
-    bash scripts/cli/doctor.sh
+    run_script doctor
     ;;
 
 info)
-    bash scripts/cli/info.sh
+    run_script info
     ;;
 
 version)
-    bash scripts/cli/version.sh
+    run_script version
     ;;
 
 logo)
-    bash scripts/cli/logo.sh
+    run_script logo
     ;;
 
 ""|-h|--help|help)

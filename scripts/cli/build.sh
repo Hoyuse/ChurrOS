@@ -2,6 +2,17 @@
 
 set -e
 
+cleanup_temp() {
+    echo "[cleanup] Removing temporary build files..."
+    rm -f archiso/airootfs/root/customize_airootfs.sh 2>/dev/null || true
+    rm -rf archiso/airootfs/root/branding 2>/dev/null || true
+    rm -rf archiso/airootfs/root/packages 2>/dev/null || true
+    rm -rf archiso/airootfs/etc/calamares 2>/dev/null || true
+    rm -f archiso/airootfs/etc/polkit-1/rules.d/49-calamares.rules 2>/dev/null || true
+}
+
+trap cleanup_temp EXIT
+
 echo "======================================"
 echo "      ChurrOS Build System"
 echo "======================================"
@@ -37,7 +48,7 @@ fi
 
 echo "[3/5] Cleaning previous build..."
 
-sudo rm -rf work
+sudo rm -rf work out
 mkdir -p out
 
 echo "[4/5] Building ISO..."
@@ -47,13 +58,11 @@ sudo mkarchiso -v \
     -o out \
     archiso
 
-echo "[5/5] Cleaning temporary files..."
+sudo chown -R "$USER:$USER" work out 2>/dev/null || true
 
-rm -f archiso/airootfs/root/customize_airootfs.sh
-rm -rf archiso/airootfs/root/branding
-rm -rf archiso/airootfs/root/packages
-rm -rf archiso/airootfs/etc/calamares
-rm -f archiso/airootfs/etc/polkit-1/rules.d/49-calamares.rules
+echo "[5/5] Cleaning build artifacts..."
+
+rm -rf work 2>/dev/null || true
 
 echo
 echo "======================================"

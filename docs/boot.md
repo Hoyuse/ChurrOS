@@ -89,7 +89,7 @@ Entradas:
 
 | Archivo | Título | Descripción |
 |---------|--------|-------------|
-| `01-archiso-linux.conf` | ChurrOs live (x86_64, UEFI) | Arranque principal |
+| `01-archiso-linux.conf` | ChurrOS Live (x86_64, UEFI) | Arranque principal |
 | `02-archiso-speech-linux.conf` | (Accesibilidad) | Añade `accessibility=on` |
 | `03-archiso-memtest86+x64.conf` | Memtest86+ | Test de memoria |
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2034
 
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(date +%s)}"
+
 iso_name="ChurrOS"
-iso_label="ChurrOS_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
+iso_label="ChurrOS_$(date --date="@${SOURCE_DATE_EPOCH}" +%Y%m)"
 iso_publisher="Hoyuse"
 iso_application="ChurrOS Installer"
-iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
+iso_version="$(date --date="@${SOURCE_DATE_EPOCH}" +%Y.%m.%d)"
 install_dir="churros"
 buildmodes=('iso')
 bootmodes=('bios.syslinux'
