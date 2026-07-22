@@ -1,5 +1,11 @@
 import subprocess
 
+import gi
+
+gi.require_version("Gio", "2.0")
+
+from gi.repository import Gio
+
 
 def launch_application(command: str):
 
@@ -18,4 +24,7 @@ def open_browser():
 
 def launch_installer():
 
-    subprocess.Popen(["sudo", "-E", "calamares", "-d"])
+    installer = Gio.DesktopAppInfo.new("calamares.desktop")
+
+    if installer is not None:
+        installer.launch(None, None)

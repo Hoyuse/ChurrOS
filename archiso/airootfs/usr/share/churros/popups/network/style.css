@@ -225,3 +225,9 @@ switch slider {
     margin-bottom:8px;
 
 }
+
+.wifi-widget scrolledwindow {
+
+    min-width: 0;
+
+}

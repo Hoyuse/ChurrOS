@@ -42,6 +42,38 @@ class WifiWidget(Gtk.Box):
             spacing=10
         )
 
+        title = Gtk.Label(
+            label="󰤨 Wi-Fi"
+        )
+
+        title.set_xalign(0)
+
+        title.add_css_class(
+            "section-title"
+        )
+
+        self.network_page.append(title)
+
+        self.network_list = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10
+        )
+
+        self.network_scroller = Gtk.ScrolledWindow()
+
+        self.network_scroller.set_policy(
+            Gtk.PolicyType.NEVER,
+            Gtk.PolicyType.AUTOMATIC
+        )
+
+        self.network_scroller.set_min_content_height(180)
+        self.network_scroller.set_max_content_height(220)
+        self.network_scroller.set_propagate_natural_height(False)
+        self.network_scroller.set_child(self.network_list)
+        self.network_scroller.set_vexpand(True)
+
+        self.network_page.append(self.network_scroller)
+
         self.stack.add_named(
             self.network_page,
             "list"
@@ -78,13 +110,13 @@ class WifiWidget(Gtk.Box):
 
         while True:
 
-            child = self.network_page.get_first_child()
+            child = self.network_list.get_first_child()
 
             if child is None:
 
                 break
 
-            self.network_page.remove(child)
+            self.network_list.remove(child)
 
     def show_message(self, text):
 
@@ -98,7 +130,7 @@ class WifiWidget(Gtk.Box):
             "network-info"
         )
 
-        self.network_page.append(label)
+        self.network_list.append(label)
 
     def reload(self):
 
@@ -107,18 +139,6 @@ class WifiWidget(Gtk.Box):
         self.last_state = WifiService.get()
 
         self.clear_network_page()
-
-        title = Gtk.Label(
-            label="󰤨 Wi-Fi"
-        )
-
-        title.set_xalign(0)
-
-        title.add_css_class(
-            "section-title"
-        )
-
-        self.network_page.append(title)
 
         if not self.last_state["available"]:
 
@@ -142,7 +162,7 @@ class WifiWidget(Gtk.Box):
 
             spinner.start()
 
-            self.network_page.append(spinner)
+            self.network_list.append(spinner)
 
             self.show_message(
                 "Searching for networks..."
@@ -167,7 +187,7 @@ class WifiWidget(Gtk.Box):
             lambda *_: self.reload()
         )
 
-        self.network_page.append(refresh)
+        self.network_list.append(refresh)
 
         for network in self.last_state["networks"]:
 
@@ -176,7 +196,7 @@ class WifiWidget(Gtk.Box):
                 self.select_network
             )
 
-            self.network_page.append(item)
+            self.network_list.append(item)
 
     def select_network(self, network):
 

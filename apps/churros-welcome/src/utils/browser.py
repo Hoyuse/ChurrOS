@@ -1,6 +1,7 @@
 import webbrowser
 
 from config.metadata import (
+    DISCORD,
     WIKI,
     REPOSITORY,
     WEBSITE,
@@ -17,6 +18,10 @@ def open_wiki():
 
 def open_repository():
     open_url(REPOSITORY)
+
+
+def open_discord():
+    open_url(DISCORD)
 
 
 def open_website():

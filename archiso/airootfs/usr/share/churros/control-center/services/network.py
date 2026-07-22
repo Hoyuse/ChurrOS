@@ -1,82 +1,90 @@
-import subprocess
+from pathlib import Path
+import importlib.util
+
+
+SHARED_SERVICES = Path(__file__).resolve().parents[2] / "services"
+
+
+def load_service(name, class_name):
+
+    spec = importlib.util.spec_from_file_location(
+        f"churros_shared_{name}",
+        SHARED_SERVICES / f"{name}.py"
+    )
+
+    module = importlib.util.module_from_spec(spec)
+
+    spec.loader.exec_module(module)
+
+    return getattr(module, class_name)
+
+
+EthernetService = load_service(
+    "ethernet",
+    "EthernetService"
+)
+
+WifiService = load_service(
+    "wifi",
+    "WifiService"
+)
 
 
 class NetworkService:
 
     @staticmethod
-    def _active_connection():
+    def get():
 
-        try:
+        ethernet = EthernetService.get()
 
-            output = subprocess.check_output(
-                [
-                    "nmcli",
-                    "-t",
-                    "-f",
-                    "NAME,TYPE",
-                    "connection",
-                    "show",
-                    "--active"
-                ],
-                text=True
-            )
+        if ethernet["connected"]:
 
-            for line in output.splitlines():
+            return {
+                "type": "ethernet",
+                "icon": "ethernet.svg",
+                "status": "Connected",
+                "name": "Ethernet",
+                "signal": None
+            }
 
-                parts = line.split(":")
+        wifi = WifiService.get()
 
-                if len(parts) >= 2:
+        for network in wifi["networks"]:
 
-                    return parts[0], parts[1]
+            if network["connected"]:
 
-            return None, None
+                return {
+                    "type": "wifi",
+                    "icon": "wifi.svg",
+                    "status": "Connected",
+                    "name": network["ssid"],
+                    "signal": network["signal"]
+                }
 
-        except Exception:
-
-            return None, None
+        return {
+            "type": "offline",
+            "icon": "ethernet.svg",
+            "status": "Offline",
+            "name": "Offline",
+            "signal": None
+        }
 
     @staticmethod
     def is_connected():
 
-        _, conn_type = NetworkService._active_connection()
-
-        return conn_type is not None
+        return NetworkService.get()["type"] != "offline"
 
     @staticmethod
     def get_status():
 
-        if NetworkService.is_connected():
-
-            return "Connected"
-
-        return "Offline"
+        return NetworkService.get()["status"]
 
     @staticmethod
     def get_name():
 
-        name, conn_type = NetworkService._active_connection()
-
-        if conn_type == "802-3-ethernet":
-
-            return "Ethernet"
-
-        if conn_type == "wifi":
-
-            return name
-
-        return "Offline"
+        return NetworkService.get()["name"]
 
     @staticmethod
     def get_icon():
 
-        _, conn_type = NetworkService._active_connection()
-
-        if conn_type == "wifi":
-
-            return "wifi.svg"
-
-        if conn_type == "802-3-ethernet":
-
-            return "ethernet.svg"
-
-        return "ethernet.svg"
+        return NetworkService.get()["icon"]

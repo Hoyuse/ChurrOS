@@ -1,15 +1,14 @@
 from gi.repository import Gtk
 
 from widgets.action_card import ActionCard
-from widgets.system_card import SystemCard
 
 from utils.browser import (
-    open_wiki,
+    open_discord,
     open_repository,
 )
 
 from utils.desktop import (
-    open_terminal,
+    launch_installer,
 )
 
 
@@ -17,34 +16,19 @@ from utils.desktop import (
 # Callbacks
 # =====================================
 
-def documentation_clicked(button):
-
-    open_wiki()
-
-
-def applications_clicked(button):
-
-    open_terminal()
-
-
 def github_clicked(button):
 
     open_repository()
 
 
-def community_clicked(button):
+def discord_clicked(button):
 
-    print("Community")
-
-
-def customize_clicked(button):
-
-    print("Customize")
+    open_discord()
 
 
-def update_clicked(button):
+def install_clicked(button):
 
-    print("Update")
+    launch_installer()
 
 
 # =====================================
@@ -54,17 +38,10 @@ def update_clicked(button):
 CARDS = [
 
     {
-        "icon": "documentation.svg",
-        "title": "Documentación",
-        "description": "Aprende a utilizar ChurrOS.",
-        "callback": documentation_clicked,
-    },
-
-    {
-        "icon": "applications.svg",
-        "title": "Aplicaciones",
-        "description": "Instala y administra software.",
-        "callback": applications_clicked,
+        "icon": "install.svg",
+        "title": "Install ChurrOS",
+        "description": "Instala ChurrOS en tu disco duro.",
+        "callback": install_clicked,
     },
 
     {
@@ -76,23 +53,9 @@ CARDS = [
 
     {
         "icon": "community.svg",
-        "title": "Comunidad",
-        "description": "Únete a la comunidad.",
-        "callback": community_clicked,
-    },
-
-    {
-        "icon": "customize.svg",
-        "title": "Personalizar",
-        "description": "Configura ChurrOS.",
-        "callback": customize_clicked,
-    },
-
-    {
-        "icon": "update.svg",
-        "title": "Actualizar",
-        "description": "Mantén el sistema actualizado.",
-        "callback": update_clicked,
+        "title": "Discord",
+        "description": "Únete a la comunidad de ChurrOS.",
+        "callback": discord_clicked,
     },
 
 ]
@@ -117,15 +80,6 @@ def build_cards():
     flow.set_column_spacing(20)
 
     flow.set_halign(Gtk.Align.CENTER)
-
-    # Tarjeta Sistema
-
-    flow.insert(
-        SystemCard(),
-        -1
-    )
-
-    # Tarjetas normales
 
     for card in CARDS:
 
