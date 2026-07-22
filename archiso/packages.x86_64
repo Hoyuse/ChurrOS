@@ -166,7 +166,7 @@ python-gobject
 gtk4
 libadwaita
 gobject-introspection
-waybar
+
 ttf-jetbrains-mono-nerd
 otf-font-awesome
 firefox
@@ -182,12 +182,19 @@ pamixer
 btop
 starship
 
-python
-python-gobject
-gtk4
-networkmanager
-wireplumber
 upower
 bluez
 bluez-utils
 brightnessctl
+
+# Calamares installer dependencies
+kcoreaddons
+kpmcore
+libpwquality
+polkit-qt6
+yaml-cpp
+qt6-declarative
+qt6-svg
+kcrash
+os-prober
+udisks2

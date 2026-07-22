@@ -10,6 +10,7 @@ from utils.browser import (
 
 from utils.desktop import (
     open_terminal,
+    launch_installer,
 )
 
 
@@ -42,6 +43,11 @@ def customize_clicked(button):
     print("Customize")
 
 
+def install_clicked(button):
+
+    launch_installer()
+
+
 def update_clicked(button):
 
     print("Update")
@@ -52,6 +58,13 @@ def update_clicked(button):
 # =====================================
 
 CARDS = [
+
+    {
+        "icon": "install.svg",
+        "title": "Instalar ChurrOS",
+        "description": "Instala ChurrOS en tu disco duro.",
+        "callback": install_clicked,
+    },
 
     {
         "icon": "documentation.svg",

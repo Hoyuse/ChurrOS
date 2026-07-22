@@ -14,3 +14,8 @@ def open_terminal():
 def open_browser():
 
     launch_application("firefox")
+
+
+def launch_installer():
+
+    subprocess.Popen(["sudo", "-E", "calamares", "-d"])

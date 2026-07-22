@@ -8,7 +8,7 @@ from gi.repository import Gtk
 def build_footer():
 
     footer = Gtk.Label(
-        label="Linux • Hyprland • ChurrOS Alpha 0.1"
+        label="Linux • Niri • ChurrOS Alpha 0.1"
     )
 
     footer.add_css_class("footer")
