@@ -48,7 +48,7 @@ window-rule {
 }
 
 window-rule {
-    match app-id="kitty"
+    match app-id="foot"
     opacity 0.8
     background-effect {
         blur true
@@ -92,7 +92,7 @@ layer-rule {
 binds {
 
     // Launch
-    Mod+Return { spawn "kitty"; }
+    Mod+Return { spawn "foot"; }
     Mod+Q { close-window; }
     Mod+M { quit; }
     Mod+F { maximize-column; }
@@ -159,8 +159,6 @@ binds {
 }
 
 // Autostart
-spawn-at-startup "awww-daemon"
-spawn-at-startup "awww" "img" "/usr/share/churros/wallpapers/default.jpeg" "--transition-type" "none"
-spawn-at-startup "waybar" "--config" "/home/churros/.config/waybar/config.jsonc"
+spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.jpeg" "-m" "fill"
+spawn-at-startup "waybar"
 spawn-at-startup "mako"
-spawn-at-startup "churros-welcome"

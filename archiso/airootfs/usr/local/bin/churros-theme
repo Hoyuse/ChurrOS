@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -e
+
+BACKGROUND="${1:-/usr/share/churros/wallpapers/default.jpeg}"
+CACHE="$HOME/.cache/churros-theme"
+
+COLOR_FG="F8FAFC"
+COLOR_BG="111827"
+COLOR_PRI="F97316"
+COLOR_SEC="1F2937"
+COLOR_ACC="DE8636"
+COLOR_ERR="EF4444"
+
+mkdir -p "$CACHE"
+
+cat > "$CACHE/colors-waybar.css" << EOF
+@define-color background #$COLOR_BG;
+@define-color foreground #$COLOR_FG;
+@define-color color1 #$COLOR_PRI;
+@define-color color4 #$COLOR_ACC;
+EOF
+
+ln -sf "$CACHE/colors-waybar.css" "$HOME/.cache/wal/colors-waybar.css" 2>/dev/null || true
+
+cat > "$CACHE/colors-foot.ini" << EOF
+[colors]
+foreground=$COLOR_FG
+background=$COLOR_BG
+regular0=$COLOR_SEC
+regular1=$COLOR_ERR
+regular2=22C55E
+regular3=F59E0B
+regular4=3B82F6
+regular5=8B5CF6
+regular6=06B6D4
+regular7=$COLOR_FG
+bright0=374151
+bright1=F87171
+bright2=4ADE80
+bright3=FBBF24
+bright4=60A5FA
+bright5=A78BFA
+bright6=22D3EE
+bright7=F1F5F9
+EOF
+
+ln -sf "$CACHE/colors-foot.ini" "$HOME/.cache/wal/colors-foot.ini" 2>/dev/null || true
+ln -sf "$CACHE/colors-waybar.css" "$HOME/.cache/wal/colors-waybar.css" 2>/dev/null || true
+
+cat > "$CACHE/colors-fuzzel.ini" << EOF
+[colors]
+background=${COLOR_BG}dd
+text=${COLOR_FG}ff
+match=${COLOR_ACC}ff
+selection=${COLOR_ACC}33
+selection-text=${COLOR_FG}ff
+selection-match=${COLOR_PRI}ff
+border=${COLOR_ACC}aa
+prompt=${COLOR_FG}ff
+placeholder=76656188
+input=${COLOR_FG}ff
+message=766561cc
+counter=76656188
+EOF
+
+cat > "$CACHE/colors-mako.conf" << EOF
+background-color=#$COLOR_BG
+text-color=#$COLOR_FG
+border-color=#$COLOR_PRI
+EOF
+
+echo "Theme applied. Colors from $BACKGROUND"
+echo "Restart waybar and mako to see changes:"
+echo "  killall -SIGUSR2 waybar"
+echo "  makoctl reload"
