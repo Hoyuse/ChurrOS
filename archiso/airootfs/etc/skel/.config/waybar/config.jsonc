@@ -45,15 +45,15 @@
   "custom/launcher": {
     "format": "󰣇",
     "on-click": "fuzzel",
-    "on-click-right": "kitty",
+    "on-click-right": "foot",
     "tooltip-format": "Launcher"
   },
 
   "cpu": {
     "interval": 5,
     "format": " 󰍛 {usage}%",
-    "on-click": "kitty -e btop",
-    "on-click-right": "alacritty"
+    "on-click": "foot btop",
+    "on-click-right": "foot"
   },
   "disk": {
     "interval": 30,
@@ -111,7 +111,7 @@
   },
   "pulseaudio": {
     "format": "{icon} ",
-    "on-click": "kitty -e wiremix",
+    "on-click": "foot wiremix",
     "on-click-right": "pamixer -t",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,
