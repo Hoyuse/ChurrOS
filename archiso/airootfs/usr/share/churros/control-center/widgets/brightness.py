@@ -42,5 +42,5 @@ class BrightnessCard(Card):
 
         self.set_state(
             subtitle=f'{brightness["brightness"]}%',
-            icon="brightness.png"
+            icon="brightness.svg"
         )
