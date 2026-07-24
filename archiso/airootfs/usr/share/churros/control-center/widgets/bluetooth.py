@@ -1,40 +1,31 @@
-import gi
-
-gi.require_version("Gtk", "4.0")
-
 from widgets.card import Card
-from widgets.header import Header
-from widgets.label import Label
-
-from services.bluetooth import BluetoothService
+from popup_launcher import open_bluetooth
 
 
 class BluetoothCard(Card):
 
     def __init__(self):
 
-        super().__init__()
-
-        self.build()
-
-    def build(self):
-
-        self.header = Header(
-
-            BluetoothService.get_icon(),
-
+        super().__init__(
+            "bluetooth.svg",
             "Bluetooth",
-
-            BluetoothService.get_status()
-
+            "Unavailable"
         )
 
-        self.append(self.header)
-
-        self.label = Label(
-
-            BluetoothService.get_description()
-
+        self.connect(
+            "clicked",
+            self.on_clicked
         )
 
-        self.append(self.label)
+    def on_clicked(self, *_):
+
+        open_bluetooth(
+            self.get_root()
+        )
+
+    def update(self):
+
+        self.set_state(
+            subtitle="Unavailable",
+            icon="bluetooth_disabled.svg"
+        )

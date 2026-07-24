@@ -1,10 +1,5 @@
-import gi
-
-gi.require_version("Gtk", "4.0")
-
 from widgets.card import Card
-from widgets.header import Header
-from widgets.label import Label
+from popup_launcher import open_battery
 
 from services.battery import BatteryService
 
@@ -13,40 +8,52 @@ class BatteryCard(Card):
 
     def __init__(self):
 
-        super().__init__()
-
-        self.build()
-
-    def build(self):
-
-        if BatteryService.has_battery():
-
-            value = BatteryService.get_percentage()
-
-            subtitle = BatteryService.get_state()
-
-        else:
-
-            value = "--"
-
-            subtitle = "Desktop PC"
-
-        self.header = Header(
-
-            BatteryService.get_icon(),
-
+        super().__init__(
+            "battery.svg",
             "Battery",
-
-            value
-
+            "Loading..."
         )
 
-        self.append(self.header)
-
-        self.label = Label(
-
-            subtitle
-
+        self.connect(
+            "clicked",
+            self.on_clicked
         )
 
-        self.append(self.label)
+    def on_clicked(self, *_):
+
+        open_battery(
+            self.get_root()
+        )
+
+    def update(self):
+
+        battery = BatteryService.get()
+
+        if not battery["available"]:
+
+            self.set_state(
+                subtitle="Desktop",
+                icon="battery.svg"
+            )
+
+            return
+
+        percentage = battery["percentage"]
+
+        icon = "battery.svg"
+
+        if percentage <= 15:
+            icon = "battery_critical.svg"
+
+        subtitle = f"{percentage}%"
+
+        if battery["state"] == "charging":
+            subtitle += " • Charging"
+
+        elif battery["state"] == "fully-charged":
+            subtitle += " • Full"
+
+        self.set_state(
+            subtitle=subtitle,
+            icon=icon
+        )

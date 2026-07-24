@@ -135,7 +135,13 @@ foot
 
 waybar
 
-
+kitty
+thunar
+thunar-archive-plugin
+thunar-volman
+tumbler
+gvfs
+gvfs-mtp
 
 greetd
 greetd-agreety

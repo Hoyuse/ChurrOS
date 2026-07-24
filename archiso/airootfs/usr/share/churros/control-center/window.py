@@ -1,106 +1,162 @@
-from pathlib import Path
+import os
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, GLib, Gdk
 
-from widgets.audio import AudioCard
 from widgets.network import NetworkCard
-from widgets.battery import BatteryCard
-from widgets.calendar import CalendarCard
 from widgets.bluetooth import BluetoothCard
+from widgets.audio import AudioCard
+from widgets.brightness import BrightnessCard
+from widgets.battery import BatteryCard
+from widgets.power import PowerButton
 
 
-class ControlCenter(Gtk.Application):
+class ControlCenterWindow(Gtk.ApplicationWindow):
 
-    def __init__(self):
+    def __init__(self, app):
 
         super().__init__(
-            application_id="org.churros.ControlCenter"
+            application=app,
+            title="Control Center"
         )
 
-        self.connect("activate", self.on_activate)
+        self.set_default_size(430, 650)
 
-    def on_activate(self, app):
-     
+        self.set_resizable(False)
+        self.set_decorated(False)
 
-        print("1. activate")
-        # --------------------------
-        # CSS
-        # --------------------------
+        self.add_css_class("control-center")
 
-        provider = Gtk.CssProvider()
+        self.network = NetworkCard()
+        self.bluetooth = BluetoothCard()
+        self.brightness = BrightnessCard()
+        self.battery = BatteryCard()
+        self.audio = AudioCard()
 
-        provider.load_from_path(
-            str(Path(__file__).parent / "style.css")
+        self.set_child(
+            self.build_ui()
         )
 
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(),
-            provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        controller = Gtk.EventControllerKey()
+
+        controller.connect(
+            "key-pressed",
+            self.on_key_pressed
         )
 
-        # --------------------------
-        # Ventana
-        # --------------------------
+        self.add_controller(controller)
 
-        window = Gtk.ApplicationWindow(application=app)
+        self.refresh()
 
-        window.set_title("ChurrOS Control Center")
+        GLib.timeout_add_seconds(
+            1,
+            self.refresh
+        )
 
-        window.set_default_size(520, 570)
+    def build_ui(self):
 
-        window.set_resizable(False)
+        root = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=20
+        )
 
-        window.set_decorated(False)
+        root.set_margin_top(20)
+        root.set_margin_bottom(20)
+        root.set_margin_start(20)
+        root.set_margin_end(20)
 
-        # --------------------------
-        # Grid principal
-        # --------------------------
+        root.append(
+            self.build_header()
+        )
 
         grid = Gtk.Grid()
 
-        grid.set_row_spacing(12)
+        grid.set_column_homogeneous(True)
 
-        grid.set_column_spacing(12)
+        grid.set_row_spacing(16)
+        grid.set_column_spacing(16)
 
-        grid.set_margin_top(16)
+        grid.attach(self.network,0,0,1,1)
+        grid.attach(self.bluetooth,1,0,1,1)
 
-        grid.set_margin_bottom(16)
+        grid.attach(self.brightness,0,1,1,1)
+        grid.attach(self.battery,1,1,1,1)
 
-        grid.set_margin_start(16)
+        root.append(grid)
 
-        grid.set_margin_end(16)
+        root.append(self.audio)
 
-        # --------------------------
-        # Primera fila
-        # --------------------------
+        return root
 
-        grid.attach(AudioCard(), 0, 0, 1, 1)
+    def build_header(self):
 
-        grid.attach(BatteryCard(), 1, 0, 1, 1)
+        header = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=12
+        )
 
-        # --------------------------
-        # Segunda fila
-        # --------------------------
+        logo = Gtk.Image.new_from_file(
+            os.path.join(
+                os.path.dirname(__file__),
+                "assets",
+                "logo.svg"
+            )
+        )
 
-        grid.attach(NetworkCard(), 0, 1, 1, 1)
+        logo.set_pixel_size(40)
 
-        grid.attach(BluetoothCard(), 1, 1, 1, 1)
+        titles = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL
+        )
 
-        # --------------------------
-        # Tercera fila
-        # --------------------------
+        titles.set_hexpand(True)
 
-        grid.attach(CalendarCard(), 0, 2, 2, 1)
+        title = Gtk.Label(
+            label="ChurrOS"
+        )
 
-        # --------------------------
-        # Mostrar ventana
-        # --------------------------
+        title.add_css_class("title")
+        title.set_xalign(0)
 
-        window.set_child(grid)
+        subtitle = Gtk.Label(
+            label="Control Center"
+        )
 
-        window.present()
+        subtitle.add_css_class("subtitle")
+        subtitle.set_xalign(0)
+
+        titles.append(title)
+        titles.append(subtitle)
+
+        header.append(logo)
+        header.append(titles)
+        header.append(PowerButton())
+
+        return header
+
+    def refresh(self):
+
+        self.network.update()
+        self.bluetooth.update()
+        self.brightness.update()
+        self.battery.update()
+        self.audio.update()
+
+        return True
+
+    def on_key_pressed(self,
+                       controller,
+                       keyval,
+                       keycode,
+                       state):
+
+        if keyval == Gdk.KEY_Escape:
+
+            self.close()
+
+            return True
+
+        return False

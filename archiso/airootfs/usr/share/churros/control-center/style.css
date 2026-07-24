@@ -1,201 +1,149 @@
-/* ==========================================================
-   Ventana
-========================================================== */
+window{
+    background:transparent;
+}
 
-window {
+.control-center{
 
-    background: transparent;
+    background:rgba(24,24,24,.88);
+
+    border-radius:22px;
+
+    color:white;
 
 }
 
+/* ---------------- HEADER ---------------- */
 
-/* ==========================================================
-   Contenedor principal
-========================================================== */
+.title{
 
-.root {
+    font-size:25px;
 
-    background: #1f1f1f;
+    font-weight:700;
 
-    border-radius: 18px;
-
-    padding: 18px;
+    color:white;
 
 }
 
+.subtitle{
 
-/* ==========================================================
-   Tarjetas
-========================================================== */
+    font-size:14px;
 
-.card {
-
-    background: #2b2b2b;
-
-    border-radius: 16px;
-
-    padding: 16px;
+    color:#d5d5d5;
 
 }
 
+/* ---------------- CARDS ---------------- */
 
-/* ==========================================================
-   Header
-========================================================== */
+.card{
 
-.card-title {
+    background:rgba(82,82,82,.82);
 
-    color: #ffffff;
+    border-radius:22px;
 
-    font-size: 16px;
+    padding:18px;
 
-    font-weight: 700;
-
-}
-
-.card-value {
-
-    color: #ff8c00;
-
-    font-size: 15px;
-
-    font-weight: 700;
+    border:2px solid transparent;
 
 }
 
-.card-subtitle {
+.card:hover{
 
-    color: #bdbdbd;
+    border:2px solid #ff9800;
 
-    font-size: 13px;
-
-}
-
-
-/* ==========================================================
-   Labels
-========================================================== */
-
-label {
-
-    color: white;
+    background:rgba(92,92,92,.92);
 
 }
 
+.card:active{
 
-/* ==========================================================
-   Slider
-========================================================== */
-
-scale {
-
-    margin-top: 4px;
+    background:rgba(70,70,70,.95);
 
 }
 
-scale trough {
+/* ---------------- TEXT ---------------- */
 
-    min-height: 8px;
+.card-title{
 
-    background: #3a3a3a;
+    font-size:17px;
 
-    border-radius: 999px;
+    font-weight:700;
 
-}
-
-scale highlight {
-
-    background: #ff8c00;
-
-    border-radius: 999px;
+    color:white;
 
 }
 
-scale slider {
+.card-subtitle{
 
-    min-width: 18px;
+    font-size:14px;
 
-    min-height: 18px;
-
-    background: #ff8c00;
-
-    border-radius: 999px;
+    color:#efefef;
 
 }
 
+/* ---------------- POWER ---------------- */
 
-/* ==========================================================
-   Calendar
-========================================================== */
+.power-button{
 
-calendar {
+    background:transparent;
 
-    background: #2b2b2b;
+    border:none;
 
-    color: white;
+    min-width:40px;
 
-    border-radius: 12px;
-
-    padding: 8px;
+    min-height:40px;
 
 }
 
-calendar:selected {
+.power-button:hover{
 
-    background: #ff8c00;
+    background:rgba(255,152,0,.12);
 
-    color: black;
-
-}
-
-
-/* ==========================================================
-   Switch (para Bluetooth después)
-========================================================== */
-
-switch:checked {
-
-    background: #ff8c00;
+    border-radius:999px;
 
 }
 
+/* ---------------- AUDIO ---------------- */
 
-/* ==========================================================
-   Hover
-========================================================== */
+scale{
 
-.card:hover {
-
-    background: #333333;
+    margin-top:12px;
 
 }
 
-calendar {
-    background: #2b2b2b;
-    color: #ffffff;
-    border-radius: 12px;
-    padding: 8px;
+scale trough{
+
+    background:#666;
+
+    min-height:8px;
+
+    border-radius:100px;
+
 }
 
-calendar header {
-    background: #2b2b2b;
-    color: #ff8c00;
+scale highlight{
+
+    background:#ff9800;
+
+    border-radius:100px;
+
 }
 
-calendar button {
-    color: #ffffff;
-    background: transparent;
+scale slider{
+
+    background:white;
+
+    min-width:16px;
+
+    min-height:16px;
+
+    border-radius:100px;
+
 }
 
-calendar button:hover {
-    background: #3a3a3a;
-}
+/* ---------------- LABELS ---------------- */
 
-calendar:selected {
-    background: #ff8c00;
-    color: #ffffff;
-}
+label{
 
-calendar.highlight {
-    color: #ff8c00;
+    color:white;
+
 }

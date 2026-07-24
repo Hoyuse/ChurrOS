@@ -1,78 +1,80 @@
-import gi
-
-gi.require_version("Gtk", "4.0")
-
-from gi.repository import GLib
-
 from widgets.card import Card
-from widgets.header import Header
-from widgets.label import Label
+from popup_launcher import open_network
 
-from services.network import NetworkService
+from services.wifi import WifiService
+from services.ethernet import EthernetService
 
 
 class NetworkCard(Card):
 
     def __init__(self):
 
-        super().__init__()
-
-        self.build()
-
-        GLib.timeout_add_seconds(
-            3,
-            self.refresh
-        )
-
-    def build(self):
-
-        self.network = NetworkService.get()
-
-        self.header = Header(
-
-            self.network["icon"],
-
+        super().__init__(
+            "wifi.svg",
             "Network",
-
-            self.network["status"]
-
+            "Loading..."
         )
 
-        self.append(self.header)
+        self.connect(
+            "clicked",
+            self.on_clicked
+        )
 
-        self.label = Label(self.get_label())
+    def on_clicked(self, *_):
 
-        self.append(self.label)
+        open_network(
+            self.get_root()
+        )
 
-    def get_label(self):
+    def update(self):
 
-        if self.network["type"] == "wifi":
+        ethernet = EthernetService.get()
 
-            return (
-                f"{self.network['name']} · "
-                f"Signal {self.network['signal']}%"
+        if ethernet["available"] and ethernet["connected"]:
+
+            subtitle = "Ethernet"
+
+            if ethernet["speed"]:
+
+                subtitle += f" • {ethernet['speed']} Mbps"
+
+            self.set_state(
+                subtitle=subtitle,
+                icon="ethernet.svg"
             )
 
-        return self.network["name"]
+            return
 
-    def refresh(self):
+        wifi = WifiService.get()
 
-        network = NetworkService.get()
+        if not wifi["available"]:
 
-        if network != self.network:
-
-            self.network = network
-
-            self.header.set_icon(
-                self.network["icon"]
+            self.set_state(
+                subtitle="Unavailable",
+                icon="wifi.svg"
             )
 
-            self.header.set_value(
-                self.network["status"]
+            return
+
+        if not wifi["enabled"]:
+
+            self.set_state(
+                subtitle="Disabled",
+                icon="wifi.svg"
             )
 
-            self.label.set_label(
-                self.get_label()
+            return
+
+        if wifi["connected"]:
+
+            self.set_state(
+                subtitle=wifi["connected"],
+                icon="wifi.svg"
             )
 
-        return True
+        else:
+
+            self.set_state(
+                subtitle="Disconnected",
+                icon="wifi.svg"
+            )
