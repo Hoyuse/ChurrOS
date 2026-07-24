@@ -131,13 +131,14 @@ zsh
 
 niri
 
-kitty
+foot
 
 waybar
 
 
 
-sddm
+greetd
+greetd-agreety
 
 qt6-wayland
 qt5-wayland
@@ -173,14 +174,14 @@ firefox
 rofi-wayland
 pavucontrol
 network-manager-applet
-awww
+swaybg
 fuzzel
 mako
 alacritty
 playerctl
 pamixer
 btop
-starship
+imv
 
 upower
 bluez
