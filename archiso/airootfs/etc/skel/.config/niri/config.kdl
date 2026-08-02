@@ -104,7 +104,7 @@ binds {
     Mod+C { spawn "churros-control-center"; }
     Mod+P { spawn "churros-settings"; }
     Mod+W { spawn "churros-welcome"; }
-    Mod+S { spawn "churros-store"; }
+    Mod+S { spawn "plasma-discover"; }
     Mod+E { spawn "thunar"; }
     Mod+Shift+E { spawn "churros-popup" "power"; }
     Mod+Shift+N { spawn "churros-popup" "network"; }
