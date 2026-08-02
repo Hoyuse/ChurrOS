@@ -8,3 +8,14 @@ work/
 out/
 build/
 __pycache__/
+*.pyc
+*.pyo
+
+# Editor / IDE
+.vscode/
+
+# QEMU EFI vars (local VM state)
+vm/OVMF_VARS.fd
+
+# Misc local notes accidentally committed
+session-*.md
