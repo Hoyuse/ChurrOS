@@ -9,12 +9,7 @@ cp -r /etc/skel/.config /home/churros/
 # Permisos
 chown -R churros:churros /home/churros/.config
 
-# Optimizar para Niri: quitar awww-daemon del autostart (swaybg es mas estable)
-NIRI_CONF="/home/churros/.config/niri/config.kdl"
-if [ -f "$NIRI_CONF" ]; then
-    sed -i '/spawn-at-startup "awww-daemon"/d' "$NIRI_CONF" 2>/dev/null || true
-    chown churros:churros "$NIRI_CONF"
-fi
+
 
 # Setear XDG_CURRENT_DESKTOP para que los servicios de preferences detecten Niri
 SESSION_FILE="/home/churros/.config/environment.d/churros-session.conf"

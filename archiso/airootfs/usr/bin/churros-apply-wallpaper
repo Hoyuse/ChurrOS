@@ -1,21 +1,5 @@
 #!/usr/bin/env bash
-#
-# churros-apply-wallpaper
-#   Aplica un wallpaper al compositor activo (Niri / Hyprland / Sway).
-#
-#   Backends soportados en orden:
-#     1. awww (animations, GIF, multi-output)
-#     2. swaybg (estatico, simple)
-#
-#   Detecta automaticamente WAYLAND_DISPLAY y XDG_RUNTIME_DIR si no
-#   estan en el entorno (caso live ISO sin session explicita).
-#
-#   Uso:
-#     churros-apply-wallpaper                  # lee settings.json
-#     churros-apply-wallpaper /path/img.jpg    # aplica esa imagen
-#
-
-set -u
+set -euo pipefail
 
 ARG_PATH="${1:-}"
 
@@ -24,29 +8,21 @@ SETTINGS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/churros/settings.json"
 LOG_PREFIX="[churros-apply-wallpaper]"
 
 _detect_session_env() {
-
     local uid
     uid=$(id -u)
 
     if [ -z "${WAYLAND_DISPLAY:-}" ]; then
-
         for d in "/run/user/${uid}" "/tmp" "/var/run/user/${uid}"; do
-
             [ -d "$d" ] || continue
-
             local sock
             for sock in "$d"/wayland-*; do
-
                 [ -S "$sock" ] || continue
-
                 export WAYLAND_DISPLAY="${sock##*/}"
                 export XDG_RUNTIME_DIR="$d"
                 echo "$LOG_PREFIX detecto WAYLAND_DISPLAY=$WAYLAND_DISPLAY en $d" >&2
                 return 0
-
             done
         done
-
         echo "$LOG_PREFIX NO se detecto socket Wayland" >&2
         return 1
     fi
@@ -58,14 +34,6 @@ _detect_session_env() {
     return 0
 }
 
-_awww_running() {
-    pgrep -x awww-daemon >/dev/null 2>&1
-}
-
-_awww_kill() {
-    pkill -x awww-daemon 2>/dev/null || true
-}
-
 _swaybg_running() {
     pgrep -x swaybg >/dev/null 2>&1
 }
@@ -74,73 +42,7 @@ _swaybg_kill() {
     pkill -x swaybg 2>/dev/null || true
 }
 
-apply_awww() {
-
-    local path="$1"
-
-    if ! _detect_session_env; then
-        return 1
-    fi
-
-    if [ -z "$WAYLAND_DISPLAY" ]; then
-        echo "$LOG_PREFIX WAYLAND_DISPLAY vacio, no se puede usar awww" >&2
-        return 1
-    fi
-
-    if ! _awww_running; then
-
-        echo "$LOG_PREFIX lanzando awww-daemon (WAYLAND=$WAYLAND_DISPLAY)..." >&2
-
-        WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-            nohup awww-daemon >> /tmp/awww-daemon.log 2>&1 &
-        disown 2>/dev/null || true
-
-        for _ in 1 2 3 4 5 6 7 8 9 10; do
-            sleep 0.2
-            if _awww_running; then
-                echo "$LOG_PREFIX awww-daemon listo (PID $(pgrep -x awww-daemon))" >&2
-                break
-            fi
-        done
-
-        if ! _awww_running; then
-            echo "$LOG_PREFIX awww-daemon no arranco, ver /tmp/awww-daemon.log" >&2
-            return 1
-        fi
-    fi
-
-    echo "$LOG_PREFIX awww img $path (WAYLAND=$WAYLAND_DISPLAY XDG=$XDG_RUNTIME_DIR)" >&2
-
-    local attempt
-    for attempt in 1 2 3 4 5; do
-        WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-            awww img "$path" >/tmp/awww-img.log 2>&1
-        local rc=$?
-
-        if [ "$rc" -eq 0 ]; then
-            echo "$LOG_PREFIX awww OK intento $attempt: $path" >&2
-            return 0
-        fi
-
-        echo "$LOG_PREFIX awww intento $attempt fallo rc=$rc: $(head -3 /tmp/awww-img.log 2>/dev/null)" >&2
-
-        if ! _awww_running; then
-            echo "$LOG_PREFIX awww-daemon murio, relanzando..." >&2
-            WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-                nohup awww-daemon >> /tmp/awww-daemon.log 2>&1 &
-            disown 2>/dev/null || true
-            sleep 0.5
-        fi
-
-        sleep 0.3
-    done
-
-    echo "$LOG_PREFIX awww fallo tras 5 intentos" >&2
-    return 1
-}
-
 apply_swaybg() {
-
     local path="$1"
 
     if ! _detect_session_env; then
@@ -168,7 +70,6 @@ apply_swaybg() {
 }
 
 apply() {
-
     local path="$1"
 
     if [ -z "$path" ] || [ ! -f "$path" ]; then
@@ -176,33 +77,19 @@ apply() {
         return 1
     fi
 
-    if command -v swaybg >/dev/null 2>&1; then
-
-        if apply_swaybg "$path"; then
-            _niri_refresh
-            return 0
-        fi
-
-        echo "$LOG_PREFIX swaybg fallo, probando awww..." >&2
+    if ! command -v swaybg >/dev/null 2>&1; then
+        echo "$LOG_PREFIX swaybg no encontrado" >&2
+        return 1
     fi
 
-    if command -v awww >/dev/null 2>&1; then
-
-        if apply_awww "$path"; then
-            _niri_refresh
-            return 0
+    if apply_swaybg "$path"; then
+        if command -v niri >/dev/null 2>&1; then
+            niri msg action do-screen-transition 2>/dev/null || true
         fi
+        return 0
     fi
 
-    echo "$LOG_PREFIX NINGUN backend pudo aplicar $path" >&2
     return 1
-}
-
-_niri_refresh() {
-
-    if command -v niri >/dev/null 2>&1; then
-        niri msg action do-screen-transition 2>/dev/null || true
-    fi
 }
 
 if [ -n "$ARG_PATH" ]; then
@@ -211,7 +98,6 @@ if [ -n "$ARG_PATH" ]; then
 fi
 
 if [ -f "$SETTINGS_FILE" ]; then
-
     PATH_SAVED=$(python3 -c "
 import json, sys
 try:

@@ -216,7 +216,7 @@ class WallpaperPage(Page):
         if not success:
             self._show_error(
                 "No se pudo aplicar el fondo",
-                "Revisa /tmp/churros-settings.log y /tmp/awww-img.log"
+                "Revisa /tmp/churros-settings.log y /tmp/swaybg.log"
             )
 
         self._rebuild_grid()
@@ -403,7 +403,7 @@ class WallpaperPage(Page):
 
                     "Revisa /tmp/churros-settings.log, "
 
-                    "/tmp/awww-img.log y /tmp/swaybg.log"
+                    "/tmp/swaybg.log"
 
                 )
 

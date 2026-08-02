@@ -183,7 +183,6 @@ python-gobject
 gtk4
 libadwaita
 gobject-introspection
-awww
 ddcutil
 ttf-jetbrains-mono-nerd
 otf-font-awesome

@@ -176,5 +176,5 @@ spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.jpeg" "-m"
 spawn-at-startup "churros-portal-start"
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
-spawn-at-startup "awww-daemon"
+
 spawn-at-startup "churros-welcome"
