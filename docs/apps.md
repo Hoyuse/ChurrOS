@@ -260,6 +260,5 @@ Para modificar una app:
 - Mover las apps a un repositorio separado: hoy viven dentro del repo de la distro. A largo plazo deberían empaquetarse e instalarse vía pacman.
 - Sustituir placeholders de las tarjetas de_action antiguas — hecho: hoy Welcome tiene Install/GitHub/Discord/Documentation/Terminal/Browser todas funcionales.
 - Internacionalización: hoy `i18n._()` (`/usr/share/churros/preferences/i18n.py` y la copia en `/usr/share/churros/i18n.py`) simplemente devuelve la string original; falta compilar `po/churros.po` a `/usr/share/locale/es/LC_MESSAGES/churros.mo`.
-- Migración foot → kitty: el AGENTS.md y README mencionan Kitty pero el sistema instala foot. Añadir `kitty` a `packages.x86_64` y cambiar spawns cuando se decida.
 - churros-ui: centralizar el CSS + widgets compartidos (hoy hay code duplication entre welcome/control-center/preferences/popups).
 - Tests: no hay suite de tests. Las apps interactúan con el sistema; verificación es `python3 -c "import ast; ast.parse(open(f).read())"` + lanzar manualmente cada app en niri.

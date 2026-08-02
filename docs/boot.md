@@ -144,7 +144,7 @@ El proceso de arranque es el siguiente:
 4. El initramfs monta el sistema squashfs raíz.
 5. systemd arranca y los servicios live (ver `docs/live-services.md`) se inicializan.
 6. Si `accessibility=on` está presente, se activan los servicios de accesibilidad.
-7. SDDM arranca, autologin como `churros` y se carga Hyprland.
+7. greetd arranca, autologin como `churros` y se carga Niri.
 
 ---
 

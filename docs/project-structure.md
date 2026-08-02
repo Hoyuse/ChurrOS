@@ -83,10 +83,10 @@ Ejemplos futuros:
 ```text
 configs
 ├── niri/
-├── kitty/
+├── foot/
 ├── waybar/
-├── rofi/
-└── sddm/
+├── fuzzel/
+└── greetd/
 ```
 
 La idea es mantener separadas las configuraciones del sistema y poder reutilizarlas fácilmente.

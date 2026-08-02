@@ -64,7 +64,7 @@ Cada documento aborda un aspecto específico del proyecto.
 | Popups | Sistema de popups (audio, battery, bluetooth, brightness, network, power). |
 | Preferences | App `churros-settings` — tema, accent, fuentes, cursor, wallpaper, power, etc. |
 | Services | Wrappers de servicios del sistema (wpctl, upower, nmcli, brightnessctl, etc). |
-| Desktop Config | Configuración del escritorio live (Niri, Waybar, SDDM, usuario). |
+| Desktop Config | Configuración del escritorio live (Niri, Waybar, greetd, usuario). |
 | Live Services | Servicios systemd y hooks del Live ISO. |
 | Boot | Sistema de arranque (GRUB, systemd-boot, Syslinux). |
 | VM | Máquina virtual de desarrollo con QEMU/KVM. |

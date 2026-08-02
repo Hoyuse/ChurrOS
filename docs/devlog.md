@@ -28,7 +28,7 @@ Sesión grande: terminadas las fases de personalización faltantes (5c, 5d), arr
 
 ### Config niri
 
-- Terminales mencionadas en docs (`AGENTS.md`, `README.md`, `docs/desktop-config.md`): Kitty. La realidad del repo: `foot` está en `packages.x86_64` (`kitty` no), `churros-welcome` lanza `foot`, waybar lanza `foot`, niri `Mod+Return` lanza `foot`. Decisión: se mantiene **foot** como terminal porque es la que está instalada; solo se documenta el gap para futura migración.
+- Terminal oficial: **foot** (`packages.x86_64`, welcome/waybar/niri `Mod+Return`). Las docs antiguas hablaban de Kitty; se corrigen para reflejar el stack real.
 - Terminal atajo: `Mod+Return` → foot (sin cambios).
 
 ### Waybar nuevos módulos

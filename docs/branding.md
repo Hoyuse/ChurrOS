@@ -245,7 +245,7 @@ En futuras versiones incluirá:
 - Fastfetch personalizado.
 - Plymouth.
 - Tema de GRUB.
-- Tema de SDDM.
+- Tema / branding de greetd.
 - Wallpapers oficiales.
 - Iconos.
 - Cursor.

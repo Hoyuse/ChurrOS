@@ -352,7 +352,7 @@ Resumen del orden de arranque del Live:
 6. `livecd-talk.service` (si `accessibility=on`) activa espeakup.
 7. `getty@tty1` hace autologin como root.
 8. `.zlogin` ejecuta `.automated_script.sh`.
-9. SDDM arranca.
+9. greetd arranca.
 10. Autologin como `churros`, sesión Niri.
 11. Niri carga autostart (waybar, swaybg, churros-welcome).
 
@@ -360,7 +360,7 @@ Resumen del orden de arranque del Live:
 
 # Future Work
 
-- Mover la lógica de `services.sh` (que habilita NetworkManager y SDDM) a unidades nativas de systemd.
+- Mover la lógica de `services.sh` (que habilita NetworkManager y greetd) a unidades nativas de systemd.
 - Eliminar la dependencia de root autologin: usar `systemd-user-sessions` o un PAM module.
 - Documentar el orden de dependencias entre servicios (hoy está implícito en los `After=` y `Before=`).
 - Internacionalizar los mensajes de los hooks.

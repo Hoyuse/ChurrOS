@@ -52,7 +52,7 @@ archiso/                      ArchISO profile root
   profiledef.sh               iso metadata, bootmodes, file_permissions map
   packages/                   Local pacman repo (built pkgs + repo db live here)
   airootfs/                   Squashfs root overlay
-    etc/skel/.config/          niri, waybar, kitty, fuzzel, starship — DO NOT MODIFY
+    etc/skel/.config/          niri, waybar, foot, fuzzel — DO NOT MODIFY
     root/scripts/             Live-ISO runtime scripts (users, services, desktop, cleanup, greetd-config)
     usr/share/churros/        Python GTK4/Libadwaita apps + scripts
 branding/                     Visual identity
@@ -88,8 +88,8 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 
 - **Live user**: `churros` (wheel, audio, video, input, storage, network), NOPASSWD sudo — created by `archiso/airootfs/root/scripts/users.sh`.
 - **Compositor**: Niri (Wayland scrollable-tiling). Requires 3D accel in QEMU (see Testing).
-- **Display Manager**: SDDM with autologin to `churros` / `niri` session.
-- **Panel/Launcher/Terminal**: Waybar / Fuzzel / Kitty.
+- **Display Manager**: greetd with autologin to `churros` / `niri` session.
+- **Panel/Launcher/Terminal**: Waybar / Fuzzel / foot.
 - **Apps**: Python GTK4 + Libadwaita in `archiso/airootfs/usr/share/churros/` (`churros-welcome`, `control-center`, `popups`, `preferences`, `services`), installed into `/usr/bin/churros-*` via `profiledef.sh` perms.
 - **Installer**: Calamares with custom `churros` branding (slideshow, QSS stylesheet).
 - **Boot modes** (from `profiledef.sh`): `bios.syslinux` + `uefi.systemd-boot`. No GRUB.
@@ -100,7 +100,7 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 
 - `installer/calamares/branding/churros/` — branding, slideshow, QSS.
 - `branding/` — colors, typography, logo guidelines, mascot.
-- `archiso/airootfs/etc/skel/.config/` — niri, waybar, kitty, fuzzel, starship themes.
+- `archiso/airootfs/etc/skel/.config/` — niri, waybar, foot, fuzzel themes.
 - Bootloader graphics and splash images.
 
 ## Notes

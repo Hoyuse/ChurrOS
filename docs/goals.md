@@ -7,7 +7,7 @@ Churros es una distribucion basada en Arch Linux enfocada en:
 - Simplicidad.
 - Alto rendimiento.
 - Diseno moderno.
-- Hyprland listo para usar.
+- Niri listo para usar.
 - Configuracion minima despues de instalar.
 
 ## Publico objetivo
@@ -20,11 +20,11 @@ Churros es una distribucion basada en Arch Linux enfocada en:
 ## Caracteristicas
 
 - Instalador grafico.
-- Hyprland por defecto.
+- Niri por defecto.
 - Quickshell.
 - Tema propio.
 - Wallpapers propios.
-- SDDM personalizado.
+- greetd con autologin.
 - Drivers automaticos.
 - Soporte para NVIDIA y AMD
 

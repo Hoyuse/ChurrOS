@@ -1,6 +1,6 @@
 # Desktop Config
 
-Este documento describe la configuración del escritorio Live de ChurrOS: Niri, Waybar, SDDM y el usuario live.
+Este documento describe la configuración del escritorio Live de ChurrOS: Niri, Waybar, greetd y el usuario live.
 
 La configuración se aplica a todo usuario nuevo del sistema gracias a que vive en `/etc/skel/.config/`, que el script `desktop.sh` (ver `docs/live-services.md`) copia a `/home/churros/` durante la inicialización del Live.
 
@@ -108,13 +108,13 @@ layout {
 
 ```kdl
 spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.jpeg" "-m" "fill"
+spawn-at-startup "churros-portal-start"
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
-spawn-at-startup "awww-daemon"
 spawn-at-startup "churros-welcome"
 ```
 
-`swaybg` carga el wallpaper inicial. `waybar` arranca la barra superior. `mako` es el daemon de notificaciones. `awww-daemon` queda en background para futuros cambios de wallpaper vía preferences. `churros-welcome` muestra la pantalla de bienvenida.
+`swaybg` carga el wallpaper inicial y es el único gestor de wallpaper del autostart. `churros-portal-start` arranca los xdg-desktop-portals. `waybar` arranca la barra superior. `mako` es el daemon de notificaciones. `churros-welcome` muestra la pantalla de bienvenida.
 
 ---
 
@@ -200,22 +200,22 @@ Tipografía: `JetBrainsMono Nerd Font`, 14px en todo.
 
 ---
 
-# SDDM Autologin
+# greetd Autologin
 
-**Path:** `archiso/airootfs/etc/sddm.conf.d/autologin.conf`
+**Path:** `archiso/airootfs/etc/greetd/config.toml`
 
-```ini
-[Autologin]
-User=churros
-Session=niri
+```toml
+[terminal]
+vt = 1
 
-[General]
-InputMethod=
+[default_session]
+command = "/usr/bin/niri"
+user = "churros"
 ```
 
-SDDM arranca, autologin con el usuario `churros`, y carga la sesión `niri`. Esto permite que el Live entre directamente al escritorio sin pedir credenciales.
+greetd arranca en el VT1, autologin con el usuario `churros`, y lanza Niri directamente. Esto permite que el Live entre al escritorio sin pedir credenciales.
 
-El input method está vacío por defecto. Si añades soporte para otro idioma con caracteres especiales, edita esta línea.
+Tras la instalación, `greetd-config.sh` reescribe este archivo con el usuario creado por Calamares.
 
 ---
 
@@ -256,11 +256,11 @@ Durante el arranque del Live, los servicios y la configuración se aplican en es
 3. `.zlogin` ejecuta `/root/.automated_script.sh`.
 4. `customize_airootfs.sh` se ejecuta (ver `docs/live-services.md`):
    - Crea el usuario `churros` (`users.sh`)
-   - Habilita NetworkManager y SDDM (`services.sh`)
+   - Habilita NetworkManager y greetd (`services.sh`)
    - Copia la configuración de `/etc/skel/` a `/home/churros/` (`desktop.sh`)
    - Limpia la cache de pacman (`cleanup.sh`)
-5. SDDM arranca, autologin como `churros`, carga `niri`.
-6. Niri lee `config.kdl` y ejecuta los `spawn-at-startup` (awww-daemon, waybar, churros-welcome).
+5. greetd arranca, autologin como `churros`, carga `niri`.
+6. Niri lee `config.kdl` y ejecuta los `spawn-at-startup` (swaybg, waybar, churros-welcome, …).
 7. Waybar arranca y carga los popups de los módulos.
 
 ---
@@ -283,7 +283,7 @@ input {
 
 ## Cambiar el wallpaper
 
-Reemplaza `archiso/airootfs/usr/share/churros/wallpapers/default.jpeg` con tu imagen. `awww-daemon` la carga automáticamente al inicio.
+Reemplaza `archiso/airootfs/usr/share/churros/wallpapers/default.jpeg` con tu imagen. `swaybg` la carga automáticamente al inicio.
 
 ## Cambiar los gaps
 
@@ -318,5 +318,4 @@ En `config.jsonc`:
 - Soporte multi-monitor: configuración de outputs pendiente.
 - Perfiles de energía: cambiar decoraciones automáticamente según si el equipo está en batería. La infraestructura (PowerService + power-profile popup + battery subpágina) ya está lista.
 - Integración con `wlogout`: script de salida que se muestra desde el popup de power.
-- Migración de `foot` → `kitty`: docs mencionan Kitty pero el sistema instala foot. Añadir `kitty` a `packages.x86_64` y cambiar spawns de waybar/welcome/niri cuando se decida.
 - Traducciones reales (gettext): hoy `i18n._()` simplemente devuelve la string original (no carga PO files). Definir `po/churros.po` y compilar a `/usr/share/locale/es/LC_MESSAGES/churros.mo`.

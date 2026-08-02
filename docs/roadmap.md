@@ -45,7 +45,7 @@ Dar personalidad propia a la distribución.
 - [ ] Fastfetch personalizado.
 - [ ] Plymouth.
 - [ ] Tema de GRUB.
-- [ ] Tema de SDDM.
+- [ ] Tema / branding de greetd.
 - [ ] Iconos oficiales.
 - [ ] Cursor oficial.
 
@@ -57,10 +57,10 @@ Construir una experiencia de escritorio moderna.
 
 ## Objetivos
 
-- [ ] Hyprland configurado.
+- [ ] Niri configurado.
 - [ ] Waybar.
-- [ ] Kitty.
-- [ ] Rofi.
+- [ ] foot.
+- [ ] Fuzzel.
 - [ ] Wlogout.
 - [ ] Notificaciones.
 - [ ] Centro de control.
