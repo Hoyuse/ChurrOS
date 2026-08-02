@@ -204,8 +204,6 @@ bluez-utils
 brightnessctl
 gsettings-desktop-schemas
 ufw
-xdg-desktop-portal
-xdg-desktop-portal-gtk
 plymouth
 papirus-icon-theme
 adwaita-icon-theme
