@@ -97,7 +97,6 @@ class ThemeService:
 
         for sig_target in (
             ["pkill", "-SIGUSR1", "waybar"],
-            ["pkill", "-SIGUSR1", "kitty"],
         ):
             try:
                 subprocess.run(
