@@ -233,7 +233,7 @@ CSS:
 3. **Cambia el wallpaper automáticamente**:
    - Dark → `/usr/share/churros/wallpapers/fondo1.png`
    - Light → `/usr/share/churros/wallpapers/default.jpeg`
-4. Envía `SIGUSR1` a waybar/kitty para recarga suave.
+4. Envía `SIGUSR2` a waybar (recarga) y a foot `SIGUSR1`/`SIGUSR2` según el modo (oscuro/claro).
 
 `WallpaperService.apply(path)`:
 

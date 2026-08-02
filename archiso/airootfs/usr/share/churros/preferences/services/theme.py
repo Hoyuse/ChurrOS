@@ -95,9 +95,11 @@ class ThemeService:
 
         env = _build_env()
 
+        # waybar: SIGUSR2 recarga, SIGUSR1 solo alterna la visibilidad
+        # foot: SIGUSR1 cambia a [colors-dark], SIGUSR2 a [colors-light]
         for sig_target in (
-            ["pkill", "-SIGUSR1", "waybar"],
-            ["pkill", "-SIGUSR1", "kitty"],
+            ["pkill", "-SIGUSR2", "waybar"],
+            ["pkill", "-SIGUSR1" if dark else "-SIGUSR2", "foot"],
         ):
             try:
                 subprocess.run(
