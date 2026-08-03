@@ -85,11 +85,39 @@ No elimina ningún archivo del código fuente.
 
 ---
 
+## check
+
+Ejecuta las comprobaciones estáticas del repositorio.
+
+```bash
+./churros check
+```
+
+Revisa:
+
+- Sintaxis de los scripts Bash y ShellCheck a nivel de error.
+- Sintaxis de todos los archivos Python.
+- Paquetes duplicados en `archiso/packages.x86_64`.
+- Que los comandos del autostart de Niri existan como binario o como paquete de la ISO.
+- Que los archivos de traducción `po/*.po` compilen.
+
+Termina con código 0 si todo pasa y 1 si algo falla. Los avisos de higiene del repositorio se informan pero no bloquean. No necesita construir la ISO ni permisos de root, y tarda unos segundos.
+
+Es el mismo comando que ejecuta el CI en cada Pull Request (ver `.github/workflows/ci.yml`).
+
+---
+
 # Flujo recomendado
 
 Durante el desarrollo se recomienda utilizar la siguiente secuencia:
 
 Modificar archivos
+
+↓
+
+```bash
+./churros check
+```
 
 ↓
 

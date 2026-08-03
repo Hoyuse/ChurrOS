@@ -89,12 +89,21 @@ Evita trabajar directamente sobre la rama principal cuando el proyecto tenga má
 
 Verifica siempre que:
 
+- Las comprobaciones automáticas pasan.
 - La ISO compila correctamente.
 - El sistema inicia sin errores.
 - La documentación está actualizada.
 - No existen archivos temporales innecesarios.
 
-Ejecuta:
+Ejecuta primero:
+
+```bash
+./churros check
+```
+
+Revisa la sintaxis de los scripts Bash y Python, los paquetes duplicados en `packages.x86_64`, que los comandos del autostart de Niri existan y que las traducciones compilen. Tarda unos segundos y no necesita construir la ISO. Es lo mismo que ejecuta el CI en cada Pull Request, así que si falla aquí, fallará allá.
+
+Si el cambio toca el escritorio, el instalador o el build:
 
 ```bash
 ./churros build

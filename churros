@@ -38,6 +38,7 @@ echo
 printf "  %-12s %s\n" "build"   "Build the ChurrOS ISO"
 printf "  %-12s %s\n" "run"     "Build (if needed) and launch QEMU"
 printf "  %-12s %s\n" "clean"   "Remove build artifacts"
+printf "  %-12s %s\n" "check"   "Run static checks over the repository"
 printf "  %-12s %s\n" "doctor"  "Check development environment"
 printf "  %-12s %s\n" "info"    "Display project information"
 printf "  %-12s %s\n" "version" "Display CLI version"
@@ -51,6 +52,7 @@ echo
 echo "  ./churros build"
 echo "  ./churros run"
 echo "  ./churros run --nokvm"
+echo "  ./churros check"
 echo "  ./churros doctor"
 echo
 }
@@ -69,6 +71,10 @@ run)
 
 clean)
     run_script clean
+    ;;
+
+check)
+    run_script check
     ;;
 
 doctor)

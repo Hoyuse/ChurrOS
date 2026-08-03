@@ -7,6 +7,7 @@
 ./churros run        # Build (if needed) and launch QEMU
 ./churros run --nokvm  # Force software emulation (no /dev/kvm)
 ./churros clean      # Remove work/ and out/ (also runs sudo rm -rf)
+./churros check      # Static checks: bash, python, package list, niri autostart, po files
 ./churros doctor     # Check for mkarchiso, qemu, xorriso, mksquashfs, mcopy, mkinitcpio
 ./scripts/build-calamares.sh  # Build Calamares .pkg.tar.zst from AUR into archiso/packages/
 ./scripts/build-aur.sh        # Build python-pywal + waypaper + yay AUR packages
@@ -28,7 +29,11 @@ A trap on EXIT cleans generated files out of `archiso/airootfs/` (`root/customiz
 
 ## Testing
 
-There are no unit tests. Verification is via the QEMU live ISO:
+There are no unit tests yet. Two layers of verification exist today.
+
+`./churros check` runs the static checks (`scripts/cli/check.sh`): bash syntax, shellcheck at error level, Python syntax, duplicate entries in `packages.x86_64`, commands spawned by niri that resolve to a binary or package, and `msgfmt --check` on `po/*.po`. It needs no ISO build and runs in seconds. The same script runs in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request.
+
+Behaviour on the live system is verified in QEMU:
 
 ```bash
 ./churros run
