@@ -1,0 +1,63 @@
+name: Informe de error
+description: Algo no funciona como debería en ChurrOS.
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por el reporte. Cuanta más información, más fácil reproducir y arreglar.
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Qué ocurre y por qué es un problema.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      description: Lista numerada, lo más concreta posible.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Resultado obtenido
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Entorno
+      options:
+        - ISO live (QEMU / máquina virtual)
+        - ISO live (hardware)
+        - Sistema instalado
+        - Solo host de desarrollo (scripts / docs)
+        - Otro
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión o commit
+      description: Contenido de `VERSION`, etiqueta de release o hash de commit si se conoce.
+      placeholder: "p. ej. 0.1.0 o ecd4adc"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Registros o capturas
+      description: Salida relevante de terminal, `vm_serial.log`, capturas, etc.
+      render: shell
