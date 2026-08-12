@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 
-set -e
-
-show_logo() {
-    "$SCRIPTS_DIR/logo.sh"
-}
+set -euo pipefail
 
 CLI_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPTS_DIR="$CLI_DIR/scripts/cli"
+
+# Explicit public surface. Extra files in scripts/cli/ are not commands.
+PUBLIC_COMMANDS=(
+    build
+    run
+    clean
+    check
+    doctor
+    info
+    version
+    logo
+)
 
 run_script() {
     local name="$1"
@@ -20,89 +28,76 @@ run_script() {
     bash "$script" "$@"
 }
 
+is_public_command() {
+    local needle="$1"
+    local cmd
+    for cmd in "${PUBLIC_COMMANDS[@]}"; do
+        if [ "$cmd" = "$needle" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+show_logo() {
+    "$SCRIPTS_DIR/logo.sh"
+}
+
 show_help() {
+    show_logo
 
-show_logo
+    echo "ChurrOS Development CLI"
+    echo "Version $(cat "$CLI_DIR/VERSION")"
+    echo
 
-echo "ChurrOS Development CLI"
-echo "Version $(cat "$CLI_DIR/VERSION")"
-echo
+    echo "Usage:"
+    echo "  ./churros <command> [options]"
+    echo
 
-echo "Usage:"
-echo "  ./churros <command>"
-echo
+    echo "Available commands:"
+    echo
 
-echo "Available commands:"
-echo
+    printf "  %-12s %s\n" "build"   "Build the ChurrOS ISO"
+    printf "  %-12s %s\n" "run"     "Build (if needed) and launch QEMU"
+    printf "  %-12s %s\n" "clean"   "Remove build artifacts"
+    printf "  %-12s %s\n" "check"   "Run static checks over the repository"
+    printf "  %-12s %s\n" "doctor"  "Check development environment"
+    printf "  %-12s %s\n" "info"    "Display project information"
+    printf "  %-12s %s\n" "version" "Display CLI version"
+    printf "  %-12s %s\n" "logo"    "Print ChurrOS logo"
 
-printf "  %-12s %s\n" "build"   "Build the ChurrOS ISO"
-printf "  %-12s %s\n" "run"     "Build (if needed) and launch QEMU"
-printf "  %-12s %s\n" "clean"   "Remove build artifacts"
-printf "  %-12s %s\n" "check"   "Run static checks over the repository"
-printf "  %-12s %s\n" "doctor"  "Check development environment"
-printf "  %-12s %s\n" "info"    "Display project information"
-printf "  %-12s %s\n" "version" "Display CLI version"
-printf "  %-12s %s\n" "logo"    "Print ChurrOS logo"
+    echo
 
-echo
+    echo "Examples:"
+    echo
 
-echo "Examples:"
-echo
-
-echo "  ./churros build"
-echo "  ./churros run"
-echo "  ./churros run --nokvm"
-echo "  ./churros run --fresh"
-echo "  ./churros check"
-echo "  ./churros doctor"
-echo
+    echo "  ./churros build"
+    echo "  ./churros run"
+    echo "  ./churros run --nokvm"
+    echo "  ./churros run --fresh"
+    echo "  ./churros run --clean"
+    echo "  ./churros check"
+    echo "  ./churros doctor"
+    echo
 }
 
 cd "$CLI_DIR"
 
-case "$1" in
+command="${1-}"
 
-build)
-    run_script build
-    ;;
-
-run)
-    run_script run
-    ;;
-
-clean)
-    run_script clean
-    ;;
-
-check)
-    run_script check
-    ;;
-
-doctor)
-    run_script doctor
-    ;;
-
-info)
-    run_script info
-    ;;
-
-version)
-    run_script version
-    ;;
-
-logo)
-    run_script logo
-    ;;
-
-""|-h|--help|help)
-    show_help
-    ;;
-
-*)
-    echo
-    echo "Unknown command: $1"
-    echo
-    show_help
-    exit 1
-    ;;
+case "$command" in
+    ""|-h|--help|help)
+        show_help
+        ;;
+    *)
+        if is_public_command "$command"; then
+            run_script "$@"
+        else
+            echo
+            echo "Unknown command: $command"
+            echo
+            show_help
+            exit 1
+        fi
+        ;;
 esac

@@ -23,14 +23,17 @@ En lugar de recordar comandos largos de ArchISO o QEMU, todo se centraliza en:
 # Uso
 
 ```bash
-./churros <comando>
+./churros <comando> [opciones]
 ```
 
 Ejemplo:
 
 ```bash
 ./churros build
+./churros run --fresh
 ```
+
+Los argumentos posteriores al subcomando se reenvían al script `scripts/cli/<comando>.sh`. Un archivo `.sh` en ese directorio no es un comando público hasta que se añade a la lista explícita del dispatcher `churros`.
 
 ---
 
@@ -60,9 +63,18 @@ Construye la ISO (si es necesario) y la inicia en una máquina virtual utilizand
 
 ```bash
 ./churros run
+./churros run --nokvm
+./churros run --fresh
+./churros run --clean
 ```
 
 Este comando permite probar rápidamente los cambios realizados sin necesidad de crear una máquina virtual manualmente.
+
+Flags opcionales (detalle en `docs/vm.md`):
+
+- `--nokvm` — emulación por software, sin KVM.
+- `--fresh` — resetea `vm/OVMF_VARS.fd` para arrancar desde el CD-ROM.
+- `--clean` — borra el disco de la VM y las variables EFI antes de arrancar.
 
 ---
 
@@ -104,6 +116,46 @@ Revisa:
 Termina con código 0 si todo pasa y 1 si algo falla. Los avisos de higiene del repositorio se informan pero no bloquean. No necesita construir la ISO ni permisos de root, y tarda unos segundos.
 
 Es el mismo comando que ejecuta el CI en cada Pull Request (ver `.github/workflows/ci.yml`).
+
+---
+
+## doctor
+
+Comprueba que las herramientas del entorno de desarrollo estén instaladas (`mkarchiso`, `qemu-system-x86_64`, `xorriso`, etc.).
+
+```bash
+./churros doctor
+```
+
+---
+
+## info
+
+Muestra información del proyecto y del entorno (versión, rama, arquitectura y directorios).
+
+```bash
+./churros info
+```
+
+---
+
+## version
+
+Muestra la versión actual de la CLI.
+
+```bash
+./churros version
+```
+
+---
+
+## logo
+
+Muestra el logotipo oficial de ChurrOS en la terminal.
+
+```bash
+./churros logo
+```
 
 ---
 
@@ -149,7 +201,7 @@ Push
 
 La CLI está diseñada para crecer junto con el proyecto.
 
-Cada nueva funcionalidad de desarrollo debe añadirse como un nuevo comando.
+Cada nueva funcionalidad de desarrollo debe añadirse como un nuevo comando: un script `scripts/cli/<comando>.sh` y una entrada en la lista explícita de comandos públicos del dispatcher `churros`. Un `.sh` extra en ese directorio no queda expuesto solo por existir.
 
 Esto evita depender de múltiples scripts independientes.
 
@@ -158,21 +210,6 @@ Esto evita depender de múltiples scripts independientes.
 # Comandos planificados
 
 Las siguientes funciones están previstas para futuras versiones.
-
-## doctor
-
-```bash
-./churros doctor
-```
-
-Verificará automáticamente:
-
-- Dependencias instaladas.
-- Estado del entorno.
-- Versiones requeridas.
-- Configuración de virtualización.
-
----
 
 ## release
 
@@ -218,26 +255,6 @@ Actualizará las dependencias del proyecto.
 ```
 
 Abrirá la documentación oficial.
-
----
-
-## version
-
-```bash
-./churros version
-```
-
-Mostrará la versión actual del proyecto.
-
----
-
-## logo
-
-```bash
-./churros logo
-```
-
-Mostrará el logotipo oficial de ChurrOS en la terminal.
 
 ---
 
