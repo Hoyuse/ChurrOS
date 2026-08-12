@@ -1,0 +1,33 @@
+name: Propuesta de mejora
+description: Idea o cambio de comportamiento para discutir antes de implementar.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Para cambios grandes, conviene discutirlos aquí antes de abrir un PR.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o necesidad
+      description: Qué falta o qué se quiere mejorar.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propuesta
+      description: Cómo se imagina la solución (a alto nivel).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Otras opciones o por qué esta es preferible.
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Enlaces, capturas, issues relacionados, etc.
