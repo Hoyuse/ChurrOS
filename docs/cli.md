@@ -110,7 +110,10 @@ Revisa:
 - Sintaxis de los scripts Bash y ShellCheck a nivel de error.
 - Sintaxis de todos los archivos Python.
 - Paquetes duplicados en `archiso/packages.x86_64`.
-- Que los comandos del autostart de Niri existan como binario o como paquete de la ISO.
+- Que los comandos del autostart de Niri existan como binario, crate Rust desplegable o paquete de la ISO.
+- Que `Exec=` / `TryExec=` de los `.desktop` resuelvan, y que las rutas absolutas existan en airootfs.
+- Orden crítico de Calamares y que cada instancia `shellprocess` tenga su `.conf`.
+- Que los paquetes de `scripts/build-aur.sh` figuren en `netinstall.yaml`.
 - Que los archivos de traducción `po/*.po` compilen.
 
 Termina con código 0 si todo pasa y 1 si algo falla. Los avisos de higiene del repositorio se informan pero no bloquean. No necesita construir la ISO ni permisos de root, y tarda unos segundos.

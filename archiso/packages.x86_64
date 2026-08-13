@@ -216,6 +216,7 @@ fastfetch
 
 # Multimedia base
 ffmpeg
+mpv
 gst-plugins-good
 gst-plugins-bad
 gst-plugins-ugly
