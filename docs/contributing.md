@@ -81,7 +81,7 @@ git checkout -b feature/installer
 git checkout -b fix/build-system
 ```
 
-Evita trabajar directamente sobre la rama principal cuando el proyecto tenga más colaboradores.
+No trabajar directamente sobre `main`. Cada cambio va en su rama y entra por pull request.
 
 ---
 
