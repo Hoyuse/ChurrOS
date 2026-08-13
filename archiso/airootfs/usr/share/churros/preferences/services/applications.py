@@ -39,7 +39,7 @@ class ApplicationsService:
     @staticmethod
     def store():
 
-        return "Pacman"
+        return "Bazaar"
 
     @staticmethod
     def auto_updates():

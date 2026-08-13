@@ -132,7 +132,7 @@ binds {
     Mod+C { spawn "churros-control-center"; }
     Mod+P { spawn "churros-settings"; }
     Mod+W { spawn "churros-welcome"; }
-    Mod+S { spawn "plasma-discover"; }
+    Mod+S { spawn "bazaar"; }
     Mod+E { spawn "thunar"; }
     Mod+Shift+E { spawn "churros-popup" "power"; }
     Mod+Shift+N { spawn "churros-popup" "network"; }

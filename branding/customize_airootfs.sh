@@ -93,37 +93,6 @@ if ls /root/packages/*.pkg.tar.zst 1>/dev/null 2>&1; then
     echo "  (skipped for live ISO — /root/packages no existe en runtime)"
 fi
 
-#
-# ChurroStore / Discover theme
-#
-
-echo "Applying ChurroOS theme to KDE/Discover..."
-
-if id "churros" &>/dev/null; then
-
-    USER_HOME="/home/churros"
-    mkdir -p "$USER_HOME/.config"
-
-    cat > "$USER_HOME/.config/kdeglobals" << 'KDEGLOBALS'
-[ColorScheme]
-ColorScheme=ChurroOSDark
-name=ChurroOSDark
-
-[General]
-ColorScheme=ChurroOSDark
-Name=Churros Dark
-font=Inter,10,-1,5,50,0,0,0,0,0
-fixed=Hack Nerd Font,9,-1,5,50,0,0,0,0,0
-
-[Icons]
-Theme=Papirus-Dark
-KDEGLOBALS
-
-    chown -R churros:churros "$USER_HOME/.config" 2>/dev/null || true
-
-    echo "✓ Theme applied to churros user"
-fi
-
 echo "Cleaning..."
 bash /root/scripts/cleanup.sh
 

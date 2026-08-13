@@ -81,6 +81,7 @@ layout {
 | `SUPER + C` | Abre el centro de control |
 | `SUPER + P` | Abre preferencias (churros-settings) |
 | `SUPER + W` | Abre churros-welcome |
+| `SUPER + S` | Abre Bazaar (tienda Flatpak) |
 | `SUPER + V` | Toggle ventana flotante |
 | `SUPER + SHIFT + V` | Cambiar foco entre floating y tiling |
 | `SUPER + O` | Toggle overview |
