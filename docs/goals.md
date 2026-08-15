@@ -1,30 +1,28 @@
-#Objetivo de ChurrOS
+# Objetivo de ChurrOS
 
-## Filosofia
+## Filosofía
 
-Churros es una distribucion basada en Arch Linux enfocada en:
+ChurrOS es una distribución basada en Arch Linux enfocada en:
 
 - Simplicidad.
 - Alto rendimiento.
-- Diseno moderno.
+- Diseño moderno.
 - Niri listo para usar.
-- Configuracion minima despues de instalar.
+- Configuración mínima después de instalar.
 
-## Publico objetivo
+## Público objetivo
 
 - Usuarios nuevos que quieran Arch sin configurarlo desde cero.
-- Desarroladores.
-- Gamers
-- Personas que quieran un escritorio bonito desde el primer inicio.
+- Desarrolladores.
+- Personas que quieran un escritorio cuidado desde el primer inicio.
 
-## Caracteristicas
+## Características
 
-- Instalador grafico.
+- Instalador gráfico (Calamares).
 - Niri por defecto.
-- Quickshell.
+- Waybar, foot, Fuzzel y Mako.
 - Tema propio.
 - Wallpapers propios.
-- greetd con autologin.
-- Drivers automaticos.
-- Soporte para NVIDIA y AMD
-
+- greetd con autologin en la sesión Live.
+- Apps oficiales en Rust (welcome, settings, control-center, popups).
+- Soporte para NVIDIA y AMD.

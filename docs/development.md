@@ -23,19 +23,25 @@ Todo cambio importante debe estar documentado y ser fácilmente reproducible.
 
 El ciclo de desarrollo recomendado es el siguiente:
 
+Crear una rama desde `origin/main`
+
+↓
+
 Modificar código
 
 ↓
 
-Compilar
+```bash
+./churros check
+```
+
+↓
 
 ```bash
 ./churros build
 ```
 
 ↓
-
-Probar
 
 ```bash
 ./churros run
@@ -47,15 +53,13 @@ Verificar funcionamiento
 
 ↓
 
-Realizar commit
+Commit (un cambio coherente)
 
 ↓
 
-Enviar cambios
+Pull request hacia `main`
 
-```bash
-git push
-```
+No se trabaja ni se empuja directo a `main`.
 
 ---
 
@@ -63,12 +67,10 @@ git push
 
 Antes de agregar nuevos archivos, verifica que pertenezcan al directorio correcto.
 
-Ejemplos:
-
-Configuraciones
+Apps oficiales (Rust)
 
 ```
-configs/
+rust/
 ```
 
 Documentación
@@ -77,19 +79,25 @@ Documentación
 docs/
 ```
 
-Recursos gráficos
+Identidad visual y script live
 
 ```
 branding/
 ```
 
-Scripts
+Calamares
+
+```
+installer/
+```
+
+Scripts y CLI
 
 ```
 scripts/
 ```
 
-Perfil del sistema
+Perfil del sistema Live
 
 ```
 archiso/
@@ -101,19 +109,19 @@ archiso/
 
 Los commits deben ser pequeños y representar una única modificación lógica.
 
-Ejemplos:
+Prefijo corto en inglés y el resto en español:
 
 ```
-feat: add Fastfetch branding
+feat: añadir branding de Fastfetch
 
-fix: correct build script
+fix: corregir el script de build
 
-docs: update branding guide
+docs: actualizar la guía de branding
 
-refactor: simplify CLI
+refactor: simplificar la CLI
 ```
 
-Evita realizar commits con múltiples cambios no relacionados.
+Evita commits con varios cambios no relacionados.
 
 ---
 
@@ -121,55 +129,39 @@ Evita realizar commits con múltiples cambios no relacionados.
 
 Toda nueva funcionalidad debe incluir su documentación correspondiente.
 
-Ejemplos:
-
-Nuevo comando
-
-↓
-
-Actualizar
-
-```
-docs/cli.md
-```
-
-Nuevo proceso de compilación
-
-↓
-
-Actualizar
-
-```
-docs/build-system.md
-```
-
-Nueva identidad visual
-
-↓
-
-Actualizar
-
-```
-docs/branding.md
-```
+| Cambio | Documento |
+|--------|-----------|
+| Nuevo comando CLI | `docs/cli.md` |
+| Proceso de compilación | `docs/build-system.md` |
+| App oficial | `docs/apps.md` (y el doc dedicado si existe) |
+| Identidad visual | `docs/branding.md` |
 
 ---
 
 # Pruebas
 
-Antes de realizar un commit se recomienda ejecutar:
+Antes de un commit de código:
+
+```bash
+./churros check
+```
+
+Si el cambio toca el escritorio, el instalador o el build:
 
 ```bash
 ./churros build
-```
-
-y posteriormente:
-
-```bash
 ./churros run
 ```
 
-La ISO debe iniciar correctamente y los cambios deben verificarse manualmente.
+La ISO debe iniciar correctamente y los cambios deben verificarse a mano. No hay suite de tests de las apps GTK todavía.
+
+Para iterar una app Rust sin reconstruir la ISO:
+
+```bash
+cargo build --release --manifest-path rust/Cargo.toml
+```
+
+El binario queda en `rust/target/release/<nombre>`.
 
 ---
 
@@ -185,17 +177,9 @@ La ISO debe iniciar correctamente y los cambios deben verificarse manualmente.
 
 # Ramas
 
-Actualmente el proyecto utiliza las siguientes ramas:
+`main` es la rama estable. Cada cambio va en su propia rama (`fix/…`, `feat/…`, `docs/…`) y entra por pull request.
 
-main
-
-Versión estable.
-
-archiso
-
-Desarrollo activo.
-
-En el futuro podrán añadirse ramas específicas para nuevas funcionalidades.
+No reutilizar ramas ya fusionadas. Partir siempre de `origin/main` actualizado.
 
 ---
 

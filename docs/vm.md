@@ -62,7 +62,7 @@ El script `scripts/cli/run.sh` lanza QEMU con los siguientes parámetros:
 
 ## UEFI
 
-Se usa OVMF (Open Virtual Machine Firmware) para que la VM arranque en modo UEFI, igual que la mayoría de PCs modernos. Esto es importante porque la ISO de ChurrOS incluye entradas systemd-boot que solo funcionan en UEFI.
+Se usa OVMF (Open Virtual Machine Firmware) para que la VM arranque en modo UEFI, igual que la mayoría de PCs modernos. En UEFI la ISO usa GRUB (`uefi.grub`); en BIOS legacy usa Syslinux.
 
 Los dos archivos de firmware:
 

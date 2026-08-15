@@ -8,11 +8,9 @@ Esta guía explica cómo preparar el sistema, obtener el código fuente del proy
 
 # Requisitos
 
-Actualmente ChurrOS está pensado para desarrollarse sobre Arch Linux o una distribución basada en Arch.
+ChurrOS está pensado para desarrollarse sobre Arch Linux o una distribución basada en Arch.
 
 ## Paquetes necesarios
-
-Instala los siguientes paquetes:
 
 ```bash
 sudo pacman -S \
@@ -20,11 +18,13 @@ sudo pacman -S \
     git \
     qemu-full \
     edk2-ovmf \
+    rust \
+    cargo \
     virt-manager \
     swtpm
 ```
 
-Algunos paquetes son opcionales dependiendo del flujo de trabajo.
+`./churros build` puede instalar `rust`/`cargo` si faltan, pero conviene tenerlos de antemano.
 
 | Paquete | Obligatorio |
 |----------|-------------|
@@ -32,8 +32,15 @@ Algunos paquetes son opcionales dependiendo del flujo de trabajo.
 | git | ✅ |
 | qemu-full | ✅ |
 | edk2-ovmf | ✅ |
+| rust / cargo | ✅ (compila las apps oficiales) |
 | virt-manager | Opcional |
 | swtpm | Opcional |
+
+Comprueba el entorno con:
+
+```bash
+./churros doctor
+```
 
 ---
 
@@ -45,6 +52,8 @@ git clone https://github.com/Hoyuse/ChurrOS.git
 cd ChurrOS
 ```
 
+No se trabaja directo en `main`. Crea una rama por cambio y abre un pull request.
+
 ---
 
 # Estructura inicial
@@ -55,39 +64,39 @@ Después de clonar el proyecto encontrarás una estructura similar a la siguient
 ChurrOS
 ├── archiso/
 ├── branding/
-├── configs/
 ├── docs/
 ├── installer/
+├── po/
+├── rust/
 ├── scripts/
-├── out/
-├── work/
 ├── churros
+├── VERSION
 └── README.md
 ```
+
+`out/`, `work/` y `vm/` aparecen al construir o ejecutar la ISO.
 
 ---
 
 # Compilar la ISO
 
-Para construir una nueva imagen de ChurrOS simplemente ejecuta:
-
 ```bash
 ./churros build
 ```
 
-Este comando realizará automáticamente las siguientes tareas:
+Este comando:
 
-1. Limpiar compilaciones anteriores.
-2. Preparar el entorno de trabajo.
-3. Ejecutar ArchISO.
-4. Generar la imagen ISO.
-5. Guardarla dentro de la carpeta `out/`.
+1. Copia branding y tema GRUB al airootfs.
+2. Construye paquetes AUR locales si faltan.
+3. Compila las apps Rust y las deja en `usr/bin/`.
+4. Ejecuta ArchISO (`mkarchiso`).
+5. Deja la ISO en `out/`.
+
+Hace falta `sudo` para `mkarchiso`.
 
 ---
 
 # Ejecutar la ISO
-
-Para probar la distribución rápidamente:
 
 ```bash
 ./churros run
@@ -97,44 +106,39 @@ Este comando:
 
 - Construye la ISO si es necesario.
 - Inicia una máquina virtual mediante QEMU.
-- Arranca directamente desde la última ISO generada.
+- Arranca desde la última ISO generada.
 
-No modifica tu sistema anfitrión.
+No modifica el sistema anfitrión. Flags útiles: `--fresh` (UEFI limpia), `--nokvm`, `--clean`. Detalle en `docs/vm.md`.
 
 ---
 
 # Limpiar archivos temporales
 
-Para eliminar todos los archivos generados durante la compilación:
-
 ```bash
 ./churros clean
 ```
 
-Este comando elimina:
-
-- work/
-- out/
+Elimina `work/` y `out/`.
 
 ---
 
 # Flujo de trabajo recomendado
 
-Durante el desarrollo se recomienda seguir siempre este flujo:
-
 Modificar archivos
 
 ↓
 
-Compilar
+```bash
+./churros check
+```
+
+↓
 
 ```bash
 ./churros build
 ```
 
 ↓
-
-Probar
 
 ```bash
 ./churros run
@@ -146,25 +150,20 @@ Verificar cambios
 
 ↓
 
-Realizar commit
-
-↓
-
-Push al repositorio
+Commit en una rama y pull request
 
 ---
 
 # Primeros cambios recomendados
 
-Si acabas de comenzar a contribuir al proyecto, puedes empezar modificando:
+Si acabas de comenzar a contribuir, puedes empezar por:
 
-- Branding
 - Documentación
-- Configuración del escritorio
-- Fastfetch
-- Wallpapers
+- CLI (`scripts/cli/`)
+- Apps en `rust/`
+- Configuración del escritorio (con cuidado: el skel temático no se toca salvo bugs)
 
-Estos componentes permiten familiarizarse con la estructura del proyecto sin afectar partes críticas del sistema.
+Estos componentes permiten familiarizarse con la estructura sin tocar branding ni el instalador.
 
 ---
 
@@ -172,40 +171,35 @@ Estos componentes permiten familiarizarse con la estructura del proyecto sin afe
 
 ## La ISO no se genera
 
-Comprueba que `archiso` esté instalado correctamente.
+Comprueba que `archiso` esté instalado.
 
 ```bash
 pacman -Q archiso
 ```
 
----
-
 ## QEMU no inicia
-
-Verifica que los paquetes necesarios estén instalados.
 
 ```bash
 qemu-system-x86_64 --version
 ```
 
----
+## Falla la compilación Rust
+
+```bash
+pacman -Q rust cargo
+cargo build --release --manifest-path rust/Cargo.toml
+```
 
 ## No aparece la ISO
 
-Comprueba el contenido de la carpeta:
-
 ```bash
-out/
+ls out/
 ```
 
-Si está vacía, ejecuta nuevamente:
-
-```bash
-./churros build
-```
+Si está vacía, ejecuta de nuevo `./churros build`.
 
 ---
 
 # Siguiente paso
 
-Una vez que puedas generar correctamente una ISO de ChurrOS, continúa con la documentación de **Project Structure**, donde se explica en detalle la función de cada directorio del proyecto.
+Cuando puedas generar una ISO, continúa con **Project Structure** (`docs/project-structure.md`) y **Apps** (`docs/apps.md`).

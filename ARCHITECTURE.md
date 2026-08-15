@@ -14,7 +14,15 @@ Cada directorio tiene una única responsabilidad.
 archiso/
 ```
 
-Contiene el perfil de ArchISO utilizado para generar la imagen.
+Perfil de ArchISO: paquetes, airootfs, cargadores de la ISO.
+
+---
+
+```
+rust/
+```
+
+Apps oficiales (gtk4-rs + libadwaita) y la librería `churros_services`. Los binarios se despliegan en el airootfs al construir.
 
 ---
 
@@ -22,13 +30,19 @@ Contiene el perfil de ArchISO utilizado para generar la imagen.
 branding/
 ```
 
-Contiene toda la identidad visual del proyecto.
+Identidad visual y `customize_airootfs.sh` (se copia al Live en cada build).
 
-- Logos
-- Wallpapers
-- Iconos
-- Colores
-- Tipografía
+- Archivos de sistema (`os-release`, issue, motd)
+- Tema GRUB
+- Guías de color, tipografía, logo y mascota
+
+---
+
+```
+installer/
+```
+
+Configuración de Calamares (`settings.conf`, módulos, `apply-calamares.sh`).
 
 ---
 
@@ -44,17 +58,31 @@ Documentación oficial.
 scripts/
 ```
 
-Scripts auxiliares.
-
-Nunca deberán contener recursos del sistema.
+CLI (`./churros`) y scripts de build. Nunca deberán contener recursos del sistema instalado.
 
 ---
 
 ```
-installer/
+po/
 ```
 
-Código del futuro instalador gráfico.
+Traducciones gettext.
+
+---
+
+# Stack del escritorio
+
+| Pieza | Implementación |
+|-------|----------------|
+| Compositor | Niri |
+| Display manager | greetd (autologin en Live) |
+| Terminal | foot |
+| Launcher | Fuzzel |
+| Panel | Waybar |
+| Notificaciones | Mako |
+| Audio | PipeWire + WirePlumber |
+| Instalador | Calamares |
+| Arranque ISO | GRUB (UEFI) + Syslinux (BIOS) |
 
 ---
 
@@ -75,7 +103,7 @@ Esto facilita:
 
 La arquitectura podrá cambiar cuando sea necesario.
 
-Sin embargo, cualquier modificación importante deberá mantener la simplicidad del proyecto.
+Cualquier modificación importante deberá mantener la simplicidad del proyecto.
 
 ---
 

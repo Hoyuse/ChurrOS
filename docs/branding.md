@@ -36,17 +36,21 @@ Todo el branding se encuentra dentro del directorio:
 branding/
 ```
 
-La estructura recomendada es:
+La estructura actual es:
 
 ```text
 branding
-├── files/
-├── logos/
-├── wallpapers/
-├── fastfetch/
-├── plymouth/
-└── installer/
+├── customize_airootfs.sh
+├── files/              # os-release, issue, motd
+├── grub-theme/         # tema del GRUB instalado
+├── colors.md
+├── typography.md
+├── logo-guidelines.md
+├── mascot.md
+└── ui-guidelines.md
 ```
+
+Los wallpapers, logos de escritorio y Fastfetch viven en `archiso/airootfs/usr/share/churros/`. Plymouth y un tema propio de greetd aún no están. El branding de Calamares está en `installer/calamares/branding/churros/` (no se edita salvo que el cambio lo pida).
 
 ---
 
@@ -136,50 +140,27 @@ Debe contener la identidad oficial de ChurrOS.
 
 # Logos
 
-La carpeta:
-
-```text
-branding/logos/
-```
-
-almacenará los logotipos oficiales de la distribución.
-
-Versiones recomendadas:
-
-- SVG
-- PNG
-- Blanco
-- Negro
-- Monocromático
+Las guías están en `branding/logo-guidelines.md`. Los SVG/PNG que usa el escritorio viven en `archiso/airootfs/usr/share/churros/` (welcome, control-center, etc.).
 
 ---
 
 # Wallpapers
 
-Todos los fondos oficiales deberán almacenarse en:
+Los fondos oficiales están en:
 
 ```text
-branding/wallpapers/
+archiso/airootfs/usr/share/churros/wallpapers/
 ```
-
-Esto permitirá reutilizarlos durante la instalación del sistema.
 
 ---
 
 # Fastfetch
 
-Las configuraciones oficiales de Fastfetch vivirán en:
+La config live está en:
 
 ```text
-branding/fastfetch/
+archiso/airootfs/usr/share/churros/defaults/fastfetch/
 ```
-
-Aquí se definirán:
-
-- logo
-- colores
-- información mostrada
-- formato
 
 ---
 
@@ -197,18 +178,7 @@ Permitirá personalizar completamente la animación de arranque.
 
 # Instalador
 
-Los recursos gráficos del instalador gráfico vivirán en:
-
-```text
-branding/installer/
-```
-
-Por ejemplo:
-
-- iconos
-- ilustraciones
-- fondos
-- logotipo
+El branding de Calamares está en `installer/calamares/branding/churros/` (slideshow, QSS). No se toca salvo que el cambio lo pida explícitamente.
 
 ---
 
@@ -228,11 +198,9 @@ Este script reemplaza los archivos originales del sistema por los personalizados
 
 # Buenas prácticas
 
-Se recomienda mantener todos los recursos gráficos centralizados dentro de la carpeta branding.
+Las guías y el script live viven en `branding/`. Los assets que el escritorio carga en runtime viven en `archiso/airootfs/usr/share/churros/`.
 
-No almacenar imágenes o logotipos dentro de otros directorios del proyecto.
-
-Esto facilita el mantenimiento y futuras modificaciones de la identidad visual.
+No mezclar scripts de build con recursos gráficos. No editar las copias generadas en el airootfs (`root/customize_airootfs.sh`, `root/branding/`).
 
 ---
 
@@ -240,16 +208,12 @@ Esto facilita el mantenimiento y futuras modificaciones de la identidad visual.
 
 El sistema de branding evolucionará para abarcar toda la experiencia del usuario.
 
-En futuras versiones incluirá:
+Ya cubre Fastfetch, wallpapers, iconos, cursor, tema GRUB e instalador Calamares.
 
-- Fastfetch personalizado.
+Sigue pendiente:
+
 - Plymouth.
-- Tema de GRUB.
 - Tema / branding de greetd.
-- Wallpapers oficiales.
-- Iconos.
-- Cursor.
 - Sonidos del sistema.
-- Instalador gráfico.
 
-El objetivo final es que toda la experiencia visual de ChurrOS sea consistente desde el arranque hasta el escritorio.
+El objetivo es que la experiencia visual sea consistente desde el arranque hasta el escritorio.

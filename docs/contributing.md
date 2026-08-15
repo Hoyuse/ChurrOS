@@ -101,7 +101,7 @@ Ejecuta primero:
 ./churros check
 ```
 
-Revisa la sintaxis de los scripts Bash y Python, los paquetes duplicados en `packages.x86_64`, que los comandos del autostart de Niri existan y que las traducciones compilen. Tarda unos segundos y no necesita construir la ISO. Es lo mismo que ejecuta el CI en cada Pull Request, así que si falla aquí, fallará allá.
+Revisa sintaxis Bash y Python, paquetes duplicados, comandos del autostart de Niri, entradas `.desktop`, orden de Calamares, extras AUR en `netinstall.yaml` y que las traducciones compilen. Tarda unos segundos y no necesita construir la ISO. Es lo mismo que ejecuta el CI en cada Pull Request, así que si falla aquí, fallará allá.
 
 Si el cambio toca el escritorio, el instalador o el build:
 
@@ -124,16 +124,16 @@ Se recomienda utilizar mensajes descriptivos.
 Ejemplos:
 
 ```text
-feat: add Fastfetch branding
+feat: añadir branding de Fastfetch
 
-fix: correct build script
+fix: corregir el script de build
 
-docs: update installation guide
+docs: actualizar la guía de instalación
 
-refactor: simplify CLI
-
-style: improve terminal banner
+refactor: simplificar la CLI
 ```
+
+Prefijo corto en inglés (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`) y el resto en español.
 
 Evita mensajes como:
 
@@ -174,19 +174,25 @@ Ejemplo:
 branding/
 ```
 
-solo contiene recursos relacionados con la identidad visual.
+identidad visual y script live.
+
+```
+rust/
+```
+
+apps oficiales (gtk4-rs).
 
 ```
 scripts/
 ```
 
-solo contiene scripts.
+CLI y scripts de build.
 
 ```
 docs/
 ```
 
-solo contiene documentación.
+documentación.
 
 Mantener una estructura limpia facilita el mantenimiento del proyecto.
 

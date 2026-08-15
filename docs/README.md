@@ -60,13 +60,13 @@ Cada documento aborda un aspecto específico del proyecto.
 | Branding | Personalización e identidad de ChurrOS. |
 | CLI | Herramienta de desarrollo `./churros`. |
 | Development | Flujo de trabajo recomendado para desarrollar ChurrOS. |
-| Apps | Apps oficiales GTK4 (welcome, control-center, settings, fuzzel). |
+| Apps | Apps oficiales GTK4 en Rust (welcome, control-center, settings, popups). |
 | Popups | Sistema de popups (audio, battery, bluetooth, brightness, network, power). |
 | Preferences | App `churros-settings` — tema, accent, fuentes, cursor, wallpaper, power, etc. |
 | Services | Wrappers de servicios del sistema (wpctl, upower, nmcli, brightnessctl, etc). |
 | Desktop Config | Configuración del escritorio live (Niri, Waybar, greetd, usuario). |
 | Live Services | Servicios systemd y hooks del Live ISO. |
-| Boot | Sistema de arranque (GRUB, systemd-boot, Syslinux). |
+| Boot | Sistema de arranque (GRUB UEFI + Syslinux BIOS). |
 | VM | Máquina virtual de desarrollo con QEMU/KVM. |
 | Release | Proceso para generar una versión oficial. |
 | Roadmap | Estado actual y objetivos futuros del proyecto. |

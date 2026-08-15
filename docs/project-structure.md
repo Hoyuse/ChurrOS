@@ -15,14 +15,18 @@ ChurrOS
 ├── docs/
 ├── installer/
 ├── po/
+├── rust/
 ├── scripts/
 ├── out/
 ├── vm/
 ├── work/
 ├── churros
+├── VERSION
 ├── LICENSE
 └── README.md
 ```
+
+`out/`, `vm/` y `work/` no forman parte del código fuente: se generan al construir o probar.
 
 ---
 
@@ -30,128 +34,110 @@ ChurrOS
 
 ## archiso/
 
-Contiene el perfil de ArchISO utilizado para construir la distribución.
+Perfil de ArchISO usado para construir la ISO Live.
 
-Aquí se encuentra todo lo relacionado con la imagen Live de ChurrOS.
+Incluye:
 
-Ejemplos:
-
-- paquetes
-- configuración del sistema
-- archivos del Live ISO
-- servicios
-- hooks
+- `packages.x86_64` — lista de paquetes
+- `profiledef.sh` — metadatos, bootmodes (`bios.syslinux` + `uefi.grub`) y permisos
+- `airootfs/` — overlay del sistema Live (skel, servicios, assets)
+- `grub/` y `syslinux/` — cargadores de la ISO
+- `packages/` — repo pacman local (Calamares y extras AUR construidos en el host)
 
 Es el corazón de la distribución.
 
 ---
 
+## rust/
+
+Workspace Cargo de las apps oficiales (gtk4-rs + libadwaita):
+
+| Crate | Binario | `deploy` |
+|-------|---------|----------|
+| `churros-welcome` | `churros-welcome` | sí |
+| `preferences` | `churros-settings` | sí |
+| `control-center` | `churros-control-center` | sí |
+| `popups` | `churros-popup` | sí |
+| `services` | librería `churros_services` | no (la usan las demás) |
+
+`scripts/build-rust.sh` (lo invoca `./churros build`) compila en release y copia los binarios con `deploy = true` a `archiso/airootfs/usr/bin/`. Esos binarios no se versionan. Los assets de runtime viven en `archiso/airootfs/usr/share/churros/<app>/`.
+
+---
+
 ## branding/
 
-Contiene todos los recursos relacionados con la identidad de ChurrOS.
-
-Ejemplos:
+Identidad de la distribución y script que se aplica al arrancar el Live.
 
 ```text
 branding
-├── files/
-├── logos/
-├── wallpapers/
-└── fastfetch/
+├── customize_airootfs.sh
+├── files/          # os-release, issue, motd
+├── grub-theme/     # tema del GRUB instalado
+├── colors.md
+├── typography.md
+├── logo-guidelines.md
+├── mascot.md
+└── ui-guidelines.md
 ```
 
-Aquí se almacenan elementos como:
+`customize_airootfs.sh` se copia al airootfs en cada build; editar la copia en `archiso/airootfs/root/` no tiene efecto.
 
-- issue
-- motd
-- os-release
-- hostname
-- logos
-- fondos de pantalla
-- fastfetch
-- futuras imágenes del instalador
-
-Todo lo relacionado con la identidad visual debe vivir aquí.
+Los wallpapers y el resto de assets de escritorio viven en `archiso/airootfs/usr/share/churros/`, no en carpetas `branding/wallpapers/` o `branding/logos/`.
 
 ---
 
 ## docs/
 
-Documentación oficial del proyecto.
-
-Incluye:
-
-- instalación
-- desarrollo
-- branding
-- estructura
-- roadmap
-- contribución
-
-Toda funcionalidad importante debe estar documentada.
+Documentación oficial del proyecto. Toda funcionalidad importante debe estar documentada.
 
 ---
 
 ## installer/
 
-Reservado para el futuro instalador gráfico de ChurrOS.
-
-Actualmente la distribución utiliza ArchISO, pero este directorio contendrá el código fuente del instalador propio.
-
-Ejemplo futuro:
+Configuración de Calamares (no un instalador propio todavía):
 
 ```text
 installer
-├── backend/
-├── frontend/
-├── assets/
-└── translations/
+├── apply-calamares.sh
+└── calamares/
+    ├── settings.conf
+    └── modules/
 ```
+
+`apply-calamares.sh` despliega la config y la regla polkit al airootfs durante el build.
+
+---
+
+## po/
+
+Traducciones gettext (`*.po`). `./churros check` las valida con `msgfmt --check`.
 
 ---
 
 ## scripts/
 
-Scripts auxiliares utilizados durante el desarrollo.
+Scripts de desarrollo. No forman parte del sistema instalado.
 
-Ejemplos:
-
-- automatización
-- compilación
-- pruebas
-- generación de archivos
-
-Los scripts no forman parte del sistema instalado.
+- `scripts/cli/` — subcomandos de `./churros` (`build`, `run`, `check`, `doctor`, …)
+- `scripts/build-rust.sh`, `build-calamares.sh`, `build-aur.sh`, `build-grub-theme.sh`
 
 ---
 
 ## out/
 
-Directorio donde se generan las imágenes ISO.
-
-Ejemplo:
-
-```text
-out/
-
-ChurrOS-2026.07-x86_64.iso
-```
-
-No debe modificarse manualmente.
-
-Su contenido puede eliminarse sin afectar el proyecto.
+ISO generada (`ChurrOS-*.iso`). Se puede borrar sin afectar el proyecto.
 
 ---
 
 ## work/
 
-Directorio temporal utilizado por ArchISO.
+Directorio temporal de ArchISO. No forma parte del repositorio.
 
-Contiene archivos generados durante la compilación.
+---
 
-No forma parte del repositorio.
+## vm/
 
-Puede eliminarse en cualquier momento.
+Disco QEMU (`ChurrOS.qcow2`) y variables UEFI (`OVMF_VARS.fd`). Gitignorados; cada desarrollador los genera con `./churros run`.
 
 ---
 
@@ -159,75 +145,52 @@ Puede eliminarse en cualquier momento.
 
 ## churros
 
-CLI oficial de desarrollo.
-
-Permite ejecutar comandos como:
+CLI oficial de desarrollo. Despacha a `scripts/cli/<comando>.sh`.
 
 ```bash
 ./churros build
 ./churros run
+./churros check
 ./churros clean
 ```
 
-En el futuro incorporará nuevas funciones para facilitar el desarrollo.
+## VERSION
 
----
+Número de versión del proyecto. Lo leen `./churros version` y `./churros info`.
 
 ## README.md
 
 Página principal del proyecto.
 
-Es la primera documentación que verá cualquier usuario o colaborador.
-
----
-
 ## LICENSE
 
-Licencia oficial del proyecto: GNU General Public License v3.0 (GPL-3.0).
+GNU General Public License v3.0 (GPL-3.0).
 
 ---
 
 # Flujo del proyecto
 
-El flujo general de desarrollo es el siguiente:
-
 ```text
 Modificar código
-
-↓
-
-Compilar
-
-↓
-
-Generar ISO
-
-↓
-
-Probar en máquina virtual
-
-↓
-
-Realizar cambios
-
-↓
-
-Commit
-
-↓
-
-Push
+        ↓
+./churros check
+        ↓
+./churros build
+        ↓
+./churros run
+        ↓
+Commit en una rama
+        ↓
+Pull request hacia main
 ```
+
+No se trabaja directo en `main`.
 
 ---
 
 # Organización del repositorio
 
 Cada carpeta tiene una única responsabilidad.
-
-No deben mezclarse archivos de distinta naturaleza.
-
-Ejemplo:
 
 ❌ Incorrecto
 
@@ -241,28 +204,27 @@ branding/
 
 ```
 branding/
-    wallpaper.png
+    files/os-release
 
 scripts/
-    build.sh
+    build-rust.sh
+
+archiso/airootfs/usr/share/churros/wallpapers/
+    fondo.png
 ```
 
 ---
 
 # Convenciones
 
-Durante el desarrollo se siguen las siguientes reglas:
-
 - Mantener una estructura simple.
 - Utilizar nombres descriptivos.
 - Evitar duplicar archivos.
-- Mantener separados el código, la documentación y los recursos gráficos.
+- Separar código, documentación y recursos gráficos.
 - Documentar cualquier cambio importante.
 
 ---
 
 # Objetivo
 
-La estructura del proyecto debe permanecer organizada incluso cuando ChurrOS crezca considerablemente.
-
-Una buena organización facilita el mantenimiento, reduce errores y mejora la colaboración entre desarrolladores.
+La estructura del proyecto debe permanecer organizada incluso cuando ChurrOS crezca. Una buena organización facilita el mantenimiento, reduce errores y mejora la colaboración.

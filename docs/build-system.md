@@ -1,14 +1,12 @@
 # Build System
 
-El sistema de compilación de ChurrOS está basado en **ArchISO** y automatizado mediante la herramienta de desarrollo `./churros`.
+El sistema de compilación de ChurrOS está basado en **ArchISO** y automatizado mediante `./churros`.
 
-El objetivo del sistema de compilación es generar imágenes ISO reproducibles, mantener un flujo de trabajo sencillo y minimizar las tareas manuales.
+El objetivo es generar imágenes ISO reproducibles, mantener un flujo sencillo y minimizar las tareas manuales.
 
 ---
 
 # Arquitectura
-
-El proceso de compilación puede resumirse de la siguiente manera:
 
 ```
                Código fuente
@@ -16,15 +14,13 @@ El proceso de compilación puede resumirse de la siguiente manera:
                      ▼
               ./churros build
                      │
+        ┌────────────┼────────────┐
+        ▼            ▼            ▼
+    branding    paquetes AUR   apps Rust
+        │            │            │
+        └────────────┼────────────┘
                      ▼
-          Preparación del entorno
-                     │
-                     ▼
-              Ejecución de ArchISO
-                     │
-                     ▼
-             Construcción de la ISO
-                     │
+              mkarchiso (sudo)
                      ▼
           out/ChurrOS-*.iso
 ```
@@ -33,179 +29,96 @@ El proceso de compilación puede resumirse de la siguiente manera:
 
 # Componentes
 
-El sistema de compilación está compuesto por tres elementos principales:
+- ArchISO (`mkarchiso`)
+- CLI de ChurrOS (`scripts/cli/build.sh`)
+- Perfil en `archiso/`
+- Workspace Rust en `rust/`
+- Paquetes locales en `archiso/packages/`
 
-- ArchISO
-- CLI de ChurrOS
-- Perfil personalizado ubicado en `archiso/`
-
----
-
-# CLI
-
-Toda la compilación se realiza mediante:
-
-```bash
-./churros build
-```
-
-Este comando automatiza completamente el proceso.
-
-No es necesario ejecutar `mkarchiso` manualmente.
+No hace falta ejecutar `mkarchiso` a mano.
 
 ---
 
 # Flujo de compilación
 
-Cuando se ejecuta:
+`./churros build` hace, en este orden:
+
+## 1. Branding y tema GRUB
+
+Copia `branding/customize_airootfs.sh` y `branding/files/` al airootfs. Regenera fuentes del tema GRUB si faltan y copia `branding/grub-theme` a `/usr/share/churros/grub-theme/`.
+
+## 2. Paquetes locales
+
+Si no están, construye Calamares y los extras AUR (`python-pywal`, `waypaper`, `yay`) en `archiso/packages/`. Si hay paquete de Calamares, `installer/apply-calamares.sh` despliega la config y se copian los `.pkg.tar.zst` a `airootfs/root/packages/`.
+
+## 3. Apps Rust
+
+`scripts/build-rust.sh` compila el workspace en release y copia los crates con `deploy = true` a `archiso/airootfs/usr/bin/`. Esos binarios no se versionan; un trap al salir del build los limpia del airootfs (junto con branding y Calamares generados).
+
+## 4. ArchISO
 
 ```bash
-./churros build
+sudo rm -rf work out
+sudo mkarchiso -v -w work -o out archiso
 ```
 
-ocurre lo siguiente:
+ArchISO instala paquetes, genera initramfs y squashfs, crea los cargadores (GRUB UEFI + Syslinux BIOS) y escribe la ISO.
 
-## 1. Limpieza
+## 5. Resultado
 
-Se elimina el directorio temporal.
+La ISO queda en `out/`. Ejemplo:
 
 ```text
-work/
+out/ChurrOS-2026.08.14-x86_64.v0.6.iso
 ```
 
-Esto evita reutilizar archivos de compilaciones anteriores.
-
----
-
-## 2. Preparación
-
-Se crea la carpeta de salida si no existe.
-
-```text
-out/
-```
-
----
-
-## 3. Construcción
-
-Se ejecuta:
-
-```bash
-mkarchiso
-```
-
-utilizando el perfil ubicado en:
-
-```text
-archiso/
-```
-
-ArchISO realiza:
-
-- instalación de paquetes
-- generación del initramfs
-- construcción del sistema Live
-- generación del sistema squashfs
-- creación del cargador UEFI
-- generación de la imagen ISO
-
----
-
-## 4. Resultado
-
-La ISO final se almacena en:
-
-```text
-out/
-```
-
-Ejemplo:
-
-```text
-out/
-
-ChurrOS-2026.07-x86_64.iso
-```
+Al terminar se borra `work/` y se devuelve `out/` al usuario.
 
 ---
 
 # Probar la distribución
 
-Para iniciar la ISO en una máquina virtual:
-
 ```bash
 ./churros run
 ```
 
-Este comando:
-
-- busca la ISO más reciente
-- inicia QEMU
-- arranca automáticamente la distribución
-
-No modifica el sistema anfitrión.
+Busca la ISO más reciente, crea el disco QEMU si hace falta e inicia la VM. Detalle en `docs/vm.md`.
 
 ---
 
 # Limpiar el proyecto
 
-Para eliminar todos los archivos temporales:
-
 ```bash
 ./churros clean
 ```
 
-Este comando elimina:
-
-```
-work/
-out/
-```
-
-No elimina ningún archivo del proyecto.
+Elimina `work/` y `out/`. No toca el código fuente.
 
 ---
 
 # Directorios utilizados
 
-## archiso/
-
-Perfil de ArchISO.
-
-Contiene todo el sistema Live.
-
----
-
-## work/
-
-Archivos temporales generados durante la compilación.
-
-Puede eliminarse sin problemas.
-
----
-
-## out/
-
-Imágenes ISO generadas.
+| Ruta | Uso |
+|------|-----|
+| `archiso/` | Perfil Live |
+| `rust/` | Código de las apps oficiales |
+| `branding/` | Identidad y script live |
+| `installer/` | Config de Calamares |
+| `work/` | Temporal de ArchISO |
+| `out/` | ISO generada |
 
 ---
 
 # Branding
 
-Durante la compilación también se aplican las personalizaciones de ChurrOS.
+Durante la compilación se integran:
 
-Entre ellas:
+- hostname, issue, motd, os-release
+- logos y fondos
+- tema GRUB
+- configuraciones del Live
 
-- hostname
-- issue
-- motd
-- os-release
-- logos
-- fondos de pantalla
-- configuraciones del sistema
-
-El branding forma parte del proceso de construcción y queda integrado dentro de la imagen Live.
+Editar la copia generada en `archiso/airootfs/root/customize_airootfs.sh` no sirve: se regenera en cada build.
 
 ---
 
@@ -213,100 +126,65 @@ El branding forma parte del proceso de construcción y queda integrado dentro de
 
 ## La ISO no aparece
 
-Comprueba que exista:
-
-```text
-out/
-```
-
-Si está vacía:
-
 ```bash
+ls out/
 ./churros build
 ```
 
----
-
 ## Error de permisos
-
-Si aparecen errores relacionados con permisos, elimina el directorio temporal:
 
 ```bash
 ./churros clean
+./churros build
 ```
 
-y vuelve a compilar.
-
----
+`mkarchiso` necesita `sudo`.
 
 ## ArchISO no encontrado
-
-Comprueba que esté instalado.
 
 ```bash
 pacman -Q archiso
 ```
 
----
+## Falla la compilación Rust
+
+```bash
+pacman -Q rust cargo
+cargo build --release --manifest-path rust/Cargo.toml
+```
 
 ## La compilación falla
 
-Revisa el registro mostrado por `mkarchiso`.
-
-La mayoría de los errores se producen por:
-
-- paquetes inexistentes
-- rutas incorrectas
-- permisos
-- configuraciones inválidas
+Revisa el registro de `mkarchiso`. Suele deberse a paquetes inexistentes, rutas incorrectas, permisos o config inválida.
 
 ---
 
 # Buenas prácticas
 
-Se recomienda seguir siempre el siguiente flujo:
-
 ```
 Modificar archivos
-
-↓
-
-Compilar
-
-↓
-
-Probar en QEMU
-
-↓
-
-Corregir errores
-
-↓
-
-Commit
-
-↓
-
-Push
+        ↓
+./churros check
+        ↓
+./churros build
+        ↓
+./churros run
+        ↓
+Corregir
+        ↓
+Commit + pull request
 ```
 
-Nunca realizar cambios directamente sobre la ISO generada.
-
-Todas las modificaciones deben hacerse sobre el código fuente del proyecto.
+Nunca modificar la ISO generada. Todos los cambios van en el código fuente.
 
 ---
 
 # Futuro
 
-El sistema de compilación evolucionará conforme avance el desarrollo de ChurrOS.
-
-Entre las mejoras planificadas se encuentran:
+Mejoras previstas:
 
 - Compilaciones incrementales.
-- Verificación automática de errores.
-- Generación de checksums.
-- Generación automática de versiones.
-- Integración con GitHub Actions.
-- Creación automática de Releases.
+- Generación de checksums desde la CLI.
+- Comando `./churros release`.
 
-El objetivo es que generar una nueva versión de ChurrOS sea un proceso completamente automatizado y reproducible.
+`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v0.6 se publica a mano en GitHub Releases (ISO partida en 7z).

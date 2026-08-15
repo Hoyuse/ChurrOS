@@ -49,11 +49,12 @@ Construye una nueva imagen ISO de ChurrOS.
 
 Este comando realiza automáticamente:
 
+- Copia de branding y tema GRUB al airootfs.
+- Construcción de paquetes AUR locales si faltan (Calamares, python-pywal, waypaper, yay).
+- Compilación de las apps Rust (`scripts/build-rust.sh`) y despliegue en `usr/bin/`.
 - Limpieza del directorio temporal.
-- Preparación del entorno.
 - Ejecución de ArchISO.
-- Construcción de la imagen ISO.
-- Almacenamiento de la ISO en `out/`.
+- Construcción de la imagen ISO en `out/`.
 
 ---
 
