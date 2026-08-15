@@ -32,23 +32,23 @@ Aunque actualmente utiliza Arch Linux como base, el objetivo a largo plazo es qu
 
 # Estado del proyecto
 
-Actualmente ChurrOS se encuentra en una etapa temprana de desarrollo. La versión actual es **v0.4.0 — Preferences Brain**.
+Actualmente ChurrOS se encuentra en una etapa temprana de desarrollo. La versión actual es **v0.6**.
 
 Características implementadas:
 
 - Perfil personalizado de ArchISO.
 - Sistema de branding propio.
 - CLI de desarrollo (`./churros`).
-- Construcción automática de la ISO.
+- Construcción automática de la ISO (incluye apps Rust y paquetes AUR locales).
 - Ejecución automática en QEMU.
 - Personalización del sistema Live.
 - Documentación oficial.
 - **Escritorio completo** — Niri + Waybar + foot + Fuzzel + Mako.
-- **Centro de control** — `churros-control-center`.
-- **App de bienvenida** — `churros-welcome`.
+- **Apps oficiales en Rust** — `churros-welcome`, `churros-settings`, `churros-control-center` y `churros-popup` (gtk4-rs + libadwaita).
 - **Panel de preferencias** (`churros-settings`) — 30+ páginas GTK4.
 - **Popups integrados** — audio, bluetooth, batería, brillo, red, power.
 - **Instalador gráfico** — Calamares con branding ChurrOS.
+- **Tema GRUB** — menú centrado aplicado al sistema instalado.
 - **CI** — `./churros check` corre en GitHub Actions.
 
 ---
@@ -73,6 +73,7 @@ Paquetes necesarios:
 - git
 - qemu-full
 - edk2-ovmf
+- rust y cargo (para las apps oficiales)
 - virt-manager (opcional)
 - swtpm (opcional)
 
@@ -116,6 +117,7 @@ ChurrOS
 ├── docs/
 ├── installer/
 ├── po/
+├── rust/
 ├── scripts/
 ├── out/
 ├── vm/
@@ -150,10 +152,11 @@ Toda la documentación oficial se encuentra en la carpeta `docs/`.
 El roadmap detallado con el progreso de cada fase está en `docs/roadmap.md`.
 
 - **Fase 1 — Fundación**: completada (CI integrada).
-- **Fase 2 — Identidad**: completada (logo, mascot, wallpapers, fastfetch, iconos, cursor).
-- **Fase 3 — Escritorio**: completada (Niri, Waybar, foot, Fuzzel, Mako, Centro de control, Tema oficial).
-- **Fase 4 — Instalador**: completada (Calamares con branding ChurrOS).
-- **Fase 5 — Ecosistema**: en curso (preferencias completas, falta actualizador y repo oficial).
+- **Fase 2 — Identidad**: en curso (logo, mascota, wallpapers, fastfetch, iconos, cursor y tema GRUB; faltan Plymouth y branding de greetd).
+- **Fase 3 — Escritorio**: en curso (Niri, Waybar, foot, Fuzzel, Mako, centro de control; falta Wlogout).
+- **Fase 4 — Instalador**: completada (Calamares con branding ChurrOS; GRUB UEFI + Syslinux BIOS).
+- **Fase 5 — Ecosistema**: en curso (apps oficiales en Rust; faltan actualizador y repositorio oficial).
+- **Fase 6 — Publicación**: en curso (release **v0.6** publicada; faltan 1.0, sitio y wiki).
 
 ---
 

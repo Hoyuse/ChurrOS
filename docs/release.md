@@ -111,16 +111,18 @@ Verifica:
 
 # 5. Actualizar la versión
 
-Cuando exista un sistema de versionado oficial deberá incrementarse la versión del proyecto.
+El número de versión vive en `VERSION` (lo muestran `./churros version` y `./churros info`). Debe coincidir con el tag de GitHub.
+
+La versión actual es **0.6** (tag `v0.6`). El esquema previsto es Semantic Versioning (`MAJOR.MINOR.PATCH`); algunos tags históricos omiten el parche (`v0.6`).
 
 Ejemplo:
 
 ```
-0.1.0
+0.6
 
 ↓
 
-0.2.0
+0.7.0
 ```
 
 ---
@@ -131,7 +133,7 @@ Registrar todos los cambios.
 
 ```bash
 git add .
-git commit -m "release: prepare version 0.1.0"
+git commit -m "release: preparar versión 0.7.0"
 ```
 
 ---
@@ -141,13 +143,13 @@ git commit -m "release: prepare version 0.1.0"
 Marcar la versión publicada.
 
 ```bash
-git tag v0.1.0
+git tag v0.7.0
 ```
 
 Enviar el tag.
 
 ```bash
-git push origin v0.1.0
+git push origin v0.7.0
 ```
 
 ---
@@ -187,11 +189,11 @@ MAJOR.MINOR.PATCH
 Ejemplos:
 
 ```
-0.1.0
+0.4.0
 
-0.2.0
+0.6
 
-0.3.1
+0.7.0
 
 1.0.0
 ```

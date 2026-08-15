@@ -1,5 +1,15 @@
 # Devlog
 
+## 2026-08-13 — ChurrOS 0.6
+
+Release pública **v0.6** (tag `v0.6`). Las apps oficiales corren como binarios Rust (`churros-welcome`, `churros-settings`, `churros-control-center`, `churros-popup`). El tema GRUB se despliega al airootfs para que Calamares lo aplique en el sistema instalado. `build-rust.sh` instala cargo/rust en el host si faltan.
+
+La ISO supera el límite de 2 GiB de GitHub: se publica partida en dos `.7z` más `SHA256SUMS`.
+
+`VERSION` y el resto de la documentación se alinean a esta versión en una tanda posterior (dejan de describir v0.4.0 / Python como el runtime actual).
+
+---
+
 ## 2026-07-25 — Popups, Control Center, Welcome, Preferencias
 
 ### Resumen

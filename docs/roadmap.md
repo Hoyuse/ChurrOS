@@ -10,9 +10,9 @@ La hoja de ruta puede cambiar conforme evolucione la distribución.
 
 # Estado actual
 
-Actualmente ChurrOS se encuentra en una etapa temprana de desarrollo.
+La versión publicada es **v0.6**. ChurrOS sigue en etapa temprana: hay ISO, escritorio, instalador y apps oficiales, pero aún no es una 1.0.
 
-El objetivo principal es construir una base sólida antes de comenzar a añadir nuevas características.
+El objetivo principal es consolidar esa base (identidad de arranque, repositorio propio y actualizador) antes de ampliar el alcance.
 
 ---
 
@@ -48,7 +48,7 @@ Dar personalidad propia a la distribución.
 - [ ] Tema / branding de greetd.
 - [x] Iconos oficiales.
 - [x] Cursor oficial.
-- [ ] Tema de GRUB (no aplica: usamos systemd-boot).
+- [x] Tema de GRUB (sistema instalado, vía Calamares).
 
 ---
 
@@ -81,7 +81,7 @@ Desarrollar el instalador gráfico de ChurrOS.
 - [x] Selección de idioma.
 - [x] Selección de zona horaria.
 - [x] Creación de usuario.
-- [x] Instalación del bootloader (systemd-boot UEFI + syslinux BIOS).
+- [x] Instalación del bootloader (GRUB UEFI + Syslinux BIOS).
 - [x] Configuración inicial.
 
 ---
@@ -93,13 +93,13 @@ Crear herramientas propias.
 ## Objetivos
 
 - [ ] Repositorio oficial.
-- [ ] Paquetes propios (en desarrollo — Calamares se construye desde AUR local).
+- [ ] Paquetes propios (en desarrollo — Calamares, yay, waypaper y python-pywal se construyen en local).
 - [x] ChurrOS CLI.
 - [ ] Actualizador.
-- [x] Aplicación de bienvenida (churros-welcome).
-- [x] Herramienta de configuración (churros-settings).
-- [x] Centro de control (churros-control-center).
-- [x] Popups integrados (audio, bluetooth, battery, brightness, network, power).
+- [x] Aplicación de bienvenida (`churros-welcome`, Rust).
+- [x] Herramienta de configuración (`churros-settings`, Rust).
+- [x] Centro de control (`churros-control-center`, Rust).
+- [x] Popups integrados (`churros-popup`: audio, bluetooth, battery, brightness, network, power).
 
 ---
 
@@ -111,7 +111,7 @@ Publicar la primera versión estable.
 
 - [ ] Versión 1.0.
 - [ ] Sitio web.
-- [ ] GitHub Releases.
+- [x] GitHub Releases (v0.6 publicada; la ISO va partida en 7z).
 - [ ] Wiki oficial.
 - [ ] Manual de usuario.
 - [ ] Comunidad.
