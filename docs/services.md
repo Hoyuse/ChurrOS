@@ -1,65 +1,47 @@
 # Services
 
-Este documento describe los servicios del sistema que utilizan las aplicaciones oficiales de ChurrOS.
+Este documento describe la capa de servicios que usan las apps oficiales.
 
-Los servicios son módulos Python que envuelven comandos del sistema y exponen una API uniforme a las apps GTK4 (control center, popups, widgets). Toda la interacción con el hardware y los servicios del sistema (audio, batería, red, brillo, energía) pasa por aquí.
+`churros_services` es un crate Rust (`rust/services/`, `deploy = false`) que envuelve comandos del sistema y expone una API uniforme. Lo consumen `churros-popup` y `churros-control-center`. Preferencias tiene además sus propios servicios de dotfiles y settings en `rust/preferences/src/services/`.
+
+El código Python de `usr/share/churros/services/` ya no está en el repositorio.
 
 ---
 
 # Overview
 
-Todos los servicios viven en:
-
 ```text
-archiso/airootfs/usr/share/churros/services/
+rust/services/src/
+├── lib.rs          # run / spawn / which
+├── audio.rs        # wpctl
+├── battery.rs      # upower
+├── bluetooth.rs    # bluetoothctl / rfkill
+├── brightness.rs   # brightnessctl + /sys/class/backlight
+├── ethernet.rs     # nmcli
+├── power.rs        # loginctl, niri msg, systemctl
+└── wifi.rs         # nmcli
 ```
 
-Cada servicio es una clase con métodos estáticos. El patrón común es:
+Patrón:
 
-- `get()` — devuelve un diccionario con el estado actual
-- `set(value)` — aplica un cambio
-- Métodos auxiliares (`enable`, `disable`, `toggle`, `lock`, `logout`, etc.) según el servicio
-
-Ningún servicio tiene estado interno: cada llamada lee del sistema en tiempo real. Esto simplifica el código y permite que múltiples widgets o popups consulten el mismo dato sin coordinarse.
-
-Los servicios no se importan directamente desde las apps: se accede a ellos desde los widgets de cada app. Por ejemplo, el popup de audio importa `services/audio.py` desde `archiso/airootfs/usr/share/churros/services/`.
+- Funciones libres (no hay clases estáticas).
+- `get()` / `available()` leen el sistema en el momento.
+- `run(cmd, timeout_ms)` captura stdout/stderr; `spawn` es fire-and-forget.
+- Sin estado interno: cada llamada refleja el hardware actual.
 
 ---
 
-# Common Pattern
+# Common helpers
 
-```python
-import subprocess
+```rust
+pub type RunOut = (i32, String, String);
 
-
-class AudioService:
-
-    @staticmethod
-    def get_volume():
-
-        output = subprocess.check_output(
-            ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"],
-            text=True
-        )
-
-        volume = float(output.split()[1])
-
-        return int(volume * 100)
-
-    @staticmethod
-    def set_volume(value):
-
-        subprocess.run(
-            [
-                "wpctl",
-                "set-volume",
-                "@DEFAULT_AUDIO_SINK@",
-                f"{value}%"
-            ]
-        )
+pub fn run(cmd: &[&str], timeout_ms: u64) -> Option<RunOut>;
+pub fn spawn(cmd: &[&str]);
+pub fn which(bin: &str) -> bool;
 ```
 
-Todas las clases siguen esta forma. La salida de `get()` siempre es un dict plano con campos predecibles; `set()` siempre es síncrono y no devuelve nada.
+`run` devuelve `None` si falla el spawn, hay timeout o la salida no es UTF-8.
 
 ---
 
@@ -67,206 +49,104 @@ Todas las clases siguen esta forma. La salida de `get()` siempre es un dict plan
 
 ## audio
 
-**Archivo:** `archiso/airootfs/usr/share/churros/services/audio.py`
+Wrapper sobre `wpctl` (PipeWire). Opera sobre `@DEFAULT_AUDIO_SINK@` / `@DEFAULT_AUDIO_SOURCE@`.
 
-Wrapper sobre `wpctl` (PipeWire).
+| Función | Acción |
+|---------|--------|
+| `get_volume()` / `set_volume(value)` | Volumen de salida 0–100 |
+| `is_muted()` / `set_mute(muted)` | Mute de salida |
+| `get_input_volume()` / `set_input_volume` | Entrada |
+| `list_sinks()` / `list_sources()` | Dispositivos (`AudioDevice { id, name, default }`) |
+| `set_default_sink(node_id)` | Cambiar sink |
 
-| Método | Comando | Devuelve |
-|--------|---------|----------|
-| `get_volume()` | `wpctl get-volume @DEFAULT_AUDIO_SINK@` | int (0–100) |
-| `set_volume(value)` | `wpctl set-volume @DEFAULT_AUDIO_SINK@ <value>%` | — |
-
-No usa `sinks` por nombre: siempre opera sobre `@DEFAULT_AUDIO_SINK@`, que PipeWire resuelve en tiempo de ejecución. Esto evita problemas cuando el usuario cambia de dispositivo de salida.
-
-Usado por:
-
-- Popup de audio (volumen + mute + dispositivo)
-- Waybar (módulo `pulseaudio` con scroll y click derecho)
-- Control center (tarjeta de audio)
+Usado por el popup de audio, Waybar (`pulseaudio`) y el control center.
 
 ---
 
 ## battery
 
-**Archivo:** `archiso/airootfs/usr/share/churros/services/battery.py`
-
 Wrapper sobre `upower`.
 
-| Método | Comando | Devuelve |
-|--------|---------|----------|
-| `get()` | `upower -e` + `upower -i <device>` | dict |
+`get()` → `BatteryInfo`:
 
-El método `get()` devuelve un dict con esta forma:
-
-```python
-{
-    "available": bool,
-    "percentage": int,
-    "state": str,         # charging, discharging, full, unknown
-    "time": str,          # "1:23" o "1:23:45" según upower
-    "icon": str           # glifo Nerd Font (󰁹 󰂂 󰂀 󰁾 󰁼 󰂎)
-}
+```text
+available, percentage, state, time_to_full, time_to_empty, icon
 ```
 
-Los iconos se eligen según el porcentaje:
-
-| Porcentaje | Icono |
-|------------|-------|
-| ≥ 95% | 󰁹 |
-| ≥ 80% | 󰂂 |
-| ≥ 60% | 󰂀 |
-| ≥ 40% | 󰁾 |
-| ≥ 20% | 󰁼 |
-| < 20% | 󰂎 |
-
-Si no se detecta ninguna batería, devuelve `{"available": False}`. Los widgets deben comprobar esta clave antes de leer el resto.
-
-Usado por:
-
-- Popup de batería
-- Waybar (módulo `battery`)
-- Control center (tarjeta de batería)
+Si no hay batería, `available` es `false`. Iconos Nerd Font según porcentaje y carga.
 
 ---
 
 ## wifi
 
-**Archivo:** `archiso/airootfs/usr/share/churros/services/wifi.py`
+Wrapper sobre `nmcli`.
 
-Wrapper sobre `nmcli` (NetworkManager).
+`get()` → `WifiInfo`: `available`, `enabled`, `connected` (SSID o `None`), `networks` (`ssid`, `signal`, `security`, `connected`, `saved`).
 
-| Método | Comando | Devuelve |
-|--------|---------|----------|
-| `get()` | `nmcli device` + `nmcli device wifi list` | dict |
-| `enable()` | `nmcli radio wifi on` | — |
-| `disable()` | `nmcli radio wifi off` | — |
-| `toggle()` | según estado actual | — |
-
-El método `get()` devuelve:
-
-```python
-{
-    "available": bool,    # ¿hay adaptador Wi-Fi?
-    "enabled": bool,      # ¿está encendido?
-    "connected": str,     # SSID activo, "" si ninguno
-    "networks": [
-        {
-            "ssid": str,
-            "signal": int,    # 0–100
-            "connected": bool
-        },
-        ...
-    ]
-}
-```
-
-Si no hay adaptador, devuelve solo `{"available": False, ...}` y la lista `networks` queda vacía.
-
-Usado por:
-
-- Popup de red
-- Waybar (módulo `network` cuando el dispositivo es Wi-Fi)
-- Control center (tarjeta de red)
+También: `enable` / `disable` / `toggle`, `connect`, `connect_hidden`, `disconnect`, `forget`, `scan`.
 
 ---
 
 ## ethernet
 
-**Archivo:** `archiso/airootfs/usr/share/churros/services/ethernet.py`
+`get()` → `EthernetInfo`: `available`, `connected`, `interface`, `connection`.
 
-Wrapper sobre `nmcli` para interfaces cableadas.
-
-| Método | Comando | Devuelve |
-|--------|---------|----------|
-| `get()` | `nmcli device` | dict |
-
-El método `get()` devuelve:
-
-```python
-{
-    "available": bool,      # ¿hay adaptador Ethernet?
-    "connected": bool,
-    "interface": str,       # nombre del dispositivo (eth0, enp3s0, ...)
-    "connection": str       # nombre del perfil de conexión
-}
-```
-
-Acepta tanto el estado `connected` como `conectado` (NetworkManager i18n).
-
-Usado por:
-
-- Popup de red (sección Ethernet)
-- Control center (tarjeta de red)
+También: `speed(device)`, `ip(device)`, `connect`, `disconnect`.
 
 ---
 
 ## brightness
 
-**Archivo:** `archiso/airootfs/usr/share/churros/services/brightness.py`
+`available()` mira `/sys/class/backlight`. `get()` → `{ available, brightness }` (0–100). `set(value)` usa `brightnessctl`.
 
-Wrapper sobre `brightnessctl` y `/sys/class/backlight`.
+Si no hay backlight (GPU externa, escritorio), `available` es `false` y el slider se desactiva.
 
-| Método | Comando | Devuelve |
-|--------|---------|----------|
-| `available()` | (lectura de `/sys/class/backlight`) | bool |
-| `get()` | `brightnessctl g` + `brightnessctl m` | dict |
-| `set(value)` | `brightnessctl set <value>%` | — |
+---
 
-El método `get()` devuelve:
+## bluetooth
 
-```python
-{
-    "available": bool,
-    "brightness": int   # 0–100
-}
-```
+Wrapper real sobre `bluetoothctl` (ya no es una lista hardcodeada).
 
-Si no hay soporte de brillo por software (por ejemplo, algunas GPUs externas), `available()` devuelve `False` y `set()` se vuelve no-op. El widget de brillo desactiva su slider en ese caso y muestra un mensaje informativo.
-
-Usado por:
-
-- Popup de brillo
-- Waybar (módulo `custom/brightness`)
+| Función | Acción |
+|---------|--------|
+| `available()` / `is_enabled()` / `is_blocked()` | Estado del adaptador |
+| `enable()` / `disable()` | Power |
+| `scan_start()` / `scan_stop()` | Escaneo |
+| `list_devices()` | `BtDevice { address, name, connected }` |
+| `connect` / `disconnect` / `pair` / `remove` | Por dirección |
 
 ---
 
 ## power
 
-**Archivo:** `archiso/airootfs/usr/share/churros/services/power.py`
+| Función | Comando |
+|---------|---------|
+| `lock()` | `loginctl lock-session` |
+| `logout()` | `niri msg action quit` (si el desktop es Hyprland, `hyprctl dispatch exit`) |
+| `suspend()` | `systemctl suspend` |
+| `hibernate()` | `systemctl hibernate` (`can_hibernate()` primero) |
+| `restart()` | `systemctl reboot` |
+| `shutdown()` | `systemctl poweroff` |
 
-Wrapper sobre `loginctl`, `niri msg` y `systemctl`.
+---
 
-| Método | Comando | Acción |
-|--------|---------|--------|
-| `lock()` | `loginctl lock-session` | bloquea la sesión |
-| `logout()` | `niri msg action quit` | sale de Niri |
-| `suspend()` | `systemctl suspend` | suspende |
-| `hibernate()` | `systemctl hibernate` | hiberna |
-| `restart()` | `systemctl reboot` | reinicia |
-| `shutdown()` | `systemctl poweroff` | apaga |
+# Preferencias
 
-No hay método `get()`: las acciones de energía son one-shot y no devuelven estado. Cada acción del popup invoca directamente el método correspondiente.
-
-Usado por:
-
-- Popup de power
-- Waybar (módulo `custom/power`)
+Los servicios de `churros-settings` (tema, acento, niri, mako, wallpaper, …) no están en este crate: viven en `rust/preferences/src/services/`. Ver `docs/preferences.md`.
 
 ---
 
 # Best Practices
 
-- No guardar estado en los servicios: cada llamada es independiente y refleja la realidad del sistema.
-- Devolver siempre dicts desde `get()` para que los widgets puedan usar `data["key"]` sin manejar tuplas o clases.
-- Comprobar `available` antes de leer otros campos: muchos servicios exponen esta clave para entornos donde el hardware no está presente (por ejemplo, batería en un escritorio).
-- Usar `subprocess.check_output` con `text=True` para evitar decode manual; envolver en `try/except` cuando la llamada pueda fallar (red, hardware ausente).
-- Mantener el servicio delgado: la lógica de presentación (formatear iconos, calcular porcentajes) pertenece al widget, no al servicio.
+- No guardar estado: cada llamada lee el sistema.
+- Comprobar `available` antes de pintar widgets.
+- Timeouts cortos (`run`) para no bloquear el hilo de UI; el control center ya refresca en un hilo aparte.
+- Presentación (iconos, porcentajes) en el widget, no en el servicio, salvo iconos que el servicio ya calcula (batería).
 
 ---
 
 # Future Work
 
-- Servicio de Bluetooth: hoy el popup de Bluetooth usa una lista hardcodeada. Hace falta un wrapper sobre `bluetoothctl` o `bluez` DBus para enumerar dispositivos emparejados.
-- Servicio de audio por dispositivo: hoy `wpctl @DEFAULT_AUDIO_SINK@` siempre opera sobre el sink activo. Para un control center avanzado habría que listar sinks y permitir elegir.
-- Notificaciones: integrar `dunst` o `mako` como servicio y exponer API para que las apps manden notificaciones.
-- Tema dinámico: un servicio que observe el estado del sistema (batería baja, red perdida) y dispare notificaciones automáticamente.
+- Audio: elegir sink desde el control center con la lista que ya expone `list_sinks`.
+- Notificaciones: API sobre mako para que las apps manden avisos.
+- Tema dinámico ante batería baja o red perdida.

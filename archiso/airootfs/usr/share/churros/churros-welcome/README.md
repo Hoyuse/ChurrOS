@@ -9,11 +9,12 @@ despliega en `/usr/bin/churros-welcome` durante el build (`scripts/build-rust.sh
 Los assets (SVG + style.css) siguen aquí para el runtime de la ISO; el crate
 tiene su propia copia en `rust/churros-welcome/assets/` para desarrollo.
 
-Muestra información del sistema (CPU, RAM, kernel, SO, arquitectura, hostname) y
-accesos directos a:
+Muestra accesos directos a:
 
 - Instalar ChurrOS (Calamares)
 - Repositorio en GitHub
 - Comunidad
+
+La tarjeta de información del sistema (`system_card.rs`) está en el crate pero no se monta en la ventana.
 
 Más detalles en `docs/apps.md`.

@@ -2,252 +2,194 @@
 
 Este documento describe las aplicaciones oficiales de ChurrOS.
 
-Todas las apps están escritas en **Python 3** usando **GTK4** y **Libadwaita**. La estructura común es:
+Desde **v0.5 / v0.6** todas las apps oficiales están escritas en **Rust** con **gtk4-rs** y **libadwaita**. El código Python de `/usr/share/churros/` se eliminó del repositorio; en runtime solo quedan assets (CSS, SVG) y los binarios que despliega `scripts/build-rust.sh`.
 
 ```text
-app/
-├── main.py             # Entry point (Gtk.Application)
-├── window.py           # Ventana principal
-├── widgets/            # Componentes reutilizables
-├── services/           # (opcional) Lógica de negocio
-├── assets/             # Iconos, CSS
-└── README.md
+rust/
+├── Cargo.toml              # workspace
+├── churros-welcome/        # binario churros-welcome
+├── preferences/            # binario churros-settings
+├── control-center/         # binario churros-control-center
+├── popups/                 # binario churros-popup
+└── services/               # crate churros_services (no se despliega)
 ```
 
-Las apps se instalan en `/usr/share/churros/<app>/` dentro de la ISO Live y se ejecutan mediante binarios en `/usr/bin/` (wrappers que hacen `cd` al directorio de la app y llaman a `python3 main.py`).
+Cada crate con `deploy = true` en `Cargo.toml` se copia a `archiso/airootfs/usr/bin/<nombre>` al construir la ISO. Los binarios no se versionan.
+
+En desarrollo, los crates resuelven assets a `rust/<crate>/assets/` si no existe `/usr/share/churros/<app>/`.
 
 ---
 
 # churros-welcome
 
-**Path (Rust):** `rust/churros-welcome/`
-**Instalada en:** `/usr/bin/churros-welcome` (binario ELF compilado)
+**Path:** `rust/churros-welcome/`
+**Binario:** `/usr/bin/churros-welcome`
 **Autostart:** `archiso/airootfs/etc/skel/.config/niri/config.kdl` (`spawn-at-startup "churros-welcome"`)
+**Assets:** `archiso/airootfs/usr/share/churros/churros-welcome/assets/`
 
-La pantalla de bienvenida que se muestra al iniciar la sesión Live. **Portada a Rust (gtk4-rs + libadwaita-rs)** — el código Python original fue reemplazado; los assets (SVG/CSS) siguen en `archiso/airootfs/usr/share/churros/churros-welcome/assets/` y se leen desde `/usr/share/churros/churros-welcome/assets/` en runtime.
-
-El binario se compila con `scripts/build-rust.sh` (invocado por `./churros build`) y se despliega en `archiso/airootfs/usr/bin/`. No se versiona en git: en un checkout limpio solo existe el crate en `rust/churros-welcome/`.
+Pantalla de bienvenida al iniciar la sesión Live.
 
 ## Purpose
 
 - Dar la bienvenida al usuario.
-- Mostrar información básica del sistema (CPU, RAM, kernel, SO, arquitectura, hostname).
-- Ofrecer accesos rápidos a documentación, GitHub, comunidad, personalización y actualización.
+- Ofrecer accesos a instalación, GitHub y comunidad.
+
+`system_card.rs` y `system_info.rs` existen (leen `/proc` y `/etc/os-release`) pero la `SystemCard` **no se monta** en la ventana actual. El footer muestra `Linux • Niri • ChurrOS` (versión embebida en el crate; hoy no lee `VERSION` del repo).
 
 ## Stack
 
-- **GTK 4.0** + **Libadwaita 1** (a través de PyGObject)
-- **psutil** (opcional): con fallback a `/proc/meminfo` si no está disponible
-- **Python 3.14+**
+- GTK 4 + Libadwaita (gtk4-rs / libadwaita-rs)
+- Sin psutil: CPU, RAM, kernel y hostname salen de `/proc`
 
 ## Window
 
-- Tamaño por defecto: 1100×720 (definido en `src/config/constants.py`)
-- Tamaño mínimo: 640×480 (para pantallas pequeñas)
-- Layout: vertical con scroll (`Gtk.ScrolledWindow`)
-- CSS cargado desde `assets/style.css` con prioridad `APPLICATION`
+- Maximizada, sin decoración
+- Tamaño mínimo: 640×480
+- Layout vertical con scroll
+- CSS: `/usr/share/churros/styles/churros.css` + `assets/style.css`
 
-## Structure (Rust)
+## Structure
 
 ```text
 rust/churros-welcome/
-├── Cargo.toml              # gtk4 (v4_22) + libadwaita + glib + gio
-├── assets/                 # Copia local para desarrollo (SVG + style.css)
+├── Cargo.toml
+├── assets/
 └── src/
-    ├── main.rs             # Adw::Application + carga de CSS + ventana maximizada
-    ├── header.rs           # Logo, título, subtítulo, separador
-    ├── cards.rs            # FlowBox con las 3 ActionCards
-    ├── footer.rs           # "Linux • Niri • ChurrOS {VERSION}"
-    ├── action_card.rs      # Gtk::Button 280x340 con icono/título/descripción
-    ├── system_card.rs      # Definida pero NO montada (igual que en Python original)
-    ├── system_info.rs      # get_cpu, get_memory, get_kernel, get_os, etc. (lectura /proc)
-    ├── actions.rs          # Abrir URLs (gio::AppInfo) + lanzar calamares.desktop
-    └── assets.rs           # Resolución de rutas: /usr/share/churros/... o assets/ local
+    ├── main.rs
+    ├── header.rs
+    ├── cards.rs            # FlowBox con 3 ActionCards
+    ├── footer.rs
+    ├── action_card.rs
+    ├── system_card.rs      # Definida, no montada
+    ├── system_info.rs
+    ├── actions.rs          # URLs + calamares.desktop
+    └── assets.rs
 ```
-
-Las funciones de `system_info` leen directamente de `/proc` (cpuinfo, meminfo, os-release, osrelease, hostname), igual que el Python con fallback a psutil — el resultado es el mismo.
-
-## System Card
-
-La `SystemCard` muestra información en tiempo real del sistema:
-
-| Campo | Fuente | Fallback |
-|-------|--------|----------|
-| CPU | `/proc/cpuinfo` (`model name`) | "Desconocido" |
-| RAM | `psutil.virtual_memory()` o `/proc/meminfo` | "Desconocido" |
-| Kernel | `platform.release()` | — |
-| SO | `/etc/os-release` (`PRETTY_NAME`) | `platform.system()` |
-| Arquitectura | `platform.machine()` | — |
-| Hostname | `platform.node()` | — |
-
-La memoria RAM usa `psutil` si está disponible. Si no, lee `/proc/meminfo` directamente y formatea en GiB. Esto permite que la app funcione incluso si `psutil` no se instaló en la ISO.
 
 ## Action Cards
 
-La pantalla principal muestra la `SystemCard` más 3 tarjetas de acción:
+| Icono | Título | Acción |
+|-------|--------|--------|
+| install.svg | Install ChurrOS | Lanza `calamares.desktop` |
+| github.svg | GitHub | Abre el repositorio |
+| community.svg | Comunidad | Abre el servidor de comunidad |
 
-| Icono | Título | Callback |
-|-------|--------|----------|
-| install.svg | Install ChurrOS | Lanza `calamares.desktop` vía `Gio.DesktopAppInfo.new("calamares.desktop").launch()`. Si no existe muestra un `Gtk.AlertDialog` informativo. |
-| github.svg | GitHub | Abre el repositorio en el navegador. |
-| community.svg | Comunidad | Abre el servidor de comunidad. |
-
-La `SystemCard` no es clickable, solo informativa (CPU, RAM, kernel, SO, arquitectura, hostname). Se muestra la primera en el FlowBox.
-
-Las tarjetas están organizadas en un `Gtk.FlowBox` con un máximo de 3 columnas y mínimo de 1. En pantallas estrechas se reorganizan automáticamente.
+Máximo 3 columnas; en pantallas estrechas se apilan.
 
 ## Desktop Entry
 
-`archiso/airootfs/usr/share/applications/churros-welcome.desktop`:
-
-```ini
-[Desktop Entry]
-Name=ChurrOS Welcome
-Exec=churros-welcome
-Terminal=false
-Categories=System;
-X-GNOME-Autostart-enabled=true
-```
+`archiso/airootfs/usr/share/applications/churros-welcome.desktop` — `Exec=churros-welcome`.
 
 ---
 
 # churros-control-center
 
-**Path:** `archiso/airootfs/usr/share/churros/control-center/`
-**Wrapper:** `/usr/bin/churros-control-center` (o `python /usr/share/churros/control-center/main.py` desde desktop entry)
+**Path:** `rust/control-center/`
+**Binario:** `/usr/bin/churros-control-center`
 **Desktop entry:** `archiso/airootfs/usr/share/applications/churros-control-center.desktop`
+**Atajo:** `Mod + C` (niri)
 
-Centro de control con tarjetas para los componentes principales del sistema.
+Centro de control con tarjetas que abren el popup correspondiente (`churros-popup <nombre>`).
 
 ## Window
 
-- Tamaño: 520×570, no redimensionable, sin decoración de ventana
-- Layout: `Gtk.Grid` con 2 columnas y 3 filas
-- Espaciado: 12px entre celdas, 16px de margen
-- CSS: estilo dark con acento naranja (`#ff8c00`)
+- 430×650, no redimensionable, sin decoración
+- Header: logo, título, botón de settings (`churros-settings`) y botón de power
+- Grid 2×2 (red, bluetooth, brillo, batería) + tarjeta de audio a ancho completo
+- Refresh asíncrono cada 2 s (`churros_services` en un hilo)
 
 ## Cards
 
-| Fila | Columna 0 | Columna 1 |
-|------|-----------|-----------|
-| 0 | NetworkCard | BluetoothCard |
-| 1 | BrightnessCard | BatteryCard |
-| 2 | AudioCard (ancho completo) | — |
-
-Cada card es un `Card` (Gtk.Button) que al hacer clic llama a `popup_launcher.open_<name>(window)`, que lanza el popup correspondiente en un proceso separado (vía `subprocess.Popen([sys.executable, popup_main])`).
-
-Header del control center tiene un botón de "Settings" (icon `preferences-system`) que lanza `churros-settings` y cierra el control center.
+| Posición | Tarjeta | Popup |
+|----------|---------|-------|
+| 0,0 | Network | `churros-popup network` |
+| 0,1 | Bluetooth | `churros-popup bluetooth` |
+| 1,0 | Brightness | `churros-popup brightness` |
+| 1,1 | Battery | `churros-popup battery` |
+| debajo | Audio | (controles in-place + popup de audio) |
 
 ## Services
 
-Cada tarjeta consulta un servicio compartido en `/usr/share/churros/services/`:
+Usa el crate `churros_services` (`rust/services/`): wifi, ethernet, bluetooth, brightness, battery, audio. Detalle en `docs/services.md`.
 
-- `services/wifi.py` + `services/ethernet.py` → `widgets/network.py` → NetworkCard
-- `services/bluetooth.py` → `widgets/bluetooth.py` → BluetoothCard
-- `services/audio.py` → `widgets/audio.py` → AudioCard
-- `services/brightness.py` → `widgets/brightness.py` → BrightnessCard
-- `services/battery.py` → `widgets/battery.py` → BatteryCard
-
-i18n: el control center importa `from i18n import _` desde `/usr/share/churros/i18n.py` (módulo central añadido para que popups + control center + preferences lo compartan).
-
-## Style
-
-- Fondo: variables CSS del `style.css` del propio control center.
-- Acento: `#DE8636` (ChurrOS naranja).
-- Polling: cada 2s hace refresh de todas las cards (vía `GLib.timeout_add_seconds(2, self.refresh)`).
+Logs de arranque: `/tmp/churros/churros-control-center.log`.
 
 ---
 
 # churros-settings
 
-**Path:** `archiso/airootfs/usr/share/churros/preferences/`
-**Wrapper:** `/usr/bin/churros-settings` → `python3 /usr/share/churros/preferences/main.py`
-**Keybind:** `SUPER + P` (definido en `archiso/airootfs/etc/skel/.config/niri/config.kdl`)
+**Path:** `rust/preferences/`
+**Binario:** `/usr/bin/churros-settings`
+**Atajo:** `Mod + P` (niri)
 
-App de configuración principal, estilo System Settings de macOS con colores ChurrOS. Documentación dedicada en `docs/preferences.md`.
+App de configuración principal, estilo System Settings con colores ChurrOS. Documentación dedicada en `docs/preferences.md`.
+
+Logs: `/tmp/churros/churros-settings.log`.
+
+---
+
+# churros-popup
+
+**Path:** `rust/popups/`
+**Binario:** `/usr/bin/churros-popup`
+
+Un solo binario con los seis popups y toggle nativo (pidfiles en `/tmp/churros/`). Documentación en `docs/popups.md`.
 
 ---
 
 # fuzzel (launcher)
 
-**Path:** binario del sistema (instalado vía `archiso/packages.x86_64`).
-**Keybind:** `SUPER + SPACE` (definido en `archiso/airootfs/etc/skel/.config/niri/config.kdl`)
-**Waybar:** `custom/launcher` → `on-click: "fuzzel"` (clic derecho → foot).
+**Path:** paquete del sistema (`archiso/packages.x86_64`).
+**Atajo:** `Mod + Space`
+**Waybar:** `custom/launcher` → `fuzzel`
 
-El launcher de aplicaciones es **fuzzel** ( Wayland-native, ligero), no una app ChurrOS propia. Muestra la lista de apps instaladas (leídas desde los `.desktop` del sistema), filtrado incremental por teclado, y lanza la seleccionada vía la DBus launcheable del .desktop.
-
-Config: `archiso/airootfs/etc/skel/.config/fuzzel/fuzzel.ini` (tipografía, colores, atajos).
-
-Razón: fuzzel cumple el rol de "Spotlight" sin necesitar write + mantain una app GTK4 custom para ello. Si en el futuro se quiere hacer un launcher con previews / acciones extra (estilo Raycast), sería momento de sustituirlo por una app propia.
+No es una app ChurrOS. Config: `archiso/airootfs/etc/skel/.config/fuzzel/fuzzel.ini`.
 
 ---
 
 # churros-ui (planificado)
 
-**Estado:** Aún no implementado. Idea original pendiente.
+**Estado:** no implementado.
 
-Biblioteca de componentes UI compartidos que las apps oficiales usarían para mantener una identidad visual consistente. Hoy cada app (welcome, control-center, preferences, popups) tiene su propio `style.css` con variables CSS similares pero duplicadas.
-
-Roadmap potencial:
-
-### v0.1
-- `ActionCard`
-- `InfoCard`
-- `Header`
-- `Footer`
-
-### v0.2
-- `Sidebar`
-- `Dialogs`
-- `Buttons`
-- `Navigation`
-
-### v0.3
-- Animaciones
-- Temas
-- Componentes avanzados
-
-## Consumers esperados
-
-- `churros-welcome`
-- `churros-settings`
-- `churros-control-center`
-- Popups
-- Cualquier herramienta oficial nueva
+Hoy cada app tiene su propio CSS. A largo plazo convendría un crate o stylesheet compartido más allá de `/usr/share/churros/styles/churros.css`.
 
 ---
 
 # Packaging
 
-Las apps GTK viven dentro del directorio `archiso/airootfs/usr/share/churros/<app>/`, que es lo que archiso empaqueta directamente en la ISO. Los wrappers en `/usr/bin/churros-*` ejecutan `python3` apuntando a esos paths.
-
-> **Nota:** El `build.sh` no copia automáticamente las apps Python. El código fuente *es* el árbol que termina en la ISO.
-
-**Apps Rust** (desde v0.5): el código vive en `rust/<app>/` como crate Cargo. `scripts/build-rust.sh` (invocado por `./churros build`) compila en release y despliega el binario en `archiso/airootfs/usr/bin/<app>`. El binario no se versiona (`.gitignore`). Los assets de runtime siguen en `archiso/airootfs/usr/share/churros/<app>/assets/`, y en desarrollo el crate usa su propia copia local en `rust/<app>/assets/`.
+| Qué | Dónde |
+|-----|--------|
+| Código | `rust/<crate>/` |
+| Binario en la ISO | `archiso/airootfs/usr/bin/<app>` (generado, no versionado) |
+| Assets | `archiso/airootfs/usr/share/churros/<app>/` |
+| Desktop entries | `archiso/airootfs/usr/share/applications/` |
 
 ---
 
 # Development
 
-Para modificar una app:
+1. Edita el crate en `rust/<app>/`.
+2. Compila en el host:
 
-1. **Python**: edita el código en `archiso/airootfs/usr/share/churros/<app>/`.
-2. **Rust**: edita el crate en `rust/<app>/` y compila localmente con `cargo build --release --manifest-path rust/Cargo.toml` (el binario queda en `rust/target/release/<app>`).
-3. Compila y prueba la ISO:
+```bash
+cargo build --release --manifest-path rust/Cargo.toml
+```
+
+3. Para verlo en el Live:
 
 ```bash
 ./churros build
 ./churros run
 ```
 
-3. Confirma que la app arranca y se ve correctamente.
+`./churros check` no compila Rust; valida scripts, paquetes, desktop entries y que los `spawn` de Niri resuelvan a un binario, crate con `deploy = true` o paquete de la ISO.
 
 ---
 
 # Future Work
 
-- Mover las apps a un repositorio separado: hoy viven dentro del repo de la distro. A largo plazo deberían empaquetarse e instalarse vía pacman.
-- Sustituir placeholders de las tarjetas de_action antiguas — hecho: hoy Welcome tiene Install/GitHub/Discord/Documentation/Terminal/Browser todas funcionales.
-- Internacionalización: hoy `i18n._()` (`/usr/share/churros/preferences/i18n.py` y la copia en `/usr/share/churros/i18n.py`) simplemente devuelve la string original; falta compilar `po/churros.po` a `/usr/share/locale/es/LC_MESSAGES/churros.mo`.
-- churros-ui: centralizar el CSS + widgets compartidos (hoy hay code duplication entre welcome/control-center/preferences/popups).
-- Tests: no hay suite de tests. Las apps interactúan con el sistema; verificación es `python3 -c "import ast; ast.parse(open(f).read())"` + lanzar manualmente cada app en niri.
+- Empaquetar las apps como paquetes pacman propios.
+- Leer `VERSION` del repo en el footer de welcome (hoy está embebida en el crate).
+- Completar i18n (los `.po` existen; las apps Rust aún no cargan gettext).
+- churros-ui: widgets y CSS compartidos.
+- Tests automatizados de las apps GTK.

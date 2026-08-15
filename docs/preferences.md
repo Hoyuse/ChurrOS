@@ -1,591 +1,190 @@
 # Preferences
 
-`churros-settings` es la app de configuración principal de ChurrOS. Está escrita en Python + GTK4 con un estilo visual inspirado en System Settings de macOS pero con los colores naranja de ChurrOS.
+`churros-settings` es la app de configuración principal de ChurrOS. Está escrita en **Rust** (gtk4-rs) con un estilo visual inspirado en System Settings de macOS y los colores naranja de ChurrOS.
 
 ---
 
 # Overview
 
-**Path:** `archiso/airootfs/usr/share/churros/preferences/`
-**Launcher:** `/usr/bin/churros-settings` → `python3 /usr/share/churros/preferences/main.py`
+**Path:** `rust/preferences/`
+**Binario:** `/usr/bin/churros-settings` (desplegado por `build-rust.sh`)
 **Atajo:** `Mod + P` (niri)
+**Assets:** `/usr/share/churros/churros-settings/` en la ISO; `rust/preferences/assets/` en desarrollo
+**Log:** `/tmp/churros/churros-settings.log`
 
-La app tiene sidebar (páginas principales) + stack de páginas (con subpáginas navegables).
+Sidebar + stack de páginas (con subpáginas). Ventana por defecto 1280×760.
 
 ---
 
 # Estructura
 
 ```text
-preferences/
-├── main.py                  # PreferencesApplication (try/except en cada bloque)
-├── window.py                # PreferencesWindow (Gtk.ApplicationWindow + sidebar + stack)
-├── i18n.py                  # gettext wrapper (copia central)
-├── style.css                # CSS con variables (dark/light + accent)
-├── churros.css              # Stylesheet compartido (también usado por control-center y popups)
+rust/preferences/
+├── Cargo.toml                 # name = "churros-settings", deploy = true
 ├── assets/
-│   └── icons/               # SVGs del sidebar
-├── widgets/                 # Widgets base
-│   ├── page.py              # Page (ScrolledWindow + botón atrás opcional)
-│   ├── sidebar.py           # Sidebar con search + lista
-│   ├── navigator.py         # Navigator (Gtk.Stack con history, signal 'navigated')
-│   ├── row.py               # Row (Gtk.Button base, set_title/set_subtitle API)
-│   ├── group.py             # Group (card con separadores)
-│   ├── combo_row.py         # ComboRow (Gtk.Box — NO hereda de Button, evita capturar clicks)
-│   ├── slider_row.py        # SliderRow (Gtk.Scale + debounce opcional)
-│   ├── switch_row.py        # SwitchRow (Gtk.Switch)
-│   ├── select_row.py        # SelectRow (CheckButton group single-mutual)
-│   ├── color_picker.py      # ColorPickerRow (Acepta title, value, callback, subtitle)
-│   ├── search.py            # SearchEntry wrapper
-│   ├── dialog.py            # Dialogs genéricos (confirmación destructiva)
-│   ├── action_row.py        # ActionRow (botón derecho alineado)
-│   └── navigation_row.py    # NavigationRow (row con flecha a subpágina)
-├── services/                # Services (lógica del sistema)
-│   ├── settings.py          # SettingsService (JSON en ~/.config/churros/settings.json)
-│   ├── theme.py             # ThemeService (dark/light + recargas)
-│   ├── accent.py            # AccentService (genera accent.css con --accent-glow)
-│   ├── fonts.py             # FontService (gsettings + Gtk.Settings)
-│   ├── cursor.py            # CursorService (gsettings cursor-theme/size en vivo)
-│   ├── icons.py             # IconsService (gsettings icon-theme en vivo)
-│   ├── wallpaper.py         # WallpaperService (swaybg primero, awww fallback)
-│   ├── waybar.py            # WaybarService (config.jsonc + style.css liquid glass)
-│   ├── keyboard.py          # KeyboardService (parsea y edita binds de niri)
-│   ├── audio.py             # AudioService (wpctl/PipeWire)
-│   ├── power.py             # PowerService (powerprofilesctl, upower, gsettings)
-│   ├── display.py           # DisplayService + backends (niri/hyprland) + set_vrr()
-│   ├── datetime.py          # DatetimeService (timedatectl + churros-pkexec)
-│   ├── connectivity.py      # Wi-Fi + Bluetooth
-│   ├── about.py
-│   ├── system.py
-│   ├── users.py
-│   ├── privacy.py
-│   ├── pywal.py             # Integración con python-pywal
-│   ├── lock_screen.py       # swaylock + swayidle
-│   ├── night_light.py       # wlsunset
-│   ├── mako.py              # MakoService (config + reload + DND)
-│   ├── dotfiles/            # Editores de dotfiles (parseo KDL/JSONC)
-│   │   ├── niri_config.py   # NiriConfig (parser KDL path-based + reload())
-│   │   ├── foot_config.py
-│   │   ├── fuzzel_config.py
-│   │   └── ...
-│   └── backends/            # Backends de display
-│       ├── base.py
-│       ├── niri.py          # niri msg outputs/action
-│       └── hyprland.py      # hyprctl
-└── pages/                   # Páginas de la UI
-    ├── system.py
-    ├── appearance.py         # Padre con 9 grupos temáticos
-    ├── audio.py
-    ├── display.py            # VRR, resolución, brillo, scale
-    ├── connectivity.py
-    ├── power.py              # Padre de power-profile/battery/display-timeout/sleep
-    ├── users.py
-    ├── privacy.py
-    ├── about.py
-    ├── input.py              # Teclado/ratón
-    ├── datetime.py           # Fecha, hora, zona horaria (selector integrado), NTP
-    ├── keyboard.py           # Editor visual de atajos de Niri
-    ├── niri.py               # Animaciones, durations, toggles
-    ├── mako.py               # Notificaciones (DND, fuentes, bordes, disposición)
-    ├── night_light.py        # wlsunset (temperatura, gamma, automático)
-    ├── lock_screen.py        # swaylock/swayidle
-    ├── window_rules.py       # Reglas de ventana (window-rule blocks en KDL)
-    ├── logs.py               # Ver logs del sistema
-    ├── backup.py             # Exportar/importar/reset configuración
-    # Subpáginas de appearance
-    ├── accent.py
-    ├── icons.py
-    ├── cursor.py
-    ├── fonts.py
-    ├── wallpaper.py
-    └── waybar.py
-    # Subpáginas de power
-    ├── power_profile.py
-    ├── battery.py
-    ├── display_timeout.py
-    └── sleep.py
-    # Subpáginas de input
-    ├── foot.py               # Terminal
-    └── fuzzel.py             # Launcher
+└── src/
+    ├── main.rs                # Gtk.Application + carga de CSS
+    ├── window.rs              # PreferencesWindow (sidebar + stack + history)
+    ├── logging.rs
+    ├── assets.rs
+    ├── widgets/               # Page, Sidebar, Row, Group, ComboRow, …
+    ├── services/              # Settings, tema, acento, niri, mako, …
+    └── pages/                 # Una página por archivo
 ```
+
+Los servicios de display aún entienden un backend Hyprland (`hyprctl`) además de Niri; el escritorio oficial es Niri. Pywal está en la UI de Apariencia como interruptor, pero la integración real sigue en TODO.
 
 ---
 
 # Settings persistence
 
-`SettingsService` (`services/settings.py`):
+`SettingsService` (`services/settings.rs`):
 
 - Ruta: `~/.config/churros/settings.json`
-- Formato JSON anidado, acceso con dot keys: `SettingsService.get("theme.dark")`, `set("accent.color", "Orange")`.
-- Defaults definidos en `DEFAULTS` dict.
-- `_ensure()` crea el archivo con defaults la primera vez.
+- JSON anidado, acceso con dot keys (`theme.dark`, `accent.color`).
+- Defaults en código; crea el archivo la primera vez.
 
-outsourced a gsettings:
+También se espeja en gsettings:
 
-- `theme.dark` ↔ `org.gnome.desktop.interface color-scheme` (`prefer-dark` / `default`)
-- `cursor.theme` ↔ `org.gnome.desktop.interface cursor-theme`
-- `cursor theme size` ↔ `org.gnome.desktop.interface cursor-size`
-- `fonts.family` ↔ `org.gnome.desktop.interface font-name`, `document-font-name`, `monospace-font-name`
-- `fonts.scale` ↔ `org.gnome.desktop.interface text-scaling-factor`
-- `icons.theme` ↔ `org.gnome.desktop.interface icon-theme`
-
-`SettingsService` guarda su propia copia además para queries rápidas y para defaults offline.
+| Clave local | gsettings |
+|-------------|-----------|
+| `theme.dark` | `org.gnome.desktop.interface color-scheme` |
+| `cursor.theme` / tamaño | `cursor-theme` / `cursor-size` |
+| `fonts.family` / escala | `font-name`, `document-font-name`, `monospace-font-name`, `text-scaling-factor` |
+| `icons.theme` | `icon-theme` |
 
 ---
 
 # Tema (dark/light)
 
-`ThemeService.is_dark()`:
+`ThemeService`:
 
-1. Lee `theme.dark` del JSON local.
-2. Si no está, hace `gsettings get org.gnome.desktop.interface color-scheme` y cachea el resultado.
+1. Lee `theme.dark` del JSON; si no está, consulta gsettings y cachea.
+2. `set(dark)` persiste y escribe `prefer-dark` / `default`.
+3. La ventana añade o quita la clase `.light`. El CSS usa variables (`--bg-window`, `--text-primary`, …) definidas en `window` (oscuro) y `window.light`.
 
-`ThemeService.set(dark)`:
-
-1. Persiste en JSON local.
-2. Llama `gsettings set org.gnome.desktop.interface color-scheme prefer-dark|default`.
-3. La propia app Preferences detecta el cambio vía `Gio.Settings` `changed::color-scheme` signal y llama `_apply_theme_class()` (añade/quita `.light` en la ventana).
-
-El CSS se basa en variables (`--bg-window`, `--text-primary`, etc.) definidas en `window { ... }` (dark default) y sobrescritas en `window.light { ... }`. Cuando `.light` se añade al root, todas las reglas con `var(...)` reaccionan automáticamente.
-
-Importante: el CSS viejo tenía hardcodes `color:white` y 3 reglas conflictivas para `.sidebar`. El actual está limpio y todo usa `var(--*)`.
+En maximizado/fullscreen se añade la clase `maximized` para el CSS glass (menos blur).
 
 ---
 
 # Accent color
 
-`AccentService` (`services/accent.py`):
+`AccentService` — 8 colores (Blue, Purple, Pink, Red, Orange, Yellow, Green, Teal).
 
-- 8 colores predefinidos: Blue, Purple, Pink, Red, Orange, Yellow, Green, Teal.
-- `current()` lee `accent.color` del JSON.
-- `set(color)`:
-  1. Persiste en JSON.
-  2. Genera `~/.config/churros/accent.css` con variables `--accent`, `--accent-strong`, `--accent-soft`, `--accent-bg-hover`, `--accent-text`.
-  3. Usa `colorsys` para derivar variantes (strong = darker, soft = lighter).
-
-Importante GTK4: el CSS generado usa `window { ... }` (NO `:root` — GTK4 no lo soporta).
-
-`AccentPage._reload_accent_css()` recarga el archivo en runtime:
-
-```python
-provider = Gtk.CssProvider()
-provider.load_from_path(accent_css)
-Gtk.StyleContext.add_provider_for_display(
-    Gdk.Display.get_default(),
-    provider,
-    Gtk.STYLE_PROVIDER_PRIORITY_USER + 1   # prioridad mayor al style.css principal
-)
-```
-
-Resultado: clic en "Green" → recarga CSS → todos los `var(--accent)` se actualizan.
+`set(color)` escribe `~/.config/churros/accent.css` con `--accent` y variantes. El CSS usa `window { … }` (GTK4 no soporta `:root`). Se recarga en caliente con un `CssProvider` a prioridad USER.
 
 ---
 
-# Fuentes
+# Fuentes, cursor, iconos, wallpaper
 
-`FontService` (`services/fonts.py`):
-
-- `available()` — lista familias vía `fc-list : family`.
-- `current()` — JSON local (`fonts.family`).
-- `set(family)` — además de gsettings (`font-name`, `document-font-name`, `monospace-font-name`), llama `Gtk.Settings.get_default().set_property("gtk-font-name", ...)` para que la app actual reaccione sin reiniciar. También resetea `gtk-fontconfig-timestamp` para forzar reload de fontconfig.
-- `scale()` / `set_scale(scale)` — `text-scaling-factor` en gsettings + `gtk-xft-dpi` en Gtk.Settings.
+- **FontService** — `fc-list`, gsettings + `Gtk.Settings` (`gtk-font-name`, `gtk-xft-dpi`) para que la propia app reaccione sin reiniciar.
+- **CursorService** — busca temas en `/usr/share/icons` y `~/.icons`; aplica `cursor-theme` / `cursor-size`.
+- **IconsService** — `icon-theme` en gsettings.
+- **WallpaperService** — `swaybg` (con fallback). El hook pywal está pendiente.
 
 ---
 
-# Cursor
+# Display
 
-`CursorService` (`services/cursor.py`):
-
-- `available()` — busca en `/usr/share/icons`, `~/.icons`, `~/.local/share/icons` las carpetas con subdirectorio `cursors/`.
-- `current()` — gsettings `cursor-theme`.
-- `set(theme)` — gsettings + JSON local.
-- `size()` / `set_size(px)` — gsettings `cursor-size`.
-
-`CursorPage` además incluye un SliderRow (8–64 px) para el tamaño.
+`DisplayService` lista monitores y modos. Backend principal: `niri msg outputs` / `niri msg action`. Queda un backend Hyprland (`hyprctl monitors -j`) por si `XDG_CURRENT_DESKTOP` lo indica; no implementa VRR ni cambio de resolución (la página omite esos controles en ese caso).
 
 ---
 
-# Wallpaper
+# Navegación
 
-`WallpaperService` (`services/wallpaper.py`):
-
-Dirs buscadas (en orden):
-
-- `~/.local/share/churros/wallpapers/` (USER_DIR, donde se copian las importadas)
-- `/usr/share/churros/wallpapers/`
-- `/usr/share/backgrounds/`
-- `~/Pictures/Wallpapers/`
-- `~/Pictures/`
-
-Extensões: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`.
-
-`set(path)`:
-
-1. Persiste `wallpaper.path` en JSON.
-2. Intenta con `awww img <path>` (transiciones suaves). Si `awww-daemon` no está corriendo, lo arranca.
-3. Si `awww` no existe o falla → fallback a `pkill swaybg` + `swaybg -i path -m fill` (start_new_session=True para que sobreviva a la app).
-
-`import_image(source_path)`:
-
-- Copia cualquier imagen del disco del usuario a `~/.local/share/churros/wallpapers/`.
-- Maneja renombres si el nombre ya existe (`foto_1.png`, `foto_2.png`, …).
-- Devuelve la ruta destino, o None si falla.
-
-`WallpaperPage` UI:
-
-- Botón "Importar desde archivos..." usando `Gtk.FileDialog` (GTK4 nativo, no el deprecated FileChooserDialog).
-- Filtro de mime types: image/jpeg, image/png, image/webp, image/gif.
-- Ruta inicial: `~` (Gio.File.new_for_path).
-- Miniatura del fondo actual (160px, con clase `wallpaper-preview`).
-- `Gtk.FlowBox` con thumbnails (120px cada uno) de todos los disponibles. El actual tiene clase `wallpaper-selected` (border accent).
-- Tras importar: copia → aplica → recarga todo el grid (`_rebuild_grid()`).
-
-CSS:
-
-- `.wallpaper-thumb` — thumbnail base (radius 10px).
-- `.wallpaper-selected` — 3px border accent.
-- `.wallpaper-button:hover` — border accent al hover.
-
-## Theme連動 (Modo oscuro/claro)
-
-`ThemeService.set(dark)` (en `services/theme.py`):
-
-1. Persiste `theme.dark` en JSON local.
-2. Llama `_write_gtk_settings(dark)` que escribe `~/.config/gtk-{3,4}.0/settings.ini` con `gtk-theme-name` y `gtk-application-prefer-dark-theme`.
-3. **Cambia el wallpaper automáticamente**:
-   - Dark → `/usr/share/churros/wallpapers/fondo1.png`
-   - Light → `/usr/share/churros/wallpapers/default.jpeg`
-4. Envía `SIGUSR2` a waybar (recarga) y a foot `SIGUSR1`/`SIGUSR2` según el modo (oscuro/claro).
-
-`WallpaperService.apply(path)`:
-
-1. Llama `churros-apply-wallpaper` (wrapper bash).
-2. Wrapper prueba en orden: `swaybg` → `awww` (si falla).
-3. Al final del apply, ejecuta `niri msg action do-screen-transition` para forzar repintura en Niri.
-4. Fallback inline en Python si el wrapper no existe.
-
-## Waybar (subpágina de Apariencia)
-
-`WaybarService` (`services/waybar.py`):
-
-- `DEFAULTS`: layer=top, position=top, height=30, spacing=0, font-size=14, font-family="JetBrainsMono Nerd Font", background=#2a1612, foreground=#c9c4c3, accent=#DE8636, background-alpha=0.9.
-
-- `get()` — lee config.jsonc + colors-waybar.css.
-
-- `set(values)`:
-  1. Escribe `~/.config/waybar/config.jsonc` (preserva definiciones de módulos del skel).
-  2. Escribe `~/.config/waybar/colors-waybar.css` con `@define-color` para `background`, `foreground`, `color4`, `color1`. **Nunca** `@define-color background-alpha` con número — waybar crashea con `'0' is not a valid color name`.
-  3. Escribe `~/.config/waybar/style.css` con liquid glass: ventana transparente, workspaces con pill translúcido + items activos en naranja, hover states.
-  4. Llama `reload()` que mata waybar (`pkill -x waybar`), espera 1s, verifica que murió (`pgrep`), lanza nuevo `waybar`.
-
-- `reload()` loguea a `/tmp/waybar.log` para debugging.
-
-`WaybarPage` UI:
-
-- Sliders para altura (20-80), espaciado (0-16), font-size (10-24).
-- Combo para capa (top/overlay/bottom) y posición (top/bottom/left/right).
-- Color pickers para fondo, texto, acento.
-- **Sistema de rotación de módulos** (sin popovers — GTK4 Popover no funciona en Niri):
-  - Click izquierdo en un módulo → rota posición left → center → right → left.
-  - Click derecho → quita el módulo.
-- Botones "Recargar waybar" y "Restablecer defaults".
-
-## Keyboard (Atajos de teclado)
-
-`KeyboardService` (`services/keyboard.py`):
-
-- Lee/escribe `~/.config/niri/config.kdl` directamente.
-- `get_keybinds()` — parsea el bloque `binds { ... }` con regex.
-- `set_keybind(key, action_type, command, args)` — reemplaza un binding existente.
-- `add_keybind(key, action_type, command, args)` — añade un nuevo binding antes del `}` de cierre.
-- `restore_backup()` — restaura desde `config.kdl.bak`.
-
-Backup automático antes de cada escritura en `NIRI_CONFIG_BACKUP`.
-
-`KeyboardPage` UI:
-
-- Agrupa atajos en categorías: Aplicaciones, Ventanas, Workspaces, Movimiento, Capturas, Overlays, Multimedia, Niri.
-- **Click en un atajo** abre diálogo de edición que muestra:
-  - Atajo actual y acción actual (resaltados).
-  - Campo "Nuevo atajo" (placeholder: `Ej: Mod+Shift+X`).
-  - Campo "Nuevo comando" (pre-rellenado).
-  - Campo "Argumentos" (pre-rellenado).
-- Botón **"Agregar nuevo atajo"** al inicio para crear atajos nuevos con campos vacíos.
-- Al guardar, rebuild automático de la lista.
-
-## DateTime (Fecha y hora)
-
-`DateTimePage` (sin service dedicado, usa `timedatectl` directamente):
-
-- Estado actual: hora, fecha, zona horaria, RTC.
-- "Sincronizar hora con internet" → `sudo timedatectl set-ntp true` en foot.
-- "Cambiar zona horaria" → selector interactivo con `fzf` sobre `timedatectl list-timezones` o fallback `less`.
+- `gtk::Stack` + historial en `window.rs`.
+- `Ctrl+F` enfoca la búsqueda global; salta a subpáginas y resalta el row.
+- `Alt+Left` o el botón atrás vuelven en el historial.
+- En pantallas estrechas el sidebar se colapsa (`Revealer`).
+- El item del sidebar sigue al padre si estás en una subpágina.
 
 ---
 
-# Power
+# Árbol de páginas
 
-Métodos de lectura:
+`power` es padre de power-profile / battery / display-timeout / sleep. `appearance` agrupa acento, iconos, cursor, fuentes, wallpaper y waybar.
 
-- `battery_present()` — `upower -e` busca un dispositivo que termine en `battery`.
-- `battery_percentage()` — `upower -i /org/freedesktop/UPower/devices/battery_BAT0` (fallback BAT1).
-- `battery_state()` — `charging`, `discharging`, `full`, etc.
-- `power_profile()` — `powerprofilesctl get` (performance/balanced/power-saver).
-- `power_profiles_available()` — `powerprofilesctl list`.
-- `screen_timeout()` / `sleep_timeout()` — gsettings `idle-delay` / `sleep-inactive-ac-timeout`.
-- `lid_close_action()` — gsettings `lid-close-ac-action`.
-
-Setters:
-
-- `set_power_profile(profile)`.
-- `set_screen_timeout(seconds)`.
-- `set_sleep_timeout(seconds)`.
-- `set_lid_close_action(action)`.
-
-Páginas:
-
-- `power.py` — menú con NavigationRows a las 4 subpáginas.
-- `power_profile.py` — combo performance/balanced/power-saver con labels localizados.
-- `battery.py` — estado real (upower) o mensaje "No se detecta ninguna batería".
-- `display_timeout.py` — combo "1m/2m/5m/10m/15m/30m/Nunca".
-- `sleep.py` — combo timeout + combo acción al cerrar tapa.
-
-Todas las subpáginas llevan `parent_page="power"` para mostrar el botón "Atrás".
-
----
-
-# Display backends
-
-`services/backends/` define `DisplayBackend` (clase abstracta) con dos implementaciones:
-
-- `niri.py` — vía `niri msg action ...` y `niri msg output ...`. Soporta `set_resolution`, `set_vrr`, `set_scale`, `set_rotation`, `set_brightness`.
-- `hyprland.py` — vía `hyprctl keyword monitor ...`. NO soporta `set_resolution` ni `set_vrr` (stubs que devuelven False), solo `set_scale`, `set_rotation` y brightness.
-
-`DisplayService.backend()` autodetecta el compositor activo.
-
-`DisplayPage` comprueba `backend.supports_resolution()` y `backend.supports_vrr()` antes de mostrar los combos correspondientes. Si el backend no soporta VRR, no se muestra el switch "Frecuencia variable (VRR)".
-
-Bug histórico: `on_vrr(self, switch, active)` recibía 2 args cuando `SwitchRow` solo pasa 1 (el bool). Corregido a `on_vrr(self, active)`.
-
----
-
-# Subpáginas y navegación
-
-`Navigator` (`widgets/navigator.py`) es un `Gtk.Stack` con:
-
-- `add_page(name, widget)` — añade una página al stack (si no existe ya).
-- `show_page(name)` — muestra la página, metiendo la anterior en `self.history`.
-- `back()` — pop del historial.
-- `clear_history()`.
-
-`Page` (`widgets/page.py`) es un `Gtk.ScrolledWindow` que acepta `parent_page=None`:
-
-- Si se pasa `parent_page`, añade un botón "Atrás" (icon `go-previous-symbolic`) al inicio.
-- `on_back()` llama `navigator.show_page(self.parent_page)`.
-
-Subpáginas registradas en `window.py`:
-
-```
-appearance (padre) → accent, icons, cursor, fonts, wallpaper
-power     (padre) → power-profile, battery, display-timeout, sleep
-```
-
-Cada subpágina declara `parent_page="appearance"` o `parent_page="power"` en su `super().__init__(...)`.
-
----
-
-# SelectRow — selección single mutual
-
-`SelectRow` (`widgets/select_row.py`) hereda de `Row` (Gtk.Button) y añade un `Gtk.CheckButton` como suffix.
-
-Problemas que tuvo:
-
-- En GTK4 el `Gtk.Button` captura el click y el `CheckButton` hijo no recibe el evento → el callback no se ejecutaba.
-- Multiple rows activos sin group → varios items quedaban seleccionados.
-
-Fix actual:
-
-- `Gtk.CheckButton.set_group()` con group compartido (atributo de clase `SelectRow.group`).
-- Callback conectado a `notify::active` del CheckButton (se emite SIEMPRE al togglear).
-- `on_row_clicked` fuerza `set_active(True)` para que el grupo se re sincronice desde el click del row.
-- `SelectRow.reset_group()` class method — llamarlo al inicio del `__init__` de cada página que use SelectRow (accent, cursor, icons) para que cada página tenga su propio grupo.
-
----
-
-# CSS — Estilo macOS con colores ChurrOS
-
-`style.css` (~460 líneas):
-
-Tokens en `window { ... }` (dark default):
-
-```css
---bg-window:        rgba(30,30,32,.96);
---bg-sidebar:       rgba(42,42,46,.78);
---bg-group:         rgba(56,56,60,.55);
---text-primary:     rgba(255,255,255,.96);
---text-secondary:   rgba(255,255,255,.55);
---border-soft:      rgba(255,255,255,.08);
---accent:           #DE8636;        /* ChurrOS naranja */
---accent-soft:      #E6A56A;
---accent-strong:    #B86A24;
---accent-text:      #ffffff;
---accent-bg-hover:  rgba(222,134,54,.18);
---scroller-thumb:  rgba(255,255,255,.12);
-```
-
-Override `window.light { ... }`:
-
-```css
---bg-window:        rgba(242,242,245,.98);
---bg-sidebar:       rgba(232,232,236,.85);
---bg-group:         rgba(255,255,255,.92);
---text-primary:     rgba(28,28,30,.96);
---text-secondary:   rgba(28,28,30,.60);
---border-soft:      rgba(0,0,0,.08);
---accent:           #C5651C;        /* más oscuro para contraste en fondo claro */
-```
-
-Estilo macOS:
-
-- Sidebar translúcido (alpha < 1), radius 16px, border subtle.
-- Items sidebar: radius 9px, hover en accent-bg-hover, activo con fondo accent sólido + texto accent-text.
-- Search box con radius 9px, focus border en accent.
-- Grupos tipo card: radius 12px, border soft.
-- Rows: radius 8px, hover en row-bg-hover. Son Gtk.Button sin frame.
-- Group title: small caps, accent o text-secondary.
-- Switches estilo iOS: 42x24 con border-radius 14px, slider 18x18 que se desplaza 22px al activar.
-- Sliders con trough 5px y slider 14px redondo con sombra.
-- DropDowns (combos) con radius 8px y hover en accent.
-- Popover list rows con radius 6px.
-- Scrollbar fina 8px, color scroller-thumb, hover en accent.
-- About card radius 16px.
-- Wallpaper thumbs radius 10px, selected 3px border accent.
-- Back button radius 8px.
-
-Sin reglas duplicadas, sin hardcodes fuera de los tokens.
-
----
-
-# Build pipeline
-
-`preederences/main.py` al arrancar:
-
-1. `AccentService.ensure()` — si `~/.config/churros/accent.css` no existe, lo genera.
-2. Carga `style.css` con `Gtk.CssProvider.load_from_path` y registra con `Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION`.
-3. Si existe `~/.config/churros/accent.css`, lo carga con prioridad `Gtk.STYLE_PROVIDER_PRIORITY_USER` (mayor que el style.css principal, así `--accent` del override gana).
-4. Crea `PreferencesWindow(self)` y la presenta.
-
-CSS reload tras cambio de accent:
-
-- `AccentPage._reload_accent_css()` crea un provider nuevo con prioridad `Gtk.STYLE_PROVIDER_PRIORITY_USER + 1` (aún mayor) para que las nuevas variables ganen.
-
----
-
-# Atajos globales de teclado
-
-`PreferencesWindow` registra atajos globales en `window.py` (vía `Gtk.EventControllerKey`):
-
-| Atajo | Acción |
-|-------|--------|
-| `Ctrl+F` | Foco al search del sidebar |
-| `Ctrl+B` | Toggle sidebar narrow (sólo iconos) |
-| `Shift+Ctrl+N` | Toggle sidebar narrow (alias) |
-
-El sidebar narrow oculta los labels dejando sólo los iconos — útil para pantallas pequeñas.
-
----
-
-# Robustez y logs
-
-La app está blindada contra fallos:
-
-- `churros-settings` (script bash): redirige output a log en `$XDG_RUNTIME_DIR/churros-settings.log` (fallback `/tmp/churros-settings.log`). Autodetecta `WAYLAND_DISPLAY` si no está exportado. Si `churros-settings` falla por completo, no aborta la sesión del usuario — el último error queda en el log.
-- `main.py`: cada bloque crítico (`_build_wallpaper`, constructores de páginas) envuelto en try/except. Los errores se loguean con stack trace completo a `$XDG_RUNTIME_DIR/churros-settings.log`.
-- `ColorPickerRow` (`e517f4f`): ahora acepta el kwarg `subtitle` para integrarse en `LockScreenPage` y otras páginas donde el color picker vive dentro de un Row con descripción secundaria.
-- `ComboRow` (`e1c2477`): reescrito como `Gtk.Box` directo. Antes heredaba de `Gtk.Button` que capturaba los clicks del dropdown. Bug se manifestaba al pulsar la flecha del combo — el botón padre absorbía el evento.
-
-Reload sin reinicio:
-
-- `NiriConfig.reload()` envía `pkill -HUP niri` (SIGUSR2 re-reload completo; SIGUSR1 sólo para la config de monitor). Algunos cambios de Niri (animations toggle, durations) ya no requieren cerrar la app — se aplican al instante.
-- `MakoService.reload()` ejecuta `makoctl reload` tras modificar el config.
-- `WaybarService.reload()` envía `SIGUSR1` a waybar (recarga sin perder estado).
-- `ThemeService` y `AccentService` regeneran CSS y notifican a niri/waybar/foot.
+| Página | Sección | Función |
+|--------|---------|---------|
+| `system.rs` | Sistema | Hostname, kernel, OS |
+| `appearance.rs` | Apariencia | Padre (tema, pywal stub, 9 grupos) |
+| ↳ `accent.rs` | (subpágina) | 8 colores + custom |
+| ↳ `icons.rs` | (subpágina) | Tema de iconos |
+| ↳ `cursor.rs` | (subpágina) | Tema y tamaño de cursor |
+| ↳ `fonts.rs` | (subpágina) | Familia, escala, preview |
+| ↳ `wallpaper.rs` | (subpágina) | Selector de fondo |
+| ↳ `waybar.rs` | (subpágina) | Posición, módulos, colores |
+| `display.rs` | Pantalla | Resolución, brillo, scale, VRR |
+| `audio.rs` | Sonido | Volumen, dispositivo |
+| `mako.rs` | Notificaciones | DND, tipografía, colores, bordes |
+| `night_light.rs` | Pantalla | `wlsunset` |
+| `lock_screen.rs` | Pantalla | `swaylock` / `swayidle` |
+| `connectivity.rs` | Red | Wi-Fi, ethernet, bluetooth |
+| `power.rs` | Energía | Padre |
+| ↳ `power_profile.rs` | (subpágina) | `powerprofilesctl` |
+| ↳ `battery.rs` | (subpágina) | Estado y umbrales |
+| ↳ `display_timeout.rs` | (subpágina) | Apagado de pantalla |
+| ↳ `sleep.rs` | (subpágina) | Suspensión y tapa |
+| `datetime.rs` | Sistema | Reloj, zona horaria, NTP |
+| `niri.rs` | Sistema | Animaciones y duraciones |
+| `window_rules.rs` | Sistema | Bloques `window-rule {}` |
+| `keyboard.rs` | Entrada | Atajos de Niri |
+| `input.rs` | Entrada | Teclado / ratón |
+| `foot.rs` | Entrada | `foot.ini` |
+| `fuzzel.rs` | Entrada | `fuzzel.ini` |
+| `applications.rs` | Sistema | Apps instaladas |
+| `users.rs` | Sistema | Cuentas |
+| `privacy.rs` | Sistema | Permisos |
+| `backup.rs` | Sistema | Export / import / reset de `~/.config/churros/` |
+| `logs.rs` | Sistema | Visor de logs |
+| `about.rs` | Sistema | Versión, créditos, licencia |
 
 ---
 
 # Servicios extra
 
-- **`PywalService`** (`services/pywal.py`) — Hook para `python-pywal`. Cuando está activo en `Apariencia`, genera paleta de 16 colores desde el wallpaper actual y los aplica como `--accent` y variables derivadas. Se desactiva con un click.
-- **`LockScreenService`** (`services/lock_screen.py`) — Wrapper sobre `swaylock` y `swayidle`. Habilita/deshabilita el lock automático con timeout configurable, lock al suspender, comandos previos al lock (v.gr. `wlsunset -t 3500`).
-- **`NightLightService`** (`services/night_light.py`) — Wrapper sobre `wlsunset`. Control de temperatura (3000K–6000K), gamma, modo automático basado en latitud/horario.
-- **`MakoService`** (`services/mako.py`) — Lee/escribe `~/.config/mako/config`, ejecuta `makoctl reload` tras cambios, toggle DND (`makoctl mode -a/-r do-not-disturb`).
+- **LockScreenService** — `swaylock` + `swayidle` (timeout, lock al suspender).
+- **NightLightService** — `wlsunset` (temperatura, gamma, automático).
+- **MakoService** (`mako_config.rs`) — escribe `~/.config/mako/config`, `makoctl reload`, DND.
+- **NiriConfig** — parser KDL y `reload()` (`pkill -HUP niri`).
+- **WaybarService** — `config.jsonc` + `style.css`; recarga con `SIGUSR1`.
+- **DatetimeService** — `timedatectl` vía `churros-pkexec`.
+- **BackupService** — tar de `~/.config/churros/`.
 
 ---
 
-# Páginas — referencia rápida
+# Robustez
 
-Cada página de `churros-settings` se registra en `window.py` y se mapea a un archivo en `pages/`. Las páginas se agrupan en la sidebar por sección. Las páginas marcadas con **(subpágina)** sólo son accesibles vía la página padre o el search global.
+- `logging.rs` escribe a `/tmp/churros/churros-settings.log` y captura panics.
+- Recargas sin reiniciar la app: Niri (HUP), Mako (`makoctl reload`), Waybar (`SIGUSR1`), tema y acento (CSS en caliente).
+- `ComboRow` es un `Gtk.Box` (no hereda de `Button`, para no comerse los clics del dropdown).
 
-| Página | Sección | Función |
-|--------|---------|---------|
-| `system.py` | Sistema | Nombre de host, kernel, OS info |
-| `appearance.py` | Apariencia | Padre con 9 grupos temáticos |
-| ↳ `accent.py` | (subpágina) | Selector de acento (8 colores + custom) |
-| ↳ `icons.py` | (subpágina) | Tema de iconos + tamaño |
-| ↳ `cursor.py` | (subpágina) | Tema de cursor + tamaño |
-| ↳ `fonts.py` | (subpágina) | Familia de fuentes + tamaño + preview |
-| ↳ `wallpaper.py` | (subpágina) | Selector de wallpaper (live preview) |
-| ↳ `waybar.py` | (subpágina) | Posición, módulos, colores, transparencia |
-| `display.py` | Pantalla | Resolución, brillo, scale, VRR |
-| `audio.py` | Sonido | Volumen, dispositivo, perfil |
-| `mako.py` | Notificaciones | DND, tipografía, colores, bordes, padding |
-| `night_light.py` | Pantalla | `wlsunset` (temperatura, gamma, auto) |
-| `lock_screen.py` | Pantalla | `swaylock`/`swayidle` (timeout, suspend lock, fondo) |
-| `connectivity.py` | Red | Wi-Fi, ethernet, bluetooth |
-| `power.py` | Energía | Padre de perfiles/timeout/sleep/batería |
-| ↳ `power_profile.py` | (subpágina) | `powerprofilesctl` (Performance/Balanced/Power-Saver) |
-| ↳ `battery.py` | (subpágina) | Umbrales de carga (charge thresholds) |
-| ↳ `display_timeout.py` | (subpágina) | Apagado automático de pantalla |
-| ↳ `sleep.py` | (subpágina) | Timeout de suspensión + lid close |
-| `datetime.py` | Sistema | Reloj vivo, zona horaria (selector integrado), NTP |
-| `niri.py` | Sistema | Animaciones toggle, durations |
-| `window_rules.py` | Sistema | Editor visual de `window-rule {}` blocks |
-| `keyboard.py` | Entrada | Editor de atajos de Niri |
-| `input.py` | Entrada | Teclado/ratón (repetición, velocidad) |
-| `foot.py` | Entrada | Editor de dotfile `foot.ini` |
-| `fuzzel.py` | Entrada | Editor de dotfile `fuzzel.ini` |
-| `users.py` | Sistema | Cuentas de usuario |
-| `privacy.py` | Sistema | Permisos y telemetría |
-| `backup.py` | Sistema | Export/import/reset de `~/.config/churros/` |
-| `logs.py` | Sistema | Visor de logs del sistema |
-| `about.py` | Sistema | Versión, créditos, licencia |
+---
 
-### Búsqueda global
+# Atajos globales
 
-`Ctrl+F` enfoca la búsqueda. Buscar por nombre de página ("waybar"), por acción ("modo oscuro", "DND"), por componente ("zsh", "firefox") salta a la página correspondiente. Si el término matchea dentro de una subpágina, navega al padre y resalta el row.
-
-### Navegación
-
-- `Navigator` (stack con history) emite `navigated` cuando cambia la página visible.
-- `PreferencesWindow` sincroniza el item del sidebar — si estás en `accent.py` (subpágina) el item resaltado es `Apariencia` (padre).
-- Click en `← Atrás` (en pages con history) o `Alt+Left` revierte.
+| Atajo | Acción |
+|-------|--------|
+| `Ctrl+F` | Búsqueda |
+| `Alt+Left` | Atrás |
+| `Mod+P` | Abrir la app (niri) |
 
 ---
 
 # Known limitations
 
-- **font-name y gtk**: el cambio de fuente se refleja inmediatamente solo en la app Preferences actual. Otras apps GTK respawn lo aplican automáticamente (gsettings func); para apps ya corriendo hay que esperar reload o reiniciarlas.
-- **i18n gettext**: actualmente `i18n._()` solo devuelve la string original (no carga PO/MO files). La infraestructura está lista; solo falta compilar `po/churros.po` a `/usr/share/locale/es/LC_MESSAGES/churros.mo`.
-- **Multi-monitor display page**: DisplayPage asume un solo monitor; multi-monitor requiere refactor del `Monitor` model.
-- **Hyprland backend supports_* stubs**: hyprland backend no implementa VRR ni set_resolution (devuelven False). DisplayPage omite esos combos cuando está activo.
-- **Tests**: sin tests automatizados GTK4; verificación es `python3 -c "import ast; ast.parse(open(f).read())"` para todos los .py + lanzar manualmente cada app en niri.
+- El cambio de fuente se aplica al momento en esta app; otras GTK ya abiertas pueden necesitar reinicio.
+- i18n: los `.po` existen, pero el binario Rust aún no carga gettext.
+- Display asume un monitor principal; multi-monitor incompleto.
+- Backend Hyprland: sin VRR ni `set_resolution`.
+- Pywal: interruptor visible, integración pendiente.
+- Sin tests automatizados GTK. Verificación: `cargo build` + probar en niri / `./churros run`.
 
 ---
 
 # Future work
 
-- Soporte multi-monitor en DisplayPage.
-- Dynamic colors: `theme.dynamic_colors` flag existe en settings.json pero no tiene efecto todavía. Idea: usar `python-pywal` para generar `~/.cache/wal/colors.css` desde el wallpaper actual y aplicar como `--accent` derivado.
-- Per-user cursor/wallpaper persistence entre sesiones (gsettings es per-user, settings.json también).
-- Página de input avanzada: gesture del trackpad, natural scrolling, tap-and-drag.
-- Aplicar font/cursor a Qt apps (env vars QT_QPA_FONTDIR, etc.).
+- Multi-monitor en Display.
+- Terminar pywal (`theme.dynamic_colors`).
+- Gestos de trackpad y scrolling natural.
+- Aplicar fuente/cursor a apps Qt.
