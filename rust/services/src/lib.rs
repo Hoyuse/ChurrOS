@@ -8,6 +8,7 @@ pub mod battery;
 pub mod bluetooth;
 pub mod brightness;
 pub mod ethernet;
+pub mod jsonc;
 pub mod power;
 pub mod wifi;
 

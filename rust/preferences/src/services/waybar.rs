@@ -44,81 +44,15 @@ pub fn defaults() -> Value {
     })
 }
 
-/// Lee un JSONC (comentarios // + trailing commas) y devuelve el objeto.
-fn read_jsonc(path: &PathBuf) -> Value {
+/// Lee un JSONC. `None` = el archivo existe pero no se pudo leer o parsear.
+/// `Some({})` = no hay archivo todavía (primera vez). Nunca se finge un
+/// objeto vacío cuando el parseo falla: eso podía borrar la config al guardar.
+fn read_jsonc(path: &PathBuf) -> Option<Value> {
     if !path.exists() {
-        return json!({});
+        return Some(json!({}));
     }
-    let Ok(raw) = fs::read_to_string(path) else {
-        return json!({});
-    };
-
-    // Quitar comentarios // (fuera de strings)
-    let mut cleaned = String::with_capacity(raw.len());
-    let mut in_string = false;
-    let mut in_comment = false;
-    let mut escape = false;
-
-    for ch in raw.chars() {
-        if in_comment {
-            if ch == '\n' {
-                in_comment = false;
-                cleaned.push('\n');
-            }
-            continue;
-        }
-        if in_string {
-            cleaned.push(ch);
-            if escape {
-                escape = false;
-                continue;
-            }
-            if ch == '\\' {
-                escape = true;
-                continue;
-            }
-            if ch == '"' {
-                in_string = false;
-            }
-            continue;
-        }
-        if ch == '/' && cleaned.ends_with('/') {
-            cleaned.pop();
-            in_comment = true;
-            continue;
-        }
-        if ch == '"' {
-            in_string = true;
-        }
-        cleaned.push(ch);
-    }
-
-    // Eliminar trailing commas: ,} -> } y ,] -> ]
-    let text = remove_trailing_commas(&cleaned);
-
-    serde_json::from_str(&text).unwrap_or_else(|_| json!({}))
-}
-
-fn remove_trailing_commas(text: &str) -> String {
-    let chars: Vec<char> = text.chars().collect();
-    let mut out = String::with_capacity(text.len());
-    let mut i = 0;
-    while i < chars.len() {
-        let c = chars[i];
-        if c == ',' {
-            let mut j = i + 1;
-            while j < chars.len() && (chars[j] == ' ' || chars[j] == '\t' || chars[j] == '\n' || chars[j] == '\r') {
-                j += 1;
-            }
-            if j < chars.len() && (chars[j] == '}' || chars[j] == ']') {
-                i += 1;
-                continue;
-            }
-        }
-        out.push(c);
-        i += 1;
-    }
-    out
+    let raw = fs::read_to_string(path).ok()?;
+    churros_services::jsonc::parse(&raw).ok()
 }
 
 fn write_jsonc(path: &PathBuf, data: &Value) {
@@ -470,7 +404,7 @@ impl WaybarService {
 
     /// Lee config.jsonc + colors-waybar.css y devuelve el estado completo.
     pub fn get() -> Value {
-        let cfg = read_jsonc(&config_path());
+        let cfg = read_jsonc(&config_path()).unwrap_or_else(|| json!({}));
         let colors = read_colors();
 
         let d = defaults();
@@ -496,7 +430,10 @@ impl WaybarService {
     /// hace que waybar desaparezca temporalmente y en algunas builds la mata).
     pub fn set(values: &Value) {
         let d = defaults();
-        let mut cfg = read_jsonc(&config_path());
+        let Some(mut cfg) = read_jsonc(&config_path()) else {
+            eprintln!("[waybar] config.jsonc ilegible; no se sobrescribe");
+            return;
+        };
 
         cfg["layer"] = values
             .get("layer")

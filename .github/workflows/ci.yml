@@ -23,3 +23,15 @@ jobs:
 
       - name: Run checks
         run: ./churros check
+
+  test:
+    name: Tests Rust
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo test -p churros-services
+        run: cargo test -p churros-services --manifest-path rust/Cargo.toml

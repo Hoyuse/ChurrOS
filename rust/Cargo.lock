@@ -76,6 +76,7 @@ dependencies = [
 name = "churros-services"
 version = "0.1.0"
 dependencies = [
+ "serde_json",
  "wait-timeout",
 ]
 
@@ -83,6 +84,7 @@ dependencies = [
 name = "churros-settings"
 version = "0.1.0"
 dependencies = [
+ "churros-services",
  "gio",
  "glib",
  "gtk4",
