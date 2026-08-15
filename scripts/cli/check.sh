@@ -375,6 +375,33 @@ else
     [ "$aur_ok" -eq 1 ] && pass "${#LOCAL_AUR[@]} local AUR packages listed in netinstall"
 fi
 
+# ------------------------------------------------------- Live overlay size
+
+section "Live overlay size"
+
+BOOT_CMDLINE_FILES=(
+    archiso/grub/grub.cfg
+    archiso/grub/loopback.cfg
+    archiso/syslinux/archiso_sys-linux.cfg
+    archiso/syslinux/archiso_pxe-linux.cfg
+    archiso/efiboot/loader/entries/01-archiso-linux.conf
+    archiso/efiboot/loader/entries/02-archiso-speech-linux.conf
+)
+
+cow_ok=1
+for boot_file in "${BOOT_CMDLINE_FILES[@]}"; do
+    if [ ! -f "$boot_file" ]; then
+        fail "$boot_file missing"
+        cow_ok=0
+        continue
+    fi
+    if ! grep -qE '(^|[[:space:]])cow_spacesize=' "$boot_file"; then
+        fail "$boot_file missing cow_spacesize= (Flatpak/Bazaar needs >500M overlay)"
+        cow_ok=0
+    fi
+done
+[ "$cow_ok" -eq 1 ] && pass "live boot entries set cow_spacesize"
+
 # ------------------------------------------------------------ Translations
 
 section "Translations"
