@@ -43,6 +43,10 @@ for line in lines:
         line = line.rstrip(")") + " 'calamares-netinstall-columns.patch')"
     elif line.startswith("sha256sums=("):
         line = line.rstrip(")") + " '" + sha + "')"
+    elif line.startswith("    -DBUILD_TESTING=OFF"):
+        out.append("    -DBUILD_TESTING=OFF")
+        out.append("    -DWITH_PYTHON=OFF")
+        continue
     elif line.startswith("build() {") and not inserted:
         out.append("prepare() {")
         out.append("    patch -Np1 -d \"$_pkgname-$pkgver\" -i \"$srcdir/calamares-netinstall-columns.patch\"")
@@ -54,7 +58,7 @@ for line in lines:
 open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
 
-echo "    PKGBUILD patched (source + prepare + checksum)"
+echo "    PKGBUILD patched (source + prepare + checksum + WITH_PYTHON=OFF)"
 
 echo "[3/4] Pre-downloading calamares source (codeberg can be flaky)..."
 
