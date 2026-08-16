@@ -63,6 +63,51 @@ fn which(name: &str) -> bool {
     path_var.split(':').any(|dir| Path::new(dir).join(name).is_file())
 }
 
+/// Ejecuta un comando con timeout y captura stdout/stderr. None si falla/timeout.
+fn run_with_timeout(
+    args: &[&str],
+    timeout: Duration,
+    env_refs: &[(&str, &str)],
+) -> Option<std::process::Output> {
+    let mut child = Command::new(args[0])
+        .args(&args[1..])
+        .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .ok()?;
+
+    let deadline = std::time::Instant::now() + timeout;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(st)) => break st,
+            Ok(None) => {
+                if std::time::Instant::now() >= deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return None;
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            Err(_) => return None,
+        }
+    };
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    if let Some(mut out) = child.stdout.take() {
+        let _ = std::io::Read::read_to_end(&mut out, &mut stdout);
+    }
+    if let Some(mut err) = child.stderr.take() {
+        let _ = std::io::Read::read_to_end(&mut err, &mut stderr);
+    }
+    let _ = child.wait();
+    Some(std::process::Output {
+        status,
+        stdout,
+        stderr,
+    })
+}
+
 impl WallpaperService {
     /// Ruta del wallpaper actual (settings.json wallpaper.path)
     pub fn current() -> String {
@@ -134,14 +179,16 @@ impl WallpaperService {
             .map(|(k, v)| (k.as_str(), v.as_str()))
             .collect();
 
-        // Backend 1: wrapper churros-apply-wallpaper
+        // Backend 1: wrapper churros-apply-wallpaper (con timeout: no bloquear
+        // la UI si el wrapper se cuelga).
         if which("churros-apply-wallpaper") {
-            let r = Command::new("churros-apply-wallpaper")
-                .arg(path)
-                .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
-                .output();
+            let r = run_with_timeout(
+                &["churros-apply-wallpaper", path],
+                Duration::from_secs(10),
+                &env_refs,
+            );
             match r {
-                Ok(out) => {
+                Some(out) => {
                     println!(
                         "[wallpaper] wrapper stdout: {}",
                         String::from_utf8_lossy(&out.stdout)
@@ -157,7 +204,7 @@ impl WallpaperService {
                     }
                     println!("[wallpaper] wrapper fallo rc={:?}", out.status.code());
                 }
-                Err(e) => println!("[wallpaper] wrapper ex: {e}"),
+                None => println!("[wallpaper] wrapper timeout/ex"),
             }
         }
 

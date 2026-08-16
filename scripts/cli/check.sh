@@ -366,13 +366,20 @@ elif [ "${#LOCAL_AUR[@]}" -eq 0 ]; then
     fail "no build_aur calls found in scripts/build-aur.sh"
 else
     aur_ok=1
+    aur_checked=0
     for pkg in "${LOCAL_AUR[@]}"; do
+        # Si ya está en la lista base (packages.x86_64) se instala por defecto,
+        # así que no necesita aparecer en netinstall.
+        if printf '%s\n' "${PACKAGES[@]}" | grep -qx "$pkg"; then
+            continue
+        fi
+        aur_checked=$((aur_checked + 1))
         if ! grep -qE "^[[:space:]]+- name:[[:space:]]+${pkg}[[:space:]]*$" "$NETINSTALL"; then
             fail "'$pkg' is built by build-aur.sh but missing from netinstall.yaml"
             aur_ok=0
         fi
     done
-    [ "$aur_ok" -eq 1 ] && pass "${#LOCAL_AUR[@]} local AUR packages listed in netinstall"
+    [ "$aur_ok" -eq 1 ] && pass "${aur_checked} local AUR packages listed in netinstall"
 fi
 
 # ------------------------------------------------------- Live overlay size

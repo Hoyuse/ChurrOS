@@ -20,9 +20,9 @@ fn run_with_timeout(args: &[&str], timeout_secs: u64) -> Option<std::process::Ou
         .ok()?;
 
     let deadline = Instant::now() + Duration::from_secs(timeout_secs);
-    loop {
+    let status = loop {
         match child.try_wait() {
-            Ok(Some(_)) => break,
+            Ok(Some(st)) => break st,
             Ok(None) => {
                 if Instant::now() >= deadline {
                     let _ = child.kill();
@@ -33,7 +33,7 @@ fn run_with_timeout(args: &[&str], timeout_secs: u64) -> Option<std::process::Ou
             }
             Err(_) => return None,
         }
-    }
+    };
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
@@ -46,7 +46,7 @@ fn run_with_timeout(args: &[&str], timeout_secs: u64) -> Option<std::process::Ou
     let _ = child.wait();
 
     Some(std::process::Output {
-        status: std::process::ExitStatus::default(),
+        status,
         stdout,
         stderr,
     })

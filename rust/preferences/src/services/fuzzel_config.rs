@@ -175,10 +175,11 @@ impl FuzzelConfig {
         write_atomic(&lines);
     }
 
-    /// pkill -fuzzel (cierra la instancia actual; paridad con el Python).
+    /// Recarga fuzzel (cierra la instancia actual para que relea su config).
     pub fn reload() {
+        // OJO: `pkill -fuzzel` NO hace nada (se parsea como -f -u "zzel").
         let _ = Command::new("pkill")
-            .args(["-fuzzel"])
+            .args(["-x", "fuzzel"])
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .spawn();

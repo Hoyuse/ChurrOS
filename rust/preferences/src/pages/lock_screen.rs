@@ -454,6 +454,7 @@ fn on_use_current_wallpaper(state: &LockStateRef) {
     }
 
     LockScreenService::set_all(&json!({ "wallpaper_path": current }));
+    LockScreenService::apply();
     state
         .borrow()
         .use_current_row
@@ -473,6 +474,7 @@ fn on_apply_custom_path(state: &LockStateRef) {
     }
 
     LockScreenService::set_all(&json!({ "wallpaper_path": path }));
+    LockScreenService::apply();
     state
         .borrow()
         .apply_path_row

@@ -131,29 +131,55 @@ fn update_value_in_block(content: &str, path: &[&str], key: &str, value: &str) -
 }
 
 /// Crea el bloque `path` al final del config, creando los padres que falten.
+/// Crea el bloque `path` (y los padres que falten), con `body_lines` como
+/// contenido del bloque más profundo. Si algún padre ya existe, el bloque
+/// nuevo se anida dentro de él; si no existe ninguno, se añade al final.
+/// (La versión anterior creaba el padre vacío y perdía el hijo.)
 fn create_block(content: &str, path: &[&str], body_lines: &[&str]) -> String {
-    let mut content = content.to_string();
-
+    // Profundidad del prefijo que ya existe.
+    let mut existing_depth = 0usize;
     for i in 1..=path.len() {
-        let sub_path = &path[..i];
-        if find_nested_block(&content, sub_path).is_none() {
-            let indent = "    ".repeat(i - 1);
-            let lines: &[&str] = if i == path.len() { body_lines } else { &[] };
-
-            let mut block = format!("{indent}{} {{\n", sub_path[i - 1]);
-            for ln in lines {
-                block += &format!("{indent}    {ln}\n");
-            }
-            block += &format!("{indent}}}\n");
-
-            if !content.is_empty() && !content.ends_with('\n') {
-                content.push('\n');
-            }
-            content.push_str(&block);
-            return content;
+        if find_nested_block(content, &path[..i]).is_some() {
+            existing_depth = i;
+        } else {
+            break;
         }
     }
-    content
+
+    if existing_depth == path.len() {
+        return content.to_string();
+    }
+
+    // Construir los bloques que faltan, de adentro hacia afuera.
+    let mut inner = String::new();
+    let deepest_indent = "    ".repeat(path.len());
+    for ln in body_lines {
+        inner.push_str(&format!("{deepest_indent}{ln}\n"));
+    }
+    for i in (existing_depth..path.len()).rev() {
+        let indent = "    ".repeat(i);
+        let head = path[i];
+        inner = format!("{indent}{head} {{\n{inner}{indent}}}\n");
+    }
+
+    if existing_depth > 0 {
+        // Anidar justo antes del cierre del padre existente.
+        let (_, parent_end) = find_nested_block(content, &path[..existing_depth]).unwrap();
+        let lines: Vec<&str> = content.lines().collect();
+        let mut out: Vec<String> = lines[..parent_end].iter().map(|s| s.to_string()).collect();
+        for l in inner.lines() {
+            out.push(l.to_string());
+        }
+        out.extend(lines[parent_end..].iter().map(|s| s.to_string()));
+        out.join("\n")
+    } else {
+        let mut c = content.to_string();
+        if !c.is_empty() && !c.ends_with('\n') {
+            c.push('\n');
+        }
+        c.push_str(&inner);
+        c
+    }
 }
 
 /// Extrae el valor de `key` dentro del bloque `block_path` (getters).
@@ -204,59 +230,30 @@ fn py_float_str(v: f64) -> String {
 }
 
 impl NiriConfig {
-    /// pkill -HUP niri (recarga la config en vivo)
+    /// Actualiza `input { keyboard { xkb { layout "..." } } }` (o lo crea).
+    /// La versión anterior usaba una clave plana `xkb-layout` que no existe
+    /// en el config y además rompía con sub-bloques anidados.
     pub fn set_keyboard_layout(layout: &str) {
-        // Añade/actualiza "xkb-layout" en el bloque input del config.kdl
         let content = read();
-        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
 
-        // Buscar bloque "input {"
-        let mut start = None;
-        let mut depth = 0i32;
-        for (i, raw) in lines.iter().enumerate() {
-            let stripped = raw.trim();
-            if start.is_none() && stripped.starts_with("input") && stripped.contains('{') {
-                start = Some(i);
-                depth = 1;
-                continue;
-            }
-            if start.is_some() {
-                depth += stripped.matches('{').count() as i32;
-                depth -= stripped.matches('}').count() as i32;
-                if depth <= 0 {
-                    break;
-                }
-            }
-        }
-        let Some(s) = start else {
-            // No hay bloque input: añadirlo al final
-            let mut content = content;
-            if !content.ends_with('\n') {
-                content.push('\n');
-            }
-            content.push_str(&format!("input {{\n    xkb-layout \"{layout}\"\n}}\n"));
-            write_atomic(&content);
+        // Editar `layout "..."` dentro de input > keyboard > xkb.
+        if let Some(updated) = update_value_in_block(
+            &content,
+            &["input", "keyboard", "xkb"],
+            "layout",
+            &format!("\"{layout}\""),
+        ) {
+            write_atomic(&updated);
             return;
-        };
+        }
 
-        // Reemplazar/insertar la línea xkb-layout dentro del bloque
-        let mut lines = lines;
-        let mut replaced = false;
-        for j in s + 1..lines.len() {
-            let stripped = lines[j].trim();
-            if stripped.starts_with('}') {
-                break;
-            }
-            if stripped.starts_with("xkb-layout") {
-                lines[j] = format!("    xkb-layout \"{layout}\"");
-                replaced = true;
-                break;
-            }
-        }
-        if !replaced {
-            lines.insert(s + 1, format!("    xkb-layout \"{layout}\""));
-        }
-        write_atomic(&lines.join("\n"));
+        // No existe el bloque xkb: crearlo anidado (con sus padres).
+        let result = create_block(
+            &content,
+            &["input", "keyboard", "xkb"],
+            &[&format!("layout \"{layout}\"")],
+        );
+        write_atomic(&result);
     }
 
     /// Recarga la config de niri en vivo (equivalente a reload()).
@@ -848,5 +845,36 @@ mod tests {
         assert_eq!(off, NiriConfig::set_glass_blur(&off, false).unwrap());
         // El resto del config no cambia
         assert_eq!(on.lines().count(), content.lines().count());
+    }
+
+    #[test]
+    fn create_block_nested_preserves_parent_and_child() {
+        let content = "layout {\n    gaps 8\n}\n";
+        // El padre "layout" existe; se debe anidar "border" dentro con su cuerpo.
+        let out = create_block(content, &["layout", "border"], &["on"]);
+        assert!(out.contains("layout {"), "falta layout: {out}");
+        assert!(out.contains("    border {"), "border no anidado: {out}");
+        assert!(out.contains("        on"), "falta cuerpo on: {out}");
+        assert!(out.contains("gaps 8"), "se perdio gaps: {out}");
+    }
+
+    #[test]
+    fn create_block_creates_full_path_when_missing() {
+        let content = "";
+        let out = create_block(content, &["input", "keyboard", "xkb"], &["layout \"us\""]);
+        assert!(out.contains("input {"));
+        assert!(out.contains("    keyboard {"));
+        assert!(out.contains("        xkb {"));
+        assert!(out.contains("            layout \"us\""));
+    }
+
+    #[test]
+    fn update_value_in_block_updates_nested_xkb() {
+        let content =
+            "input {\n    keyboard {\n        xkb {\n            layout \"us\"\n        }\n    }\n}\n";
+        let updated = update_value_in_block(content, &["input", "keyboard", "xkb"], "layout", "\"es\"")
+            .expect("actualizar layout");
+        assert!(updated.contains("layout \"es\""), "no actualizo layout: {updated}");
+        assert!(!updated.contains("layout \"us\""), "no quito el layout viejo: {updated}");
     }
 }

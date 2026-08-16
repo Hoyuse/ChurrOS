@@ -59,22 +59,28 @@ fn run_no_output(args: &[&str]) {
 
 pub struct PowerService;
 
+/// Ruta del primer dispositivo de batería de `upower -e`
+/// (línea que termina en "battery": BAT0, CMB0, hidpp_battery_*, etc.).
+fn battery_device() -> Option<String> {
+    let output = run(&["upower", "-e"]);
+    output
+        .lines()
+        .find(|l| l.trim().ends_with("battery"))
+        .map(|l| l.trim().to_string())
+}
+
 impl PowerService {
     /// True si hay una batería detectada (upower -e termina en "battery").
     pub fn battery_present() -> bool {
-        let output = run(&["upower", "-e"]);
-        if output.is_empty() {
-            return false;
-        }
-        output.lines().any(|l| l.trim().ends_with("battery"))
+        battery_device().is_some()
     }
 
     /// Porcentaje de carga (0-100); si no hay batería/upower falla -> 100.
     pub fn battery_percentage() -> i64 {
-        let mut output = run(&["upower", "-i", "/org/freedesktop/UPower/devices/battery_BAT0"]);
-        if output.is_empty() {
-            output = run(&["upower", "-i", "/org/freedesktop/UPower/devices/battery_BAT1"]);
-        }
+        let Some(device) = battery_device() else {
+            return 100;
+        };
+        let output = run(&["upower", "-i", &device]);
         for line in output.lines() {
             if line.contains("percentage") {
                 if let Some((_, v)) = line.split_once(':') {
@@ -92,10 +98,10 @@ impl PowerService {
     /// NOTA: el docstring del Python dice 'Cargando'/'Descargando'/'Llena' pero
     /// el codigo devuelve el valor crudo en ingles; se porta el comportamiento real.
     pub fn battery_state() -> String {
-        let mut output = run(&["upower", "-i", "/org/freedesktop/UPower/devices/battery_BAT0"]);
-        if output.is_empty() {
-            output = run(&["upower", "-i", "/org/freedesktop/UPower/devices/battery_BAT1"]);
-        }
+        let Some(device) = battery_device() else {
+            return "Desconocido".to_string();
+        };
+        let output = run(&["upower", "-i", &device]);
         for line in output.lines() {
             if line.contains("state") {
                 if let Some((_, v)) = line.split_once(':') {
@@ -121,9 +127,13 @@ impl PowerService {
         let output = run(&["powerprofilesctl", "list"]);
         let mut profiles = Vec::new();
         for line in output.lines() {
-            let t = line.trim();
+            // `powerprofilesctl list` imprime `  performance:` (con ":") y un
+            // `*` en el activo; el match exacto fallaba por los dos puntos.
+            let t = line.trim().trim_end_matches(':').trim();
             if matches!(t, "performance" | "balanced" | "power-saver") {
-                profiles.push(t.to_string());
+                if !profiles.contains(&t.to_string()) {
+                    profiles.push(t.to_string());
+                }
             }
         }
         if profiles.is_empty() {

@@ -37,6 +37,26 @@ fn dotfiles() -> Vec<(&'static str, PathBuf)> {
 
 const DEFAULTS_DIR: &str = "/usr/share/churros/defaults";
 
+/// Une `base` + `rel` rechazando rutas absolutas y componentes ".."
+/// (protección contra path traversal en backups maliciosos).
+fn safe_join(base: &Path, rel: &str) -> Option<PathBuf> {
+    let rel_path = Path::new(rel);
+    if rel_path.is_absolute() {
+        return None;
+    }
+    if rel_path.components().any(|c| {
+        matches!(
+            c,
+            std::path::Component::ParentDir
+                | std::path::Component::RootDir
+                | std::path::Component::Prefix(_)
+        )
+    }) {
+        return None;
+    }
+    Some(base.join(rel_path))
+}
+
 /// Copia recursiva de directorio (como shutil.copytree).
 fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     fs::create_dir_all(dst)?;
@@ -79,7 +99,9 @@ impl BackupService {
 
         let result = (|| -> std::io::Result<()> {
             let file = fs::File::create(&tmp)?;
-            let mut tar = tar::Builder::new(file);
+            // Compresión zstd real (la extensión es .tar.zst).
+            let encoder = zstd::stream::Encoder::new(file, 3)?;
+            let mut tar = tar::Builder::new(encoder);
 
             if settings_file().exists() {
                 tar.append_path_with_name(&settings_file(), "churros/settings.json")?;
@@ -91,7 +113,8 @@ impl BackupService {
                 }
             }
 
-            tar.finish()?;
+            let encoder = tar.into_inner()?;
+            encoder.finish()?;
             Ok(())
         })();
 
@@ -120,7 +143,20 @@ impl BackupService {
         let mut has_dotfiles = false;
 
         let file = fs::File::open(&src).map_err(|e| format!("Archivo invalido: {e}"))?;
-        let mut archive = tar::Archive::new(file);
+        let raw = std::io::Read::bytes(file)
+            .collect::<Result<Vec<u8>, _>>()
+            .map_err(|e| format!("Archivo invalido: {e}"))?;
+
+        // Backup comprimido con zstd (magic 28 B5 2F FD) o tar plano (legacy).
+        let reader: Box<dyn Read> = if raw.starts_with(&[0x28, 0xB5, 0x2F, 0xFD]) {
+            Box::new(
+                zstd::stream::read::Decoder::new(&raw[..])
+                    .map_err(|e| format!("Archivo invalido: {e}"))?,
+            )
+        } else {
+            Box::new(&raw[..])
+        };
+        let mut archive = tar::Archive::new(reader);
 
         let entries = archive
             .entries()
@@ -152,15 +188,16 @@ impl BackupService {
             return Err("El archivo no es un backup de ChurrOS".to_string());
         }
 
-        // NOTA: igual que el Python original, las rutas no se sanitizan
-        // (un tar malicioso con ".." podría escribir fuera de ~/.config).
+        // Sanitizar rutas: rechazar absolutas y ".." (path traversal).
         for (name, is_dir, data) in items {
             if name.starts_with("churros/") {
                 if is_dir {
                     continue;
                 }
                 let rel = name.trim_start_matches("churros/");
-                let target = churros_dir().join(rel);
+                let Some(target) = safe_join(&churros_dir(), rel) else {
+                    continue;
+                };
                 if let Some(parent) = target.parent() {
                     fs::create_dir_all(parent).map_err(|e| e.to_string())?;
                 }
@@ -170,6 +207,11 @@ impl BackupService {
                 let _ = parts.next(); // "dotfiles"
                 let Some(df_name) = parts.next() else { continue };
                 let rest = parts.next().unwrap_or("");
+
+                // Solo dotfiles conocidos (evita escribir dirs arbitrarios).
+                if !dotfiles().iter().any(|(n, _)| *n == df_name) {
+                    continue;
+                }
 
                 let target_dir = home().join(".config").join(df_name);
 
@@ -181,7 +223,9 @@ impl BackupService {
                     continue;
                 }
 
-                let target = target_dir.join(rest);
+                let Some(target) = safe_join(&target_dir, rest) else {
+                    continue;
+                };
                 if let Some(parent) = target.parent() {
                     fs::create_dir_all(parent).map_err(|e| e.to_string())?;
                 }
@@ -238,12 +282,10 @@ impl BackupService {
 
     /// Recarga waybar/mako/fuzzel (equivalente a _reload_services).
     pub fn reload_services() {
-        // pkill -fuzzel es un bug del Python original (pkill interpreta
-        // "-fuzzel" como -f + -u "zzel"); se replica tal cual por paridad.
         for cmd in [
             vec!["pkill", "-HUP", "waybar"],
             vec!["makoctl", "reload"],
-            vec!["pkill", "-fuzzel"],
+            vec!["pkill", "-x", "fuzzel"],
         ] {
             let _ = Command::new(&cmd[0])
                 .args(&cmd[1..])

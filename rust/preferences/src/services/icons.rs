@@ -30,6 +30,32 @@ fn uid() -> u32 {
     1000
 }
 
+/// Socket wayland real del runtime dir (wayland-0, wayland-1, ...).
+/// Fallback al valor de la variable de entorno si existe.
+fn detect_wayland_display() -> Option<String> {
+    if let Ok(v) = std::env::var("WAYLAND_DISPLAY") {
+        if !v.is_empty() {
+            return Some(v);
+        }
+    }
+    let xrd = std::env::var("XDG_RUNTIME_DIR")
+        .unwrap_or_else(|_| format!("/run/user/{}", uid()));
+    let dir = PathBuf::from(&xrd);
+    if !dir.is_dir() {
+        return None;
+    }
+    let Ok(entries) = fs::read_dir(&dir) else {
+        return None;
+    };
+    let mut socks: Vec<String> = entries
+        .flatten()
+        .filter_map(|e| e.file_name().into_string().ok())
+        .filter(|n| n.starts_with("wayland-"))
+        .collect();
+    socks.sort();
+    socks.first().cloned()
+}
+
 /// Escribe/actualiza una clave en ~/.config/gtk-{3.0,4.0}/settings.ini
 /// (equivalente al bucle de ver/dir en IconsService.set del Python)
 fn write_gtk_ini(key: &str, value: &str) {
@@ -65,7 +91,9 @@ fn write_gtk_ini(key: &str, value: &str) {
 fn apply_live_icon_theme(theme: &str) {
     let mut env: Vec<(String, String)> = std::env::vars().collect();
     if !env.iter().any(|(k, _)| k == "WAYLAND_DISPLAY") {
-        env.push(("WAYLAND_DISPLAY".to_string(), "wayland-1".to_string()));
+        if let Some(sock) = detect_wayland_display() {
+            env.push(("WAYLAND_DISPLAY".to_string(), sock));
+        }
     }
     if !env.iter().any(|(k, _)| k == "XDG_RUNTIME_DIR") {
         env.push(("XDG_RUNTIME_DIR".to_string(), format!("/run/user/{}", uid())));

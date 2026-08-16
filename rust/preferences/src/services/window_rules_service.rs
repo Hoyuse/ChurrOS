@@ -124,30 +124,12 @@ fn serialize_rule(rule: &Value) -> String {
     lines.join("\n") + "\n"
 }
 
-/// Quita el comentario "// Window rules" final del prefijo
-/// (equivalente a re.sub(r"//+\s*Window rules\s*\n+\s*\Z", "", ...)).
-fn strip_window_rules_comment(prefix: &str) -> String {
-    let trimmed = prefix.trim_end();
-    const MARK: &str = "Window rules";
-
-    if let Some(pos) = trimmed.rfind(MARK) {
-        if pos + MARK.len() == trimmed.len() {
-            let before = &trimmed[..pos];
-            let before = before.trim_end();
-            if before.ends_with('/') {
-                let mut cut = before.len();
-                let bytes = before.as_bytes();
-                while cut > 0 && (bytes[cut - 1] == b'/' || bytes[cut - 1] == b' ' || bytes[cut - 1] == b'\t') {
-                    cut -= 1;
-                }
-                return before[..cut].trim_end().to_string();
-            }
-        }
-    }
-    prefix.to_string()
-}
-
 /// Reescribe todas las reglas (equivalente a _rewrite_all).
+///
+/// Reemplaza SOLO los bloques window-rule, conservando el contenido que haya
+/// entre ellos (comentarios, marcadores [CHURROS-GLASS-*], otros bloques).
+/// La versión anterior descartaba todo lo que hubiera entre el primer y el
+/// último bloque.
 fn rewrite_all(rules: &[Value]) {
     let content = read();
     let (blocks, lines) = find_all_blocks(&content, "window-rule");
@@ -155,26 +137,24 @@ fn rewrite_all(rules: &[Value]) {
         return;
     }
 
-    let first_start = blocks[0].0;
-    let last_end = blocks[blocks.len() - 1].1;
-
-    let mut prefix = lines[..first_start].join("\n");
-    if !prefix.is_empty() {
-        prefix = strip_window_rules_comment(&(prefix.trim_end().to_string() + "\n"));
+    let mut out: Vec<String> = Vec::new();
+    let mut cursor = 0usize;
+    for (i, (start, end)) in blocks.iter().enumerate() {
+        for l in &lines[cursor..*start] {
+            out.push(l.clone());
+        }
+        if let Some(rule) = rules.get(i) {
+            for l in serialize_rule(rule).lines() {
+                out.push(l.to_string());
+            }
+        }
+        cursor = end + 1;
     }
-    if prefix.is_empty() {
-        prefix = String::new();
+    for l in &lines[cursor..] {
+        out.push(l.clone());
     }
 
-    let suffix = lines[last_end + 1..].join("\n");
-
-    let mut body = String::new();
-    for r in rules {
-        body += &serialize_rule(r);
-    }
-
-    let new_content = format!("{prefix}\n// Window rules\n{body}{suffix}");
-    write_atomic(&new_content);
+    write_atomic(&(out.join("\n") + "\n"));
 }
 
 impl WindowRulesService {

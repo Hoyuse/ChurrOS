@@ -66,20 +66,34 @@ impl PrivacyService {
         let action = if value { "enable" } else { "disable" };
         let ufw_action = if value { "enable" } else { "disable" };
 
-        if getuid() == 0 {
-            let _ = Command::new("systemctl")
-                .args([action, "ufw.service"])
-                .status();
-            let _ = Command::new("ufw").args(["--force", ufw_action]).status();
+        let (mut cmd_systemctl, mut cmd_ufw) = if getuid() == 0 {
+            (
+                Command::new("systemctl"),
+                Command::new("ufw"),
+            )
         } else {
-            let _ = Command::new("pkexec")
-                .args(["systemctl", action, "ufw.service"])
-                .status();
-            let _ = Command::new("pkexec")
-                .args(["ufw", "--force", ufw_action])
-                .status();
-        }
-        true
+            (Command::new("pkexec"), Command::new("pkexec"))
+        };
+        let systemctl_ok = cmd_systemctl
+            .args(if getuid() == 0 {
+                vec![action, "ufw.service"]
+            } else {
+                vec!["systemctl", action, "ufw.service"]
+            })
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        let ufw_ok = cmd_ufw
+            .args(if getuid() == 0 {
+                vec!["--force", ufw_action]
+            } else {
+                vec!["ufw", "--force", ufw_action]
+            })
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+
+        systemctl_ok && ufw_ok
     }
 
     #[allow(dead_code)] // portado por paridad; sin uso en las páginas actuales

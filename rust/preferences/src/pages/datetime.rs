@@ -310,12 +310,8 @@ fn refresh_info(ui: &TzUi) {
     if !tz.is_empty() {
         ui.tz_row.set_subtitle(&tz);
     }
-    let zone_short = DatetimeService::current_zone_short();
-    if !zone_short.is_empty() {
-        ui.status_row.set_subtitle(&zone_short);
-    } else if !tz.is_empty() {
-        ui.status_row.set_subtitle(&tz);
-    }
+    // NOTA: no tocar status_row aquí — los callbacks lo usan como feedback
+    // ("Zona horaria cambiada a ...") y antes se sobrescribía al instante.
     ui.ntp_switch.set_active(DatetimeService::get_ntp());
     let rtc = DatetimeService::get_rtc_time();
     if !rtc.is_empty() {

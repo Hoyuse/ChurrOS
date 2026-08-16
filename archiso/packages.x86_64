@@ -218,6 +218,9 @@ evince
 # Calculadora
 gnome-calculator
 
+# Colores dinámicos (pywal) — desde el repo local [churros]; dependencia: imagemagick
+python-pywal
+
 # Calamares installer dependencies
 kcoreaddons
 kpmcore

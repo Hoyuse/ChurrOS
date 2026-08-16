@@ -329,27 +329,18 @@ impl PreferencesWindow {
         let is_narrow = Rc::clone(&self.is_narrow);
         let threshold = self.narrow_threshold;
 
-        // Check cada 250ms mientras la ventana está mapeada
+        // connect_realize (una sola vez) en vez de connect_map: el map podía
+        // dispararse varias veces y acumular timers de 250ms concurrentes.
         let map_window = window.clone();
-        map_window.connect_map(move |_| {
+        map_window.connect_realize(move |_| {
+            apply_narrow(&window, &is_narrow, &sidebar_revealer, &toggle_button, threshold);
+
             let w = window.clone();
             let is_narrow = is_narrow.clone();
             let sidebar_revealer = sidebar_revealer.clone();
             let toggle_button = toggle_button.clone();
             glib::timeout_add_local(std::time::Duration::from_millis(250), move || {
-                let width = w.width();
-                let new_narrow = width < threshold;
-
-                if *is_narrow.borrow() != new_narrow {
-                    *is_narrow.borrow_mut() = new_narrow;
-                    if new_narrow {
-                        sidebar_revealer.set_reveal_child(false);
-                        toggle_button.set_visible(true);
-                    } else {
-                        sidebar_revealer.set_reveal_child(true);
-                        toggle_button.set_visible(false);
-                    }
-                }
+                apply_narrow(&w, &is_narrow, &sidebar_revealer, &toggle_button, threshold);
                 glib::ControlFlow::Continue
             });
         });
@@ -366,6 +357,22 @@ impl PreferencesWindow {
 impl PreferencesWindow {
     pub fn present(&self) {
         self.window.present();
+    }
+}
+
+/// Aplica el estado "narrow" de la ventana (oculta/muestra sidebar).
+fn apply_narrow(
+    window: &gtk::ApplicationWindow,
+    is_narrow: &Rc<RefCell<bool>>,
+    sidebar_revealer: &gtk::Revealer,
+    toggle_button: &gtk::Button,
+    threshold: i32,
+) {
+    let new_narrow = window.width() < threshold;
+    if *is_narrow.borrow() != new_narrow {
+        *is_narrow.borrow_mut() = new_narrow;
+        sidebar_revealer.set_reveal_child(!new_narrow);
+        toggle_button.set_visible(new_narrow);
     }
 }
 

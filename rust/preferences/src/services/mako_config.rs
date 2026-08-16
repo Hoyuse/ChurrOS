@@ -113,7 +113,11 @@ fn get_key_opt(section: &str, key: &str) -> Option<String> {
 
 fn get_key_bool(section: &str, key: &str, default: bool) -> bool {
     match get_key_opt(section, key) {
-        Some(v) => v == "true",
+        // mako acepta true/false/yes/no/1/0
+        Some(v) => matches!(
+            v.trim().to_ascii_lowercase().as_str(),
+            "true" | "yes" | "1" | "on"
+        ),
         None => default,
     }
 }

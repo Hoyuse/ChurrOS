@@ -9,9 +9,6 @@ groups:
       - name: waypaper
         description: Selector gráfico de wallpapers con previsualización
         selected: false
-      - name: python-pywal
-        description: Genera esquemas de color desde el wallpaper
-        selected: false
       - name: wlogout
         description: Menú de salida para Wayland (Mod+Shift+Q)
         selected: false

@@ -162,6 +162,11 @@ impl ConnectivityService {
         run_no_output(&["nmcli", "radio", "wifi", if enabled { "on" } else { "off" }]);
     }
 
+    /// Fuerza un reescaneo de redes Wi-Fi (nmcli device wifi rescan).
+    pub fn rescan_wifi() {
+        run_no_output(&["nmcli", "device", "wifi", "rescan"]);
+    }
+
     /// SSID de la red activa, si hay.
     pub fn current_network() -> Option<String> {
         if !Self::wifi_available() {
@@ -215,7 +220,7 @@ impl ConnectivityService {
             let signal = fields.next().unwrap_or_default();
             let security = fields.next().unwrap_or_default();
 
-            let ssid = ssid.replace("\\:", ":");
+            let ssid = ssid;
             let ssid_final = if ssid.is_empty() { "Hidden Network".to_string() } else { ssid };
             let signal = parse_signal(&signal);
 
@@ -224,7 +229,7 @@ impl ConnectivityService {
                 saved: saved.contains(&ssid_final),
                 ssid: ssid_final,
                 signal,
-                security: security.replace("\\:", ":"),
+                security,
             };
             networks.push(network);
         }
@@ -243,7 +248,7 @@ impl ConnectivityService {
             b.connected
                 .cmp(&a.connected)
                 .then(b.saved.cmp(&a.saved))
-                .then(a.signal.cmp(&b.signal))
+                .then(b.signal.cmp(&a.signal))
         });
         deduped
     }
@@ -251,16 +256,23 @@ impl ConnectivityService {
     /// Nombres de conexiones wifi guardadas (802-11-wireless).
     fn saved_networks() -> std::collections::HashSet<String> {
         let mut saved = std::collections::HashSet::new();
-        let (code, out, _) = wifi_run(&["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"]);
+        let (code, out, _) = wifi_run(&[
+            "nmcli",
+            "--escape",
+            "yes",
+            "-t",
+            "-f",
+            "NAME,TYPE",
+            "connection",
+            "show",
+        ]);
         if code != 0 {
             return saved;
         }
         for line in out.lines() {
-            let mut parts = line.splitn(2, ':');
-            let name = parts.next().unwrap_or("");
-            let conn_type = parts.next().unwrap_or("");
-            if conn_type == "802-11-wireless" {
-                saved.insert(name.to_string());
+            let fields = parse_escaped_fields(line);
+            if fields.len() >= 2 && fields[1] == "802-11-wireless" {
+                saved.insert(fields[0].clone());
             }
         }
         saved

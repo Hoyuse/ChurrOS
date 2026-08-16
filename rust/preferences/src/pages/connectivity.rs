@@ -78,33 +78,53 @@ pub fn build(navigator: gtk::Stack) -> Page {
     page.add(wifi_group.borrow().widget());
     page.add(bluetooth_group.borrow().widget());
 
-    // Cargar datos en thread (nmcli/bluetoothctl pueden tardar).
-    // Los Rc<RefCell<Group>> NO son Send: el thread solo produce datos y
-    // los envía por canal; el hilo principal los consume en un timeout.
-    let (tx, rx) = std::sync::mpsc::channel::<ConnectivityData>();
-    std::thread::spawn(move || {
-        let _ = tx.send(load_data());
-    });
+    // reload: función reutilizable que lanza la carga en thread y repuebla.
+    // Se guarda en un Rc para poder pasarla a los callbacks de los switches
+    // y a la fila "Recargar redes".
+    let reload: Rc<RefCell<Option<Rc<dyn Fn()>>>> = Rc::new(RefCell::new(None));
 
-    let wifi_group_ui = Rc::clone(&wifi_group);
-    let bluetooth_group_ui = Rc::clone(&bluetooth_group);
-    glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
-        match rx.try_recv() {
-            Ok(data) => {
-                populate(&wifi_group_ui, &bluetooth_group_ui, data);
-                glib::ControlFlow::Break
-            }
-            Err(_) => glib::ControlFlow::Continue,
+    let start_load = {
+        let wg = Rc::clone(&wifi_group);
+        let bg = Rc::clone(&bluetooth_group);
+        let reload = Rc::clone(&reload);
+        move || {
+            let (tx, rx) = std::sync::mpsc::channel::<ConnectivityData>();
+            std::thread::spawn(move || {
+                let _ = tx.send(load_data());
+            });
+            let wg = Rc::clone(&wg);
+            let bg = Rc::clone(&bg);
+            let reload = Rc::clone(&reload);
+            glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+                match rx.try_recv() {
+                    Ok(data) => {
+                        populate(&wg, &bg, data, &reload);
+                        glib::ControlFlow::Break
+                    }
+                    Err(_) => glib::ControlFlow::Continue,
+                }
+            });
         }
-    });
+    };
+
+    *reload.borrow_mut() = Some(Rc::new(start_load.clone()));
+    start_load();
 
     page
+}
+
+/// Lanza un reload (recarga de datos) si ya está inicializado.
+fn trigger_reload(reload: &Rc<RefCell<Option<Rc<dyn Fn()>>>>) {
+    if let Some(f) = reload.borrow().as_ref() {
+        f();
+    }
 }
 
 fn populate(
     wifi_group: &Rc<RefCell<Group>>,
     bluetooth_group: &Rc<RefCell<Group>>,
     data: ConnectivityData,
+    reload: &Rc<RefCell<Option<Rc<dyn Fn()>>>>,
 ) {
     // ============ Wi-Fi ============
     wifi_group.borrow_mut().clear();
@@ -119,7 +139,7 @@ fn populate(
             None,
         ));
     } else {
-        let wifi_group_ui = Rc::clone(wifi_group);
+        let wifi_reload = Rc::clone(reload);
         wifi_group.borrow_mut().add(&SwitchRow::new(
             "Activar Wi-Fi",
             None,
@@ -127,7 +147,7 @@ fn populate(
             data.wifi.enabled,
             Some(Box::new(move |active| {
                 ConnectivityService::set_wifi(active);
-                let _ = &wifi_group_ui;
+                trigger_reload(&wifi_reload);
             })),
         ));
 
@@ -191,13 +211,17 @@ fn populate(
             }
         }
 
+        let rescan_reload = Rc::clone(reload);
         wifi_group.borrow_mut().add(&Row::new(
             "Recargar redes",
             Some("Forzar un nuevo escaneo"),
             None,
             None,
             None,
-            None,
+            Some(Box::new(move |_btn| {
+                ConnectivityService::rescan_wifi();
+                trigger_reload(&rescan_reload);
+            })),
         ));
     }
 
@@ -214,7 +238,7 @@ fn populate(
             None,
         ));
     } else {
-        let bluetooth_group_ui = Rc::clone(bluetooth_group);
+        let bluetooth_reload = Rc::clone(reload);
         bluetooth_group.borrow_mut().add(&SwitchRow::new(
             "Activar Bluetooth",
             None,
@@ -222,7 +246,7 @@ fn populate(
             data.bluetooth.enabled,
             Some(Box::new(move |active| {
                 ConnectivityService::set_bluetooth(active);
-                let _ = &bluetooth_group_ui;
+                trigger_reload(&bluetooth_reload);
             })),
         ));
 

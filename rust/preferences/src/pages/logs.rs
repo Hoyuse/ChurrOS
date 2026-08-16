@@ -122,17 +122,29 @@ fn set_validate(text: &str, css_class: &str) {
     });
 }
 
-/// Equivalente a _refresh_validate (síncrono; el Python usa un thread).
+/// Equivalente a _refresh_validate (asíncrono: niri validate en un thread).
 fn refresh_validate() {
     set_validate("Validando...", "row-subtitle");
 
-    let (ok, msg) = LogsService::niri_validate();
+    let (tx, rx) = std::sync::mpsc::channel::<(bool, String)>();
+    std::thread::spawn(move || {
+        let (ok, msg) = LogsService::niri_validate();
+        let _ = tx.send((ok, msg));
+    });
 
-    if ok {
-        set_validate("Config valida.", "row-subtitle");
-    } else {
-        set_validate(&format!("Config invalida:\n{msg}"), "row-title");
-    }
+    glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+        match rx.try_recv() {
+            Ok((ok, msg)) => {
+                if ok {
+                    set_validate("Config valida.", "row-subtitle");
+                } else {
+                    set_validate(&format!("Config invalida:\n{msg}"), "row-title");
+                }
+                glib::ControlFlow::Break
+            }
+            Err(_) => glib::ControlFlow::Continue,
+        }
+    });
 }
 
 /// Equivalente a _set_log.
@@ -147,15 +159,27 @@ fn set_log(text: &str) {
     });
 }
 
-/// Equivalente a _refresh_logs (síncrono; el Python usa un thread).
+/// Equivalente a _refresh_logs (asíncrono: journalctl en un thread).
 fn refresh_logs() {
     set_log("Cargando...");
 
-    let text = LogsService::niri_logs(400);
+    let (tx, rx) = std::sync::mpsc::channel::<String>();
+    std::thread::spawn(move || {
+        let text = LogsService::niri_logs(400);
+        let _ = tx.send(text);
+    });
 
-    if text.trim().is_empty() {
-        set_log("(sin logs)");
-    } else {
-        set_log(&text);
-    }
+    glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+        match rx.try_recv() {
+            Ok(text) => {
+                if text.trim().is_empty() {
+                    set_log("(sin logs)");
+                } else {
+                    set_log(&text);
+                }
+                glib::ControlFlow::Break
+            }
+            Err(_) => glib::ControlFlow::Continue,
+        }
+    });
 }

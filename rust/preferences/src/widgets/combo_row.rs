@@ -11,7 +11,7 @@ use std::rc::Rc;
 pub struct ComboRow {
     pub root: gtk::Box,
     pub combo: gtk::DropDown,
-    values: RefCell<Vec<String>>,
+    values: Rc<RefCell<Vec<String>>>,
     callback: Rc<RefCell<Option<Box<dyn Fn(&str)>>>>,
 }
 
@@ -54,8 +54,19 @@ impl ComboRow {
 
         root.append(&labels);
 
+        // Si el valor seleccionado no está en la lista, añadirlo al principio:
+        // así el combo nunca muestra un índice 0 erróneo y no se pisa el valor
+        // real del usuario al guardar.
+        let mut effective: Vec<&str> = values.to_vec();
+        if let Some(sel) = selected {
+            if !sel.is_empty() && !effective.contains(&sel) {
+                effective.insert(0, sel);
+            }
+        }
+        let values = effective;
+
         let model = gtk::StringList::new(&[]);
-        for v in values {
+        for v in &values {
             model.append(v);
         }
 
@@ -69,15 +80,16 @@ impl ComboRow {
 
         root.append(&combo);
 
-        let values_owned: Vec<String> = values.iter().map(|s| s.to_string()).collect();
+        let values_owned: Rc<RefCell<Vec<String>>> =
+            Rc::new(RefCell::new(values.iter().map(|s| s.to_string()).collect()));
         let callback_rc = Rc::new(RefCell::new(callback));
 
         if callback_rc.borrow().is_some() {
             let cb = Rc::clone(&callback_rc);
-            let values = values_owned.clone();
+            let values = Rc::clone(&values_owned);
             combo.connect_selected_notify(move |combo| {
                 let idx = combo.selected() as usize;
-                if let Some(value) = values.get(idx) {
+                if let Some(value) = values.borrow().get(idx) {
                     if let Some(cb) = cb.borrow().as_ref() {
                         cb(value);
                     }
@@ -88,7 +100,7 @@ impl ComboRow {
         Self {
             root,
             combo,
-            values: RefCell::new(values_owned),
+            values: values_owned,
             callback: callback_rc,
         }
     }
@@ -108,12 +120,13 @@ impl ComboRow {
             model.append(v);
         }
         self.combo.set_model(Some(&model));
+        // El callback lee `self.values` compartido, así que actualizarlo aquí
+        // lo mantiene sincronizado (antes usaba una copia obsoleta).
         *self.values.borrow_mut() = values.iter().map(|s| s.to_string()).collect();
-        if let Some(sel) = selected {
-            if let Some(idx) = self.values.borrow().iter().position(|v| v == sel) {
-                self.combo.set_selected(idx as u32);
-            }
-        }
+        let idx = selected
+            .and_then(|sel| self.values.borrow().iter().position(|v| v == sel))
+            .unwrap_or(0);
+        self.combo.set_selected(idx as u32);
     }
 }
 
