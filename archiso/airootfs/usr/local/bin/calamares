@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 #
 # calamares — ejecuta el instalador con privilegios de root de forma
-# automática. Si ya corre como root (p. ej. vía sudo desde el desktop
-# entry) ejecuta el binario real directamente; si no, eleva con
-# churros-pkexec (pkexec dispara io.calamares.calamares.pkexec.run,
-# permitida sin contraseña para el usuario churros, con fallback a sudo).
+# automática. Usa sudo -E para preservar el entorno gráfico
+# (WAYLAND_DISPLAY, XDG_RUNTIME_DIR, etc.); el usuario churros tiene
+# sudo NOPASSWD, así que no pide contraseña.
 #
 
 if [ "$(id -u)" -eq 0 ]; then
     exec /usr/bin/calamares "$@"
 fi
 
-exec /usr/bin/churros-pkexec /usr/bin/calamares "$@"
+exec sudo -E /usr/bin/calamares "$@"
