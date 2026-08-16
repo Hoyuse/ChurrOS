@@ -195,7 +195,7 @@ fn set_niri_cursor_size(size: f64) {
         let new_block = rewrite_cursor_block(block, size_i);
         new_content = Some(format!(
             "{}{}{}",
-            &content[line_start..brace_open],
+            &content[line_start..=brace_open],
             new_block,
             &content[close..]
         ));

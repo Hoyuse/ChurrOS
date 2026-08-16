@@ -79,14 +79,12 @@ fn which(bin: &str) -> bool {
 fn build_swaylock_cmd(data: &Value) -> Vec<String> {
     let mut cmd = vec!["swaylock".to_string()];
 
+    // swaylock (stock) no tiene "--indicator <tipo>": el anillo es el
+    // indicador por defecto y "none" se consigue con -u. "bar"/"dots"
+    // tampoco existen en stock, caen al anillo por defecto.
     let indicator = data.get("indicator").and_then(|v| v.as_str()).unwrap_or("auto");
-
-    if indicator != "auto" && !indicator.is_empty() {
-        cmd.push("-i".to_string());
-        cmd.push(indicator.to_string());
-    } else if indicator == "auto" {
-        cmd.push("-i".to_string());
-        cmd.push("ring".to_string());
+    if indicator == "none" {
+        cmd.push("-u".to_string());
     }
 
     let wp = data.get("wallpaper_path").and_then(|v| v.as_str()).unwrap_or("");
@@ -143,6 +141,14 @@ fn build_swaylock_cmd(data: &Value) -> Vec<String> {
     }
 
     cmd
+}
+
+/// Cita un argumento para sh (swayidle ejecuta el comando con sh -c).
+fn sh_quote(arg: &str) -> String {
+    if arg.chars().all(|c| c.is_ascii_alphanumeric() || "/._-+@%:".contains(c)) {
+        return arg.to_string();
+    }
+    format!("'{}'", arg.replace('\'', r"'\''"))
 }
 
 impl LockScreenService {
@@ -248,7 +254,13 @@ impl LockScreenService {
             .unwrap_or(600);
 
         let swaylock_cmd = build_swaylock_cmd(&data);
-        let joined = swaylock_cmd.join(" ").replace('\'', r"'\''");
+        // swayidle ejecuta el comando con sh -c: citar cada argumento
+        // (el font por defecto contiene espacios y rompía el comando).
+        let joined = swaylock_cmd
+            .iter()
+            .map(|a| sh_quote(a))
+            .collect::<Vec<_>>()
+            .join(" ");
 
         // swayidle -w timeout <segundos> "<comando swaylock>"
         let mut cmd = Command::new("swayidle");

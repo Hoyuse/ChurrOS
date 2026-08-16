@@ -2,15 +2,12 @@
     ChurrOS Popups — Liquid Glass base
     Accent: #F97316
 
-    Diseño común de todos los popups: fondo glass, cabecera con icono en
-    badge, tarjetas de contenido, botones de acción y estados de foco.
-    Los CSS por popup (audio.css, network.css…) extienden o ajustan estos
-    estilos con PRIORITY_APPLICATION + 1.
+    Transparencia: el alpha del fondo de .popup; el blur lo aplica niri
+    (window-rule background-effect blur true para org.churros.popup).
 */
 
 .popup {
-    background: rgba(15,15,16,.78);
-    backdrop-filter: blur(28px) saturate(1.5);
+    background: rgba(15,15,16,.55);
     border-radius: 20px;
     border: 1px solid rgba(255,255,255,.09);
     box-shadow: 0 12px 48px rgba(0,0,0,.55),
@@ -54,7 +51,6 @@
 /* ── Tarjeta base de contenido ─────────────────────── */
 .card {
     background: rgba(255,255,255,.04);
-    backdrop-filter: blur(18px) saturate(1.2);
     border-radius: 16px;
     padding: 16px;
     border: 1px solid rgba(255,255,255,.07);

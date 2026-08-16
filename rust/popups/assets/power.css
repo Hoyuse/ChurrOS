@@ -11,7 +11,6 @@
     border-radius: 14px;
     padding: 13px 16px;
     background: rgba(255,255,255,.05);
-    backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,.07);
     transition: 200ms cubic-bezier(.4,0,.2,1);
     box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;

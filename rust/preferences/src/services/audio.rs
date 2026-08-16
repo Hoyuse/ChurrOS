@@ -149,43 +149,53 @@ fn devices(section: &str) -> Vec<AudioDevice> {
             inside = true;
             continue;
         }
-        if inside {
-            if line.trim().is_empty() {
-                break;
-            }
-            let t = line.trim();
-            let (is_default, rest) = match t.strip_prefix('*') {
-                Some(r) => (true, r.trim()),
-                None => (false, t),
-            };
-
-            // regex Python: (\*?)\s*([0-9]+)\.\s+(.*)
-            let digits: String = rest
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect();
-            if digits.is_empty() {
-                continue;
-            }
-            let after_digits = &rest[digits.len()..];
-            let Some(after_dot) = after_digits.strip_prefix('.') else {
-                continue;
-            };
-            // \s+ obligatorio tras el punto (paridad con la regex)
-            if !after_dot.starts_with(|c: char| c.is_whitespace()) {
-                continue;
-            }
-            let name = after_dot.trim_start();
-            if name.is_empty() {
-                continue;
-            }
-            let id = digits.parse::<u32>().unwrap_or(0);
-            result.push(AudioDevice {
-                id,
-                name: name.to_string(),
-                default: is_default,
-            });
+        if !inside {
+            continue;
         }
+        if line.trim().is_empty() {
+            break;
+        }
+
+        // wpctl antepone caracteres de árbol (│ ├ └ ─) al margen; el trim
+        // normal no los elimina y el parser fallaba con PipeWire moderno.
+        let t = line.trim_start_matches(['│', '├', '└', '─', ' ', '\t']);
+        let (is_default, rest) = match t.strip_prefix('*') {
+            Some(r) => (true, r.trim_start()),
+            None => (false, t.trim_start()),
+        };
+
+        // regex Python: (\*?)\s*([0-9]+)\.\s+(.*)
+        let digits: String = rest
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect();
+        if digits.is_empty() {
+            continue;
+        }
+        let after_digits = &rest[digits.len()..];
+        let Some(after_dot) = after_digits.strip_prefix('.') else {
+            continue;
+        };
+        // \s+ obligatorio tras el punto (paridad con la regex)
+        if !after_dot.starts_with(char::is_whitespace) {
+            continue;
+        }
+        let mut name = after_dot.trim_start();
+        // Quitar el sufijo "[vol: ...]" (mismo comportamiento que el
+        // crate churros-services de los popups).
+        if let Some(idx) = name.find(" [vol:") {
+            name = &name[..idx];
+        }
+        let name = name.trim_end();
+        if name.is_empty() {
+            continue;
+        }
+        let id = digits.parse::<u32>().unwrap_or(0);
+        result.push(AudioDevice {
+            id,
+            name: name.to_string(),
+            default: is_default,
+        });
     }
     result
 }

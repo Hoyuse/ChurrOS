@@ -8,10 +8,10 @@
 
 /* ── Tokens (dark default) ─────────────────────────────── */
 window {
-    --bg-window:        rgba(15,15,16,.82);
-    --bg-sidebar:       rgba(18,18,20,.92);
-    --bg-group:         rgba(22,22,24,.88);
-    --bg-group-hover:   rgba(30,30,34,.92);
+    --bg-window:        rgba(15,15,16,.62);
+    --bg-sidebar:       rgba(18,18,20,.70);
+    --bg-group:         rgba(22,22,24,.75);
+    --bg-group-hover:   rgba(30,30,34,.80);
     --row-bg:           transparent;
     --row-bg-hover:     rgba(255,255,255,.04);
     --row-bg-active:    rgba(255,255,255,.08);
@@ -34,9 +34,9 @@ window {
 
 /* Light override */
 window.light {
-    --bg-window:        rgba(242,242,245,.75);
-    --bg-sidebar:       rgba(255,255,255,.58);
-    --bg-group:         rgba(255,255,255,.72);
+    --bg-window:        rgba(242,242,245,.60);
+    --bg-sidebar:       rgba(255,255,255,.50);
+    --bg-group:         rgba(255,255,255,.62);
     --bg-group-hover:   rgba(0,0,0,.04);
     --row-bg:           transparent;
     --row-bg-hover:     rgba(0,0,0,.04);
@@ -59,21 +59,24 @@ window.light {
 }
 
 /* ── Window base (glass) ───────────────────────────────── */
+/*
+    El blur NO se puede hacer con CSS de GTK (backdrop-filter no
+    existe): lo aplica niri (window-rule background-effect blur true
+    para org.churros.preferences). Aquí solo va el alpha del fondo.
+*/
 window {
     background: var(--bg-window);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
 }
 
 /*
-    Cuando la ventana esta maximizada o fullscreen, no aplicamos
-    backdrop-filter ni border-radius: el fondo del monitor ya es
-    visible detras, asi que mezclarlos hace la interfaz ilegible
-    y amplifica el brillo de wallpapers claros en dark mode.
+    Cuando la ventana esta maximizada o fullscreen, quitamos el
+    border-radius: el fondo del monitor ya es visible detras, asi que
+    mezclarlos hace la interfaz ilegible y amplifica el brillo de
+    wallpapers claros en dark mode.
 */
 window.maximized,
 window.fullscreen {
     background: var(--bg-window);
-    backdrop-filter: none;
     border-radius: 0;
 }
 
@@ -84,7 +87,6 @@ window.fullscreen {
 /* ── Sidebar (glass panel) ─────────────────────────────── */
 .sidebar {
     background: var(--bg-sidebar);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
     border-radius: 18px;
     padding: 12px;
     margin: 16px 10px 16px 16px;
@@ -194,7 +196,6 @@ searchentry image {
 /* ── Group (glass card) ───────────────────────────────── */
 .group {
     background: var(--bg-group);
-    backdrop-filter: blur(16px) saturate(1.2);
     border-radius: 14px;
     padding: 4px;
     border: 1px solid var(--border-soft);
@@ -213,7 +214,6 @@ searchentry image {
 
 .group-card {
     background: var(--bg-group);
-    backdrop-filter: blur(16px) saturate(1.2);
     border: 1px solid var(--border-soft);
     border-radius: 14px;
     padding: 10px;
@@ -301,10 +301,6 @@ switch:checked {
     box-shadow: var(--accent-glow);
 }
 
-switch:checked slider {
-    margin-left: 24px;
-}
-
 /* ── Slider ──────────────────────────────────────────── */
 scale {
     min-width: 180px;
@@ -361,7 +357,6 @@ button.combo:hover {
 
 popover contents list {
     background: rgba(26,26,28,.92);
-    backdrop-filter: blur(20px);
 }
 
 popover contents listview row {
@@ -381,7 +376,6 @@ popover contents listview row:selected {
 
 popover.search-results list {
     background: var(--popover-bg, rgba(26,26,28,.96));
-    backdrop-filter: blur(20px);
 }
 
 popover.search-results row {
@@ -421,7 +415,6 @@ scrollbar slider:hover {
 /* ── About card ──────────────────────────────────────── */
 .about-card {
     background: var(--bg-group);
-    backdrop-filter: blur(20px) saturate(1.3);
     border: 1px solid var(--border-soft);
     border-radius: 18px;
     padding: 28px;

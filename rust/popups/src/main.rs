@@ -57,6 +57,16 @@ fn current_name() -> Option<String> {
     read_file(&name_file())
 }
 
+/// Nombre del popup corriendo: solo si su pid sigue vivo.
+/// Un pidfile obsoleto (SIGKILL/crash) no debe bloquear el lanzamiento.
+fn running_name() -> Option<String> {
+    if running_pid().is_some() {
+        current_name()
+    } else {
+        None
+    }
+}
+
 fn kill_process(pid: i32) {
     if !process_alive(pid) {
         return;
@@ -121,7 +131,7 @@ fn main() {
     }
 
     // Mismo popup corriendo -> apagar (toggle off)
-    if current_name().as_deref() == Some(name.as_str()) {
+    if running_name().as_deref() == Some(name.as_str()) {
         kill_popup();
         return;
     }

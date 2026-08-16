@@ -26,9 +26,9 @@ fn run_gsettings(args: &[&str]) -> String {
     output.trim_matches(|c| c == '\'' || c == '"').to_string()
 }
 
-fn set_gsettings(key: &str, value: &str) {
+fn set_gsettings(schema: &str, key: &str, value: &str) {
     let _ = Command::new("gsettings")
-        .args(["set", "org.gnome.desktop.input-sources", key, value])
+        .args(["set", schema, key, value])
         .output();
 }
 
@@ -65,7 +65,11 @@ pub fn build(navigator: gtk::Stack) -> Page {
         None,
         None,
         Some(Box::new(|layout| {
-            set_gsettings("sources", &format!("[('xkb', '{layout}')]"));
+            set_gsettings(
+                "org.gnome.desktop.input-sources",
+                "sources",
+                &format!("[('xkb', '{layout}')]"),
+            );
             NiriConfig::set_keyboard_layout(&layout);
         })),
     );
@@ -78,7 +82,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
 
     let tap_value = run_gsettings(&[
         "get",
-        "org.gnome.desktop.peripherals.mouse",
+        "org.gnome.desktop.peripherals.touchpad",
         "tap-to-click",
     ]);
     let tap_active = tap_value.to_lowercase().contains("true");
@@ -89,7 +93,11 @@ pub fn build(navigator: gtk::Stack) -> Page {
         Some("Raton: clic con un toque"),
         tap_active,
         Some(Box::new(|active| {
-            set_gsettings("tap-to-click", if active { "true" } else { "false" });
+            set_gsettings(
+                "org.gnome.desktop.peripherals.touchpad",
+                "tap-to-click",
+                if active { "true" } else { "false" },
+            );
         })),
     ));
 

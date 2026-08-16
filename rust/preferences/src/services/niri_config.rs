@@ -259,9 +259,13 @@ impl NiriConfig {
         write_atomic(&lines.join("\n"));
     }
 
+    /// Recarga la config de niri en vivo (equivalente a reload()).
+    /// OJO: NO usar pkill -HUP niri — SIGHUP reinicia la sesión entera
+    /// del compositor (mata todas las apps); la forma correcta es
+    /// `niri msg action load-config-file`.
     pub fn reload() {
-        let _ = Command::new("pkill")
-            .args(["-HUP", "niri"])
+        let _ = Command::new("niri")
+            .args(["msg", "action", "load-config-file"])
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .spawn();
@@ -600,7 +604,7 @@ impl NiriConfig {
                 None => create_block(
                     &content,
                     &["blur"],
-                    &["passes 2", "offset 2.0", "noise 0.0", "saturation 1.2"],
+                    &["passes 3", "offset 3.0", "noise 0.0", "saturation 1.3"],
                 ),
             };
             write_atomic(&result);
@@ -703,12 +707,87 @@ impl NiriConfig {
 
     // ------------------------------------------------- Performance mode
 
-    /// Modo rendimiento: desactiva blur + animaciones
+    /// Marcadores del bloque de blur de las apps ChurrOS en config.kdl
+    /// (ver archiso/airootfs/etc/skel/.config/niri/config.kdl).
+    const GLASS_START: &'static str = "[CHURROS-GLASS-START]";
+    const GLASS_END: &'static str = "[CHURROS-GLASS-END]";
+
+    /// Byte bounds de la región entre las líneas de marcador (exclusivas).
+    /// Se busca el marcador como LÍNEA completa para que las menciones
+    /// en comentarios descriptivos no confundan el matcher.
+    fn glass_bounds(content: &str) -> Option<(usize, usize)> {
+        let start_marker = "\n// [CHURROS-GLASS-START]\n";
+        let end_marker = "\n// [CHURROS-GLASS-END]";
+        let start = content.find(start_marker)? + start_marker.len();
+        let end = start + content[start..].find(end_marker)?;
+        Some((start, end))
+    }
+
+    /// Devuelve si el blur de las window rules de ChurrOS está activo
+    /// (None si el config no tiene los marcadores).
+    fn get_glass_blur(content: &str) -> Option<bool> {
+        let (start, end) = Self::glass_bounds(content)?;
+        for line in content[start..end].lines() {
+            match line.trim() {
+                "blur true" => return Some(true),
+                "blur false" => return Some(false),
+                _ => {}
+            }
+        }
+        Some(false)
+    }
+
+    /// Toggle blur true <-> blur false SOLO en líneas exactas dentro del
+    /// bloque marcado (los comentarios que mencionen blur no se tocan).
+    fn set_glass_blur(content: &str, enabled: bool) -> Option<String> {
+        let (start, end) = Self::glass_bounds(content)?;
+        let region = &content[start..end];
+        let had_trailing_nl = region.ends_with('\n');
+        let mut new_region: String = region
+            .lines()
+            .map(|line| {
+                let stripped = line.trim();
+                if !enabled && stripped == "blur true" {
+                    line.replacen("blur true", "blur false", 1)
+                } else if enabled && stripped == "blur false" {
+                    line.replacen("blur false", "blur true", 1)
+                } else {
+                    line.to_string()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        if had_trailing_nl {
+            new_region.push('\n');
+        }
+        Some(format!(
+            "{}{}{}",
+            &content[..start],
+            new_region,
+            &content[end..]
+        ))
+    }
+
+    /// Modo rendimiento: desactiva blur (window rules de ChurrOS) + animaciones.
     pub fn get_performance_mode() -> bool {
-        !Self::get_blur_enabled() && !Self::get_animations()
+        let content = read();
+        let glass_off = match Self::get_glass_blur(&content) {
+            Some(active) => !active,
+            // Config sin marcadores: criterio antiguo (bloque blur ausente)
+            None => !Self::get_blur_enabled(),
+        };
+        !Self::get_animations() && glass_off
     }
 
     pub fn set_performance_mode(on: bool) {
+        // El blur real de las apps vive en las window rules (marcadas con
+        // [CHURROS-GLASS-*]): quitarlo ahí es lo que lo desactiva de verdad.
+        let content = read();
+        if let Some(new_content) = Self::set_glass_blur(&content, !on) {
+            write_atomic(&new_content);
+        }
+        // El bloque global `blur { ... }` solo es tuning; se conserva el
+        // comportamiento anterior (borrar al activar, restaurar al quitar).
         Self::set_blur_enabled(!on);
         Self::set_animations(!on);
     }
@@ -730,4 +809,44 @@ fn first_quoted(line: &str) -> Option<String> {
     let rest = &line[start..];
     let end = rest.find('"')?;
     Some(rest[..end].to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// config.kdl real de la ISO (skel): debe tener los marcadores de glass.
+    fn real_config() -> &'static str {
+        const PATH: &str = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../archiso/airootfs/etc/skel/.config/niri/config.kdl"
+        );
+        let content = fs::read_to_string(PATH).expect("leer config.kdl del skel");
+        Box::leak(content.into_boxed_str())
+    }
+
+    #[test]
+    fn real_config_has_glass_markers() {
+        let content = real_config();
+        assert!(content.contains(NiriConfig::GLASS_START), "falta [CHURROS-GLASS-START]");
+        assert!(content.contains(NiriConfig::GLASS_END), "falta [CHURROS-GLASS-END]");
+        assert_eq!(NiriConfig::get_glass_blur(content), Some(true));
+    }
+
+    #[test]
+    fn glass_blur_toggle_roundtrip() {
+        let content = real_config();
+        let off = NiriConfig::set_glass_blur(content, false).expect("toggle off");
+        assert_eq!(NiriConfig::get_glass_blur(&off), Some(false));
+        assert!(off.contains("blur false"));
+
+        let on = NiriConfig::set_glass_blur(&off, true).expect("toggle on");
+        assert_eq!(NiriConfig::get_glass_blur(&on), Some(true));
+        assert!(on.contains("blur true"));
+
+        // Idempotente
+        assert_eq!(off, NiriConfig::set_glass_blur(&off, false).unwrap());
+        // El resto del config no cambia
+        assert_eq!(on.lines().count(), content.lines().count());
+    }
 }

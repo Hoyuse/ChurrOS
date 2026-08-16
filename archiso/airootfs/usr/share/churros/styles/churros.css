@@ -10,10 +10,10 @@
 
 /* ── Tokens → dark default ──────────────────────────── */
 window {
-    --bg-window:           rgba(15,15,16,.82);
-    --bg-sidebar:          rgba(18,18,20,.92);
-    --bg-group:            rgba(22,22,24,.88);
-    --bg-group-hover:      rgba(30,30,34,.92);
+    --bg-window:           rgba(15,15,16,.62);
+    --bg-sidebar:          rgba(18,18,20,.70);
+    --bg-group:            rgba(22,22,24,.75);
+    --bg-group-hover:      rgba(30,30,34,.80);
     --row-bg:              transparent;
     --row-bg-hover:        rgba(255,255,255,.04);
     --row-bg-active:       rgba(255,255,255,.08);
@@ -37,9 +37,9 @@ window {
 
 /* Light override */
 window.light {
-    --bg-window:           rgba(242,242,245,.75);
+    --bg-window:           rgba(242,242,245,.60);
     --bg-surface:          rgba(255,255,255,.58);
-    --bg-group:           rgba(255,255,255,.72);
+    --bg-group:           rgba(255,255,255,.62);
     --bg-group-hover:      rgba(0,0,0,.04);
     --row-bg:              transparent;
     --row-bg-hover:         rgba(0,0,0,.04);
@@ -62,29 +62,32 @@ window.light {
 }
 
 /* ── Window ─────────────────────────────────────────── */
+/*
+    Glassmorphism: la transparencia sale del alpha del fondo; el blur
+    NO se puede hacer con CSS de GTK (backdrop-filter no existe) — lo
+    aplica niri con window-rule { background-effect { blur true } }
+    para cada app-id de ChurrOS.
+*/
 window {
     background: var(--bg-window);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
     border-radius: 16px;
 }
 
 /*
-    Cuando la ventana esta maximizada o fullscreen, no aplicamos
-    backdrop-filter ni border-radius: el fondo del monitor ya es
-    visible detras, asi que mezclarlos hace la interfaz ilegible
-    y amplifica el brillo de wallpapers claros en dark mode.
+    Cuando la ventana esta maximizada o fullscreen, no hay nada que
+    blurrear detras: el fondo del monitor ya es visible detras, asi que
+    mezclarlos hace la interfaz ilegible y amplifica el brillo de
+    wallpapers claros en dark mode.
 */
 window.maximized,
 window.fullscreen {
     background: var(--bg-window);
-    backdrop-filter: none;
     border-radius: 0;
 }
 
 window.popup {
     border-radius: 14px;
     background: var(--popover-bg);
-    backdrop-filter: blur(26px) saturate(1.5);
     border: 1px solid var(--border-soft);
     box-shadow: var(--glass-shadow);
 }
@@ -92,7 +95,6 @@ window.popup {
 /* ── Popover / Menu ─────────────────────────────────── */
 popover {
     background: var(--popover-bg);
-    backdrop-filter: blur(26px) saturate(1.5);
     border-radius: 14px;
     border: 1px solid var(--border-strong);
     box-shadow: var(--glass-shadow);
@@ -216,10 +218,6 @@ switch:checked {
     box-shadow: var(--accent-glow);
 }
 
-switch:checked slider {
-    margin-left: 24px;
-}
-
 /* ── Slider / Scale ─────────────────────────────────── */
 scale trough {
     min-height: 6px;
@@ -305,7 +303,6 @@ searchentry:focus,
 .popup,
 .about-card {
     background: var(--bg-group);
-    backdrop-filter: blur(20px) saturate(1.3);
     border-radius: 18px;
     border: 1px solid var(--border-soft);
     box-shadow: var(--glass-shadow), var(--glass-inset);
@@ -314,7 +311,6 @@ searchentry:focus,
 /* ── Sidebar ────────────────────────────────────────── */
 .sidebar {
     background: var(--bg-surface);
-    backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
     border-radius: 20px;
     padding: 12px;
     margin: 16px 10px 16px 16px;

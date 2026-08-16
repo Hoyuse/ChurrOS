@@ -43,9 +43,14 @@ fn ensure() {
 
 pub fn load() -> Value {
     ensure();
-    match fs::read_to_string(config_file()) {
-        Ok(content) => serde_json::from_str(&content).unwrap_or_else(|_| defaults()),
-        Err(_) => defaults(),
+    let Ok(content) = fs::read_to_string(config_file()) else {
+        return defaults();
+    };
+    match serde_json::from_str::<Value>(&content) {
+        Ok(v @ Value::Object(_)) => v,
+        // JSON válido pero con raíz no-objeto ([] , "x", 42...): recuperarse
+        // con defaults en vez de paniquear dentro de set().
+        _ => defaults(),
     }
 }
 
@@ -90,7 +95,10 @@ pub fn get_bool(key: &str, default: bool) -> bool {
 
 pub fn set(key: &str, value: Value) {
     let mut data = load();
-    let mut current = data.as_object_mut().expect("settings.json raíz debe ser objeto");
+    let Some(mut current) = data.as_object_mut() else {
+        // load() garantiza una raíz objeto, pero nunca paniquear aquí.
+        return;
+    };
 
     let mut parts: Vec<&str> = key.split('.').collect();
     let last = parts.pop().unwrap();

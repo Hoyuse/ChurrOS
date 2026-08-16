@@ -4,7 +4,6 @@
 // ==========================================
 
 use std::fs;
-use std::path::PathBuf;
 use std::process::Command;
 
 pub struct UsersService;
@@ -169,18 +168,28 @@ impl UsersService {
             return true;
         }
 
-        let path = PathBuf::from(GREETD_PATH);
-        let directory = path.parent().unwrap_or(std::path::Path::new("/etc"));
-        let tmp = directory.join(format!(
-            "greetd-{}.toml.tmp",
-            std::process::id()
-        ));
-        if fs::write(&tmp, &new_content).is_ok() {
-            if fs::rename(&tmp, &path).is_ok() {
-                return true;
-            }
-            let _ = fs::remove_file(&tmp);
+        // /etc/greetd no es escribible por el usuario: escribir a un temporal
+        // propio y copiarlo con privilegios (churros-pkexec: pkexec/sudo -n).
+        // El patrón es el mismo que usa datetime.rs con timedatectl.
+        let tmp = std::env::temp_dir().join(format!("churros-greetd-{}.toml", std::process::id()));
+        if fs::write(&tmp, &new_content).is_err() {
+            return false;
         }
-        false
+        let tmp_str = tmp.to_string_lossy().to_string();
+        let ok = if getuid() == 0 {
+            Command::new("install")
+                .args(["-m", "644", &tmp_str, GREETD_PATH])
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false)
+        } else {
+            Command::new("churros-pkexec")
+                .args(["install", "-m", "644", &tmp_str, GREETD_PATH])
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false)
+        };
+        let _ = fs::remove_file(&tmp);
+        ok
     }
 }

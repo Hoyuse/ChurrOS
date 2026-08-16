@@ -5,6 +5,9 @@
 
 use gtk::prelude::*;
 
+use std::cell::Cell;
+use std::rc::Rc;
+
 use crate::services::users::UsersService;
 use crate::widgets::group::Group;
 use crate::widgets::page::Page;
@@ -45,15 +48,33 @@ pub fn build(navigator: gtk::Stack) -> Page {
     // Seguridad
     let mut security = Group::new("Seguridad");
 
-    security.add(&SwitchRow::new(
+    // Autologin: edita /etc/greetd con privilegios; si falla (pkexec
+    // cancelado, sin permisos) se revierte el switch para no mentir.
+    let autologin_row = SwitchRow::new(
         "Inicio automático",
         Some("users.svg"),
         Some("Iniciar sesión automáticamente"),
         UsersService::auto_login(),
-        Some(Box::new(|value| {
-            UsersService::set_auto_login(value);
-        })),
-    ));
+        None,
+    );
+    let autologin_switch = autologin_row.switch.clone();
+    let revert_guard = Rc::new(Cell::new(false));
+    {
+        let revert_guard = Rc::clone(&revert_guard);
+        autologin_switch.connect_notify_local(Some("active"), move |switch, _| {
+            if revert_guard.get() {
+                return;
+            }
+            revert_guard.set(true);
+            let active = switch.is_active();
+            let ok = UsersService::set_auto_login(active);
+            if !ok {
+                switch.set_active(!active);
+            }
+            revert_guard.set(false);
+        });
+    }
+    security.add(&autologin_row);
 
     page.add(security.widget());
 

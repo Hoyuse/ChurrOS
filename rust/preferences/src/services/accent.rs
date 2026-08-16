@@ -105,7 +105,32 @@ impl AccentService {
     pub fn set(color: &str) {
         settings::set("accent.color", serde_json::json!(color));
         Self::write_accent_css(color);
-        // TODO: pywal integration
+        // Si pywal está activo, el color con nombre se sobrescribe por la
+        // paleta dinámica (paridad con accent.py del Python).
+        if crate::services::pywal::PywalService::enabled() {
+            if let Some(palette) = crate::services::pywal::PywalService::generate() {
+                crate::services::pywal::PywalService::apply_accent(&palette);
+            }
+        }
+    }
+
+    /// Escribe accent.css con un hex arbitrario (para pywal). NO persiste en
+    /// settings.json: el color custom se sobrescribe la próxima vez que el
+    /// usuario elige un color con nombre.
+    pub fn set_hex(hex: &str) {
+        let base = if hex.starts_with('#') {
+            hex.to_string()
+        } else {
+            format!("#{hex}")
+        };
+        let path = Self::accent_css_path();
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let _ = fs::write(
+            path,
+            Self::build_accent_css(&base, "dynamic colors (pywal)"),
+        );
     }
 
     pub fn ensure() {

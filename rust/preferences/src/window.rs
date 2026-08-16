@@ -22,6 +22,9 @@ pub struct PreferencesWindow {
     history: Rc<RefCell<Vec<String>>>,
     narrow_threshold: i32,
     is_narrow: Rc<RefCell<bool>>,
+    // Mantener la referencia viva: si se dropea, GLib destruye el objeto y
+    // el handler de color-scheme deja de disparar.
+    gtk_settings: Option<gio::Settings>,
 }
 
 impl PreferencesWindow {
@@ -41,16 +44,23 @@ impl PreferencesWindow {
         window.set_resizable(true);
 
         let w = window.clone();
-        if let Some(schema_source) = gio::SettingsSchemaSource::default() {
-            if let Some(schema) = schema_source.lookup("org.gnome.desktop.interface", false) {
-                let settings =
-                    gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None::<&str>);
-                settings.connect_changed(Some("color-scheme"), move |_, _| {
-                    let w = w.clone();
-                    glib::idle_add_local_once(move || refresh_theme(&w));
-                });
-            }
-        }
+        let gtk_settings = gio::SettingsSchemaSource::default().and_then(|schema_source| {
+            let schema = schema_source.lookup("org.gnome.desktop.interface", false)?;
+            let settings =
+                gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None::<&str>);
+            settings.connect_changed(Some("color-scheme"), move |_, _| {
+                let w = w.clone();
+                glib::idle_add_local_once(move || refresh_theme(&w));
+            });
+            Some(settings)
+        });
+
+        // Hook en vivo: ThemeService::set notifica aquí directamente, sin
+        // depender de gsettings/dconf (equivalente a _refresh_root_theme del
+        // Python). El listener de color-scheme de arriba queda como refuerzo
+        // para cambios externos.
+        let theme_window = window.clone();
+        ThemeService::on_change(move |_dark| refresh_theme(&theme_window));
 
         // Layout principal
         let root = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -63,6 +73,16 @@ impl PreferencesWindow {
         sidebar_revealer.set_reveal_child(true);
         sidebar_revealer.set_child(Some(&sidebar.borrow().root));
         root.append(&sidebar_revealer);
+
+        // Cablear el buscador de la sidebar (el Search no puede conectar su
+        // propio callback porque necesitaría una referencia a su Sidebar).
+        let search_sidebar = Rc::clone(&sidebar);
+        sidebar.borrow().search.connect_search(move |query| {
+            let Ok(sidebar) = search_sidebar.try_borrow() else {
+                return;
+            };
+            sidebar.on_search(query);
+        });
 
         // Navegador con botón de toggle para modo estrecho
         let nav_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -98,6 +118,7 @@ impl PreferencesWindow {
             history,
             narrow_threshold: 760,
             is_narrow,
+            gtk_settings,
         };
 
         win.register_pages();
@@ -361,6 +382,12 @@ fn apply_theme_class(window: &gtk::ApplicationWindow) {
 
 fn refresh_theme(window: &gtk::ApplicationWindow) {
     apply_theme_class(window);
+    // Flip del tema de los widgets GTK en vivo (Adwaita dark/light). Esto es
+    // lo que hace que botones/switch/entrys cambien al instante, además de
+    // los tokens CSS de window.light.
+    if let Some(settings) = gtk::Settings::default() {
+        settings.set_gtk_application_prefer_dark_theme(!ThemeService::is_dark());
+    }
     window.queue_draw();
     window.queue_resize();
 }

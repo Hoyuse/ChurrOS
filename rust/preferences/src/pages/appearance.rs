@@ -7,6 +7,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::services::niri_config::NiriConfig;
+use crate::services::pywal::PywalService;
 use crate::services::settings;
 use crate::services::theme::ThemeService;
 use crate::services::wallpaper::WallpaperService;
@@ -56,16 +57,19 @@ pub fn build(navigator: gtk::Stack) -> Page {
         Some("Generar paleta desde el wallpaper (pywal)"),
         dynamic_active,
         Some(Box::new(move |active| {
-            settings::set("theme.dynamic_colors", serde_json::json!(active));
+            let ok = PywalService::toggle(active);
             set_feedback(
                 &feedback_rc,
                 if active {
-                    "Colores dinámicos activados"
+                    if ok {
+                        "Colores dinámicos activados"
+                    } else {
+                        "No se pudo activar (¿pywal instalado y wallpaper válido?)"
+                    }
                 } else {
                     "Colores dinámicos desactivados"
                 },
             );
-            // TODO: integración pywal (services/pywal_service.py)
         })),
     ));
 

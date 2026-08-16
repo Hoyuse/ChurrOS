@@ -296,10 +296,15 @@ fn second_quoted(s: &str) -> Option<String> {
 }
 
 fn between_parens(s: &str) -> Option<String> {
-    let start = s.find('(')?;
-    let rest = &s[start + 1..];
-    let end = rest.find(')')?;
-    Some(rest[..end].to_string())
+    // El último paréntesis: la descripción entre comillas puede contener
+    // paréntesis propios (`Output "PNP(XXX)" (HDMI-A-2)`); el nombre del
+    // monitor es siempre el paréntesis final de la línea.
+    let start = s.rfind('(')?;
+    let end = s.rfind(')')?;
+    if end < start {
+        return None;
+    }
+    Some(s[start + 1..end].to_string())
 }
 
 /// Parsea "1920x1080 @ 60.000" (espacios opcionales alrededor del @):
@@ -415,7 +420,8 @@ fn niri_monitors() -> Vec<Monitor> {
             continue;
         }
         if line.contains("Variable refresh rate:") {
-            m.vrr = line.contains("supported");
+            // "not supported" también contiene "supported"
+            m.vrr = line.contains("supported") && !line.contains("not supported");
             continue;
         }
 

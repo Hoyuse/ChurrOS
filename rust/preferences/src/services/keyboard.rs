@@ -32,19 +32,18 @@ pub struct Bind {
 
 /// ¿La clave coincide con el patrón del regex Python
 /// `(Mod\S*|Print|Ctrl\+Print|Alt\+Print|XF86\S*)`?
-fn key_is_recognized(key: &str) -> bool {
+pub fn is_valid_key(key: &str) -> bool {
     key.starts_with("Mod") || key == "Print" || key == "Ctrl+Print" || key == "Alt+Print" || key.starts_with("XF86")
 }
 
-/// Extrae el contenido entre el primer '"' y el siguiente '"' de `s` (s empieza con '"').
+/// Extrae el contenido desde el inicio de `s` hasta el siguiente '"'
+/// (s NO incluye la comilla de apertura: los callers hacen strip_prefix('"')).
+/// Devuelve (contenido, resto tras la comilla de cierre).
 fn split_quote(s: &str) -> (String, String) {
     let bytes = s.as_bytes();
     let mut end = 0usize;
     let mut escaped = false;
     for (i, &b) in bytes.iter().enumerate() {
-        if i == 0 {
-            continue;
-        }
         if escaped {
             escaped = false;
             continue;
@@ -61,7 +60,7 @@ fn split_quote(s: &str) -> (String, String) {
     if end == 0 {
         return (String::new(), String::new());
     }
-    (s[1..end].to_string(), s[end + 1..].to_string())
+    (s[..end].to_string(), s[end + 1..].to_string())
 }
 
 /// Equivalente a _parse_action: "spawn \"cmd\" \"args\"" | "spawn-sh \"cmd\"" | builtin.
@@ -99,17 +98,23 @@ fn parse_action(raw: &str) -> (String, String, String) {
     ("builtin".to_string(), func, args)
 }
 
+/// Escapa un string para meterlo entre comillas en KDL.
+fn kdl_escape(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
 /// Equivalente a _make_action_line.
 fn make_action_line(bind_type: &str, command: &str, args: &str) -> String {
     match bind_type {
         "spawn" => {
+            let cmd = kdl_escape(command);
             if !args.is_empty() {
-                format!("spawn \"{command}\" \"{args}\"")
+                format!("spawn \"{cmd}\" \"{}\"", kdl_escape(args))
             } else {
-                format!("spawn \"{command}\"")
+                format!("spawn \"{cmd}\"")
             }
         }
-        "spawn-sh" => format!("spawn-sh \"{command}\""),
+        "spawn-sh" => format!("spawn-sh \"{}\"", kdl_escape(command)),
         _ => {
             if !args.is_empty() {
                 format!("{command} {args}")
@@ -147,7 +152,7 @@ fn parse_bind_line(line: &str) -> Option<Bind> {
 
     let mut tokens = head.split_whitespace();
     let key = tokens.next()?;
-    if !key_is_recognized(key) {
+    if !is_valid_key(key) {
         return None;
     }
     let allow_when_locked = tokens.any(|t| t.starts_with("allow-when-locked"));
@@ -215,7 +220,9 @@ impl KeyboardService {
         };
 
         let new_action = make_action_line(action_type, command, args);
-        let new_line = format!("    {key} {{ {new_action}; }}");
+        // Sin indent aquí: se conserva el indent original de la línea
+        // reemplazada (el Python duplicaba la indentación).
+        let new_line = format!("{key} {{ {new_action}; }}");
 
         let mut out = String::new();
         let mut in_binds = false;
@@ -267,7 +274,7 @@ impl KeyboardService {
         };
 
         let new_line = format!(
-            "    {key} {{ {}; }}",
+            "{key} {{ {}; }}",
             make_action_line(action_type, command, args)
         );
 
@@ -289,13 +296,66 @@ impl KeyboardService {
             }
         }
 
-        // Paridad con Python (insert(-1, ...)): sin bloque binds, inserta antes de la última línea
-        let pos = insert_pos.unwrap_or_else(|| out_lines.len().saturating_sub(1));
-        out_lines.insert(pos, new_line);
+        if let Some(pos) = insert_pos {
+            out_lines.insert(pos, format!("    {new_line}"));
+        } else {
+            // Sin bloque binds: crear uno al final (el Python insertaba
+            // la línea suelta fuera de cualquier bloque -> KDL inválido).
+            out_lines.push(String::new());
+            out_lines.push("binds {".to_string());
+            out_lines.push(format!("    {new_line}"));
+            out_lines.push("}".to_string());
+        }
 
         let mut result = out_lines.join("\n");
         result.push('\n');
         fs::write(&path, result).is_ok()
+    }
+
+    /// Elimina el atajo `key` del bloque `binds` de config.kdl.
+    pub fn remove_keybind(key: &str) -> bool {
+        let path = config_path();
+        if !path.exists() {
+            return false;
+        }
+        let _ = fs::copy(&path, backup_path());
+
+        let content = match fs::read_to_string(&path) {
+            Ok(c) => c,
+            Err(_) => return false,
+        };
+
+        let mut out = String::new();
+        let mut in_binds = false;
+        let mut removed = false;
+
+        for line in content.lines() {
+            let stripped = line.trim();
+            if stripped.starts_with("binds") {
+                in_binds = true;
+                out.push_str(line);
+                out.push('\n');
+                continue;
+            }
+            if in_binds && stripped == "}" {
+                out.push_str(line);
+                out.push('\n');
+                in_binds = false;
+                continue;
+            }
+            if in_binds && !removed && line_matches_key(stripped, key) {
+                removed = true;
+                continue;
+            }
+            out.push_str(line);
+            out.push('\n');
+        }
+
+        if removed {
+            fs::write(&path, out).is_ok()
+        } else {
+            false
+        }
     }
 
     /// Restaura config.kdl desde la copia de seguridad (config.kdl.bak).
@@ -307,5 +367,100 @@ impl KeyboardService {
         } else {
             false
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn split_quote_keeps_first_char() {
+        // Los callers ya quitan la comilla de apertura antes de llamar.
+        let (content, rest) = split_quote("churros-welcome\"");
+        assert_eq!(content, "churros-welcome");
+        assert!(rest.is_empty());
+
+        let (content, rest) = split_quote("foot\" \"--flag\"");
+        assert_eq!(content, "foot");
+        assert_eq!(rest, " \"--flag\"");
+    }
+
+    #[test]
+    fn parse_spawn_bind_keeps_command() {
+        let bind = parse_bind_line("    Mod+W { spawn \"churros-welcome\"; }").unwrap();
+        assert_eq!(bind.key, "Mod+W");
+        assert_eq!(bind.kind, "spawn");
+        assert_eq!(bind.command, "churros-welcome");
+        assert_eq!(bind.args, "");
+
+        let bind = parse_bind_line("    Mod+Shift+N { spawn \"churros-popup\" \"network\"; }").unwrap();
+        assert_eq!(bind.command, "churros-popup");
+        assert_eq!(bind.args, "network");
+    }
+
+    #[test]
+    fn parse_spawn_sh_keeps_command() {
+        let bind = parse_bind_line("    Mod+T { spawn-sh \"foot\"; }").unwrap();
+        assert_eq!(bind.kind, "spawn-sh");
+        assert_eq!(bind.command, "foot");
+    }
+
+    #[test]
+    fn make_action_line_escapes_quotes() {
+        assert_eq!(make_action_line("spawn", "foot", ""), "spawn \"foot\"");
+        assert_eq!(make_action_line("spawn", "cmd", "a b"), "spawn \"cmd\" \"a b\"");
+        assert_eq!(
+            make_action_line("spawn", "say", "\"hi\""),
+            "spawn \"say\" \"\\\"hi\\\"\""
+        );
+        assert_eq!(make_action_line("builtin", "close-window", ""), "close-window");
+    }
+
+    #[test]
+    fn write_path_roundtrip() {
+        // HOME temporal para no tocar la config real del usuario.
+        let tmp = std::env::temp_dir().join(format!("churros-kbd-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&tmp);
+        let niri_dir = tmp.join(".config").join("niri");
+        fs::create_dir_all(&niri_dir).unwrap();
+        let config = niri_dir.join("config.kdl");
+        fs::write(
+            &config,
+            "layout {\n    gaps 8\n}\n\nbinds {\n    Mod+Return { spawn \"foot\"; }\n}\n",
+        )
+        .unwrap();
+        // Solo este test toca HOME (los demás no leen config_path), así que
+        // no hace falta serializar.
+        unsafe { std::env::set_var("HOME", &tmp) };
+
+        // add: debe insertarse dentro de binds con indent correcto
+        assert!(KeyboardService::add_keybind("Mod+W", "spawn", "churros-welcome", ""));
+        let content = fs::read_to_string(&config).unwrap();
+        assert!(content.contains("    Mod+W { spawn \"churros-welcome\"; }"), "add: {content}");
+
+        // set: reemplaza la acción conservando el indent (sin doble indent)
+        assert!(KeyboardService::set_keybind("Mod+W", "spawn", "churros-settings", ""));
+        let content = fs::read_to_string(&config).unwrap();
+        assert!(content.contains("    Mod+W { spawn \"churros-settings\"; }"), "set: {content}");
+        assert!(!content.contains("        Mod+W"), "set: indent duplicado: {content}");
+
+        // remove: desaparece la línea
+        assert!(KeyboardService::remove_keybind("Mod+W"));
+        let content = fs::read_to_string(&config).unwrap();
+        assert!(!content.contains("Mod+W"), "remove: {content}");
+        assert!(content.contains("Mod+Return"), "remove: borró otro bind: {content}");
+
+        // sin bloque binds: add crea el bloque en vez de escribir KDL inválido
+        let config2 = niri_dir.join("config.kdl");
+        fs::write(&config2, "layout {\n    gaps 8\n}\n").unwrap();
+        assert!(KeyboardService::add_keybind("Mod+T", "builtin", "close-window", ""));
+        let content = fs::read_to_string(&config2).unwrap();
+        assert!(
+            content.contains("binds {") && content.contains("    Mod+T { close-window; }"),
+            "sin binds: {content}"
+        );
+
+        let _ = fs::remove_dir_all(&tmp);
     }
 }

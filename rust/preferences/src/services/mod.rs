@@ -19,6 +19,7 @@ pub mod night_light;
 pub mod niri_config;
 pub mod power;
 pub mod privacy;
+pub mod pywal;
 pub mod settings;
 pub mod system;
 pub mod theme;

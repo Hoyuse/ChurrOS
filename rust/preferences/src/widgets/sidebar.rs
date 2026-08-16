@@ -155,7 +155,10 @@ impl Sidebar {
         }
     }
 
-    fn on_search(&self, query: &str) {
+    /// Filtra el menú y muestra el popover de resultados.
+    /// Público porque el wiring se hace desde window.rs (Sidebar no puede
+    /// auto-referenciarse para conectar su propio Search).
+    pub fn on_search(&self, query: &str) {
         let query = query.to_lowercase();
 
         // Filtrar botones del menú principal

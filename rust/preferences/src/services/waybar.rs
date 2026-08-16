@@ -96,6 +96,64 @@ fn read_colors() -> Value {
     result
 }
 
+/// Lee style.css: font-family, font-size y background-alpha del bloque `*`
+/// (font-size/font-family/background-alpha se persisten en style.css, no en
+/// colors-waybar.css; leerlos de los colores los perdía siempre).
+fn read_style() -> Value {
+    let mut result = json!({});
+    if !style_path().exists() {
+        return result;
+    }
+    let Ok(content) = fs::read_to_string(style_path()) else {
+        return result;
+    };
+
+    let mut got_alpha = false;
+    for line in content.lines() {
+        let line = line.trim();
+        let Some((key, value)) = line.split_once(':') else {
+            continue;
+        };
+        let key = key.trim();
+        let value = value.trim().trim_end_matches(';').trim();
+
+        match key {
+            "font-family" => {
+                if result.get("font-family").is_none() {
+                    let v = value.trim_matches('\'');
+                    result["font-family"] = json!(v);
+                }
+            }
+            "font-size" => {
+                if result.get("font-size").is_none() {
+                    if let Some(px) = value.strip_suffix("px") {
+                        if let Ok(n) = px.trim().parse::<i64>() {
+                            result["font-size"] = json!(n);
+                        }
+                    }
+                }
+            }
+            "background-color" => {
+                // Solo el primer alpha(...): el del bloque `*`; el resto del
+                // archivo (tooltip, workspaces, mpris) usa alphas derivados.
+                if !got_alpha {
+                    if let Some(inner) = value.strip_prefix("alpha(") {
+                        let inner = inner.trim_end_matches(')');
+                        if let Some((_, a)) = inner.rsplit_once(',') {
+                            if let Ok(a) = a.trim().parse::<f64>() {
+                                result["background-alpha"] = json!(a);
+                                got_alpha = true;
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    result
+}
+
 fn write_colors(values: &Value) {
     if let Some(parent) = colors_path().parent() {
         let _ = fs::create_dir_all(parent);
@@ -103,13 +161,17 @@ fn write_colors(values: &Value) {
     let bg = values.get("background").and_then(|v| v.as_str()).unwrap_or("#2a1612");
     let fg = values.get("foreground").and_then(|v| v.as_str()).unwrap_or("#c9c4c3");
     let accent = values.get("accent").and_then(|v| v.as_str()).unwrap_or("#DE8636");
-    let content = format!(
+    let content = colors_css(bg, fg, accent);
+    let _ = fs::write(colors_path(), content);
+}
+
+fn colors_css(bg: &str, fg: &str, accent: &str) -> String {
+    format!(
         "@define-color background {bg};\n\
          @define-color foreground {fg};\n\
          @define-color color4 {accent};\n\
          @define-color color1 {accent};\n"
-    );
-    let _ = fs::write(colors_path(), content);
+    )
 }
 
 fn write_style(values: &Value) {
@@ -402,10 +464,11 @@ impl WaybarService {
         defaults()
     }
 
-    /// Lee config.jsonc + colors-waybar.css y devuelve el estado completo.
+    /// Lee config.jsonc + colors-waybar.css + style.css y devuelve el estado completo.
     pub fn get() -> Value {
         let cfg = read_jsonc(&config_path()).unwrap_or_else(|| json!({}));
         let colors = read_colors();
+        let style = read_style();
 
         let d = defaults();
         json!({
@@ -413,12 +476,12 @@ impl WaybarService {
             "position": cfg.get("position").and_then(|v| v.as_str()).unwrap_or(d["position"].as_str().unwrap()).to_string(),
             "spacing": cfg.get("spacing").and_then(|v| v.as_i64()).unwrap_or(d["spacing"].as_i64().unwrap()),
             "height": cfg.get("height").and_then(|v| v.as_i64()).unwrap_or(d["height"].as_i64().unwrap()),
-            "font-size": colors.get("font-size").and_then(|v| v.as_i64()).unwrap_or(d["font-size"].as_i64().unwrap()),
-            "font-family": colors.get("font-family").and_then(|v| v.as_str()).unwrap_or(d["font-family"].as_str().unwrap()).to_string(),
+            "font-size": style.get("font-size").and_then(|v| v.as_i64()).unwrap_or(d["font-size"].as_i64().unwrap()),
+            "font-family": style.get("font-family").and_then(|v| v.as_str()).unwrap_or(d["font-family"].as_str().unwrap()).to_string(),
             "background": colors.get("background").and_then(|v| v.as_str()).unwrap_or(d["background"].as_str().unwrap()).to_string(),
             "foreground": colors.get("foreground").and_then(|v| v.as_str()).unwrap_or(d["foreground"].as_str().unwrap()).to_string(),
             "accent": colors.get("accent").and_then(|v| v.as_str()).unwrap_or(d["accent"].as_str().unwrap()).to_string(),
-            "background-alpha": colors.get("background-alpha").and_then(|v| v.as_f64()).unwrap_or(d["background-alpha"].as_f64().unwrap()),
+            "background-alpha": style.get("background-alpha").and_then(|v| v.as_f64()).unwrap_or(d["background-alpha"].as_f64().unwrap()),
             "modules-left": cfg.get("modules-left").cloned().unwrap_or_else(|| json!([])),
             "modules-center": cfg.get("modules-center").cloned().unwrap_or_else(|| json!([])),
             "modules-right": cfg.get("modules-right").cloned().unwrap_or_else(|| json!([])),
@@ -461,6 +524,24 @@ impl WaybarService {
         write_jsonc(&config_path(), &cfg);
         write_colors(values);
         write_style(values);
+    }
+
+    /// Aplica una paleta pywal a waybar (colors-waybar.css) y recarga.
+    /// Solo toca los colores, sin pisar config.jsonc/style.css.
+    pub fn apply_pywal_colors(bg: &str, fg: &str, accent: &str) {
+        if let Some(parent) = colors_path().parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let _ = fs::write(colors_path(), colors_css(bg, fg, accent));
+
+        // Recargar waybar con SIGUSR2 (recarga la config en vivo)
+        let env = build_env();
+        let _ = Command::new("pkill")
+            .args(["-SIGUSR2", "waybar"])
+            .envs(env.iter().cloned())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status();
     }
 
     /// Mata waybar limpiamente y lo relanza (equivalente a reload()).

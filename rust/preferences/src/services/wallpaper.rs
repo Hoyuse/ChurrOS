@@ -115,7 +115,8 @@ impl WallpaperService {
     pub fn set(path: &str) -> bool {
         settings::set("wallpaper.path", serde_json::json!(path));
         let applied = Self::apply(path);
-        // TODO: hook pywal (services/pywal_service.py — regenerar paleta si está activo)
+        // Colores dinámicos: regenerar paleta pywal si está activo.
+        crate::services::pywal::PywalService::regenerate_if_enabled();
         applied
     }
 

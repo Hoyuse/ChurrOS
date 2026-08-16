@@ -15,10 +15,10 @@ prefer-no-csd
 
 // Blur
 blur {
-    passes 2
-    offset 2
+    passes 3
+    offset 3
     noise 0
-    saturation 1.2
+    saturation 1.3
 }
 
 // Input
@@ -83,6 +83,46 @@ window-rule {
     match title="^Picture-in-Picture$"
     open-floating true
 }
+
+// Apps de ChurrOS: glassmorphism — la transparencia sale del alpha del
+// fondo en CSS (GTK no soporta backdrop-filter); el blur real lo hace
+// el compositor con background-effect blur true.
+//
+// El bloque entre [CHURROS-GLASS-START] y [CHURROS-GLASS-END] lo
+// gestiona churros-settings (Modo rendimiento): la app cambia
+// blur true <-> blur false dentro de estos marcadores para
+// activar/desactivar el blur sin tocar el resto del config.
+// [CHURROS-GLASS-START]
+// Regla genérica: blur para TODAS las apps de ChurrOS
+// (org.churros.*). El match es regex: cubre popups, control-center,
+// preferences, welcome y futuras apps sin reglas extra.
+window-rule {
+    match app-id="org.churros"
+    background-effect {
+        blur true
+    }
+}
+
+// clip-to-geometry + geometry-corner-radius hacen que el blur siga
+// las esquinas redondeadas del CSS de cada app.
+window-rule {
+    match app-id="org.churros.popup"
+    geometry-corner-radius 20
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id="org.churros.controlcenter"
+    geometry-corner-radius 22
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id="org.churros.preferences"
+    geometry-corner-radius 16
+    clip-to-geometry true
+}
+// [CHURROS-GLASS-END]
 
 // Layer rules
 layer-rule {
