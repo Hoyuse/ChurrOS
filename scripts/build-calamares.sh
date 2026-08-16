@@ -12,9 +12,23 @@ echo "======================================"
 
 mkdir -p "$PACKAGE_DIR"
 
+HOST_PYTHON="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+
 if ls "$PACKAGE_DIR"/calamares-*.pkg.tar.zst 1>/dev/null 2>&1; then
-    echo "[skip] Calamares already built."
-    exit 0
+    PKG="$(ls "$PACKAGE_DIR"/calamares-*.pkg.tar.zst | head -1)"
+    TMP_DIR="$(mktemp -d)"
+    bsdtar -xf "$PKG" -C "$TMP_DIR" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
+        bsdtar -xf "$PKG" -C "$TMP_DIR" usr/lib/libcalamares.so 2>/dev/null || true
+    PKG_PYTHON="$(ldd "$TMP_DIR"/usr/lib/libcalamares.so* 2>/dev/null \
+        | sed -n 's/.*libpython\([0-9.]*\)\.so.*/\1/p' | head -1)"
+    rm -rf "$TMP_DIR"
+    if [ "$PKG_PYTHON" != "$HOST_PYTHON" ]; then
+        echo "[rebuild] Calamares links Python ${PKG_PYTHON:-<none>} but host has $HOST_PYTHON."
+        echo "          Rebuilding to link the matching libpython."
+    else
+        echo "[skip] Calamares already built (Python $PKG_PYTHON matches host)."
+        exit 0
+    fi
 fi
 
 rm -rf "$WORK_DIR" 2>/dev/null || true
@@ -43,10 +57,6 @@ for line in lines:
         line = line.rstrip(")") + " 'calamares-netinstall-columns.patch')"
     elif line.startswith("sha256sums=("):
         line = line.rstrip(")") + " '" + sha + "')"
-    elif line.startswith("    -DBUILD_TESTING=OFF"):
-        out.append("    -DBUILD_TESTING=OFF")
-        out.append("    -DWITH_PYTHON=OFF")
-        continue
     elif line.startswith("build() {") and not inserted:
         out.append("prepare() {")
         out.append("    patch -Np1 -d \"$_pkgname-$pkgver\" -i \"$srcdir/calamares-netinstall-columns.patch\"")
@@ -58,7 +68,7 @@ for line in lines:
 open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
 
-echo "    PKGBUILD patched (source + prepare + checksum + WITH_PYTHON=OFF)"
+echo "    PKGBUILD patched (source + prepare + checksum)"
 
 echo "[3/4] Pre-downloading calamares source (codeberg can be flaky)..."
 
