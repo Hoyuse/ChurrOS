@@ -12,11 +12,13 @@ LOG=/tmp/churros-update.log
     PAC_RC=$?
     churros-pkexec flatpak update -y 2>&1
     FLAT_RC=$?
+    churros-pkexec churros-update-utils 2>&1
+    CHURROS_RC=$?
     echo "=== fin ==="
 } >> "$LOG" 2>&1
 
-if [ "${PAC_RC:-1}" -eq 0 ] && [ "${FLAT_RC:-1}" -eq 0 ]; then
-    notify-send -a ChurrOS "Sistema actualizado" "pacman y flatpak al día" 2>/dev/null || true
+if [ "${PAC_RC:-1}" -eq 0 ] && [ "${FLAT_RC:-1}" -eq 0 ] && [ "${CHURROS_RC:-1}" -eq 0 ]; then
+    notify-send -a ChurrOS "Sistema actualizado" "pacman, flatpak y utilidades de ChurrOS al día" 2>/dev/null || true
 else
     notify-send -a ChurrOS -u critical "Fallo en la actualización" "Revisa $LOG" 2>/dev/null || true
 fi

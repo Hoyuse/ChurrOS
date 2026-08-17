@@ -3,8 +3,13 @@
 # churros-pkexec — Ejecuta con privilegios via pkexec o sudo.
 # Garantiza ejecucion sin prompts para usuarios autorizados.
 #
+# Importante: si pkexec ELEVA y ejecuta el comando, su código de salida es
+# el del propio comando. Solo 126/127 de pkexec significan "no pudo
+# elevar/ejecutar" y entonces se intenta sudo. Si el comando falló por su
+# cuenta (p. ej. una descarga con 404 -> exit 1), se propaga ese código
+# sin volver a ejecutar nada ni reportar un falso error de privilegios.
 
-set -e
+set -u
 
 if [ "$#" -lt 1 ]; then
     echo "Uso: churros-pkexec <comando> [args...]" >&2
@@ -13,8 +18,15 @@ fi
 
 if command -v pkexec >/dev/null 2>&1; then
 
-    if pkexec "$@"; then
+    pkexec "$@"
+    rc=$?
+
+    if [ "$rc" -eq 0 ]; then
         exit 0
+    fi
+
+    if [ "$rc" -ne 126 ] && [ "$rc" -ne 127 ]; then
+        exit "$rc"
     fi
 
 fi

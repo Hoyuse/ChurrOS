@@ -15,6 +15,24 @@ use crate::services::settings;
 
 pub struct UpdateService;
 
+/// Release de utilidades de ChurrOS (del updates.json del servidor).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ChurrosUpdate {
+    pub version: String,
+    pub file: String,
+    pub sha256: String,
+}
+
+/// Parsea el updates.json del servidor de releases.
+fn parse_updates_json(raw: &str) -> Option<ChurrosUpdate> {
+    let v: serde_json::Value = serde_json::from_str(raw).ok()?;
+    Some(ChurrosUpdate {
+        version: v.get("version")?.as_str()?.to_string(),
+        file: v.get("file")?.as_str()?.to_string(),
+        sha256: v.get("sha256")?.as_str()?.to_string(),
+    })
+}
+
 fn home() -> PathBuf {
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     PathBuf::from(home)
@@ -156,6 +174,46 @@ impl UpdateService {
         run_streaming(&["churros-pkexec", "flatpak", "update", "-y"], cb)
     }
 
+    // ------------------------------------------- utilidades de ChurrOS
+
+    /// URL base del servidor de releases de utilidades de ChurrOS.
+    pub fn churros_url() -> String {
+        settings::get_string(
+            "updates.churros_url",
+            "https://download.churroslinux.org/churros/",
+        )
+    }
+
+    /// Versión instalada de las utilidades (lee /etc/churros-version).
+    pub fn installed_churros_version() -> String {
+        std::fs::read_to_string("/etc/churros-version")
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|_| "?".to_string())
+    }
+
+    /// Comprueba si hay una versión nueva de las utilidades de ChurrOS.
+    /// `Some` = hay actualización disponible (versión != instalada).
+    pub fn check_churros() -> Option<ChurrosUpdate> {
+        let base = Self::churros_url();
+        let url = format!("{base}updates.json");
+        let out = run_capture(
+            &["curl", "-fsSL", "--connect-timeout", "10", url.as_str()],
+            15,
+        )?;
+        let update = parse_updates_json(&out)?;
+        if update.version == Self::installed_churros_version() {
+            None
+        } else {
+            Some(update)
+        }
+    }
+
+    /// Actualiza las utilidades de ChurrOS vía churros-update-utils (root).
+    pub fn update_churros(cb: &dyn Fn(&str)) -> bool {
+        let url = Self::churros_url();
+        run_streaming(&["churros-pkexec", "churros-update-utils", url.as_str()], cb)
+    }
+
     // -------------------------------------------------------- timer
 
     /// Aplica el estado actual (enabled + intervalo) al timer de systemd.
@@ -205,5 +263,30 @@ impl UpdateService {
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_updates_json_valid() {
+        let raw = r#"{
+            "version": "0.7",
+            "date": "2026-08-20",
+            "file": "churros-utils-0.7.tar.zst",
+            "sha256": "abc123"
+        }"#;
+        let u = parse_updates_json(raw).unwrap();
+        assert_eq!(u.version, "0.7");
+        assert_eq!(u.file, "churros-utils-0.7.tar.zst");
+        assert_eq!(u.sha256, "abc123");
+    }
+
+    #[test]
+    fn parse_updates_json_invalid() {
+        assert!(parse_updates_json("not json").is_none());
+        assert!(parse_updates_json(r#"{"version":"0.7"}"#).is_none());
     }
 }

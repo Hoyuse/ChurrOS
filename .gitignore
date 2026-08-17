@@ -45,3 +45,6 @@ archiso/airootfs/usr/share/churros/churros-welcome/
 archiso/airootfs/usr/share/churros/churros-settings/
 archiso/airootfs/usr/share/churros/churros-popup/
 archiso/airootfs/usr/share/churros/churros-control-center/
+
+# Release bundles produced by scripts/build-churros-release.sh
+release/

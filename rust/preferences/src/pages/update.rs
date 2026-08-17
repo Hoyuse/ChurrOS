@@ -43,6 +43,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
     );
 
     let status: Rc<RefCell<Option<Row>>> = Rc::new(RefCell::new(None));
+    let churros_status: Rc<RefCell<Option<Row>>> = Rc::new(RefCell::new(None));
     let log_view: Rc<RefCell<Option<gtk::TextView>>> = Rc::new(RefCell::new(None));
 
     // ---------- Automáticas ----------
@@ -81,19 +82,20 @@ pub fn build(navigator: gtk::Stack) -> Page {
     let mut action_group = Group::new("Acciones");
 
     let status_rc = Rc::clone(&status);
+    let churros_rc = Rc::clone(&churros_status);
     action_group.add(&Row::new(
         "Buscar actualizaciones",
-        Some("Comprueba pacman y flatpak"),
+        Some("Comprueba pacman, flatpak y utilidades de ChurrOS"),
         Some("system.svg"),
         None,
         None,
-        Some(Box::new(move |_| check_updates(&status_rc))),
+        Some(Box::new(move |_| check_updates(&status_rc, &churros_rc))),
     ));
 
     let log_rc = Rc::clone(&log_view);
     action_group.add(&Row::new(
         "Actualizar ahora",
-        Some("Ejecuta pacman -Syu y flatpak update"),
+        Some("Ejecuta pacman -Syu, flatpak update y utilidades de ChurrOS"),
         Some("system.svg"),
         None,
         None,
@@ -110,6 +112,18 @@ pub fn build(navigator: gtk::Stack) -> Page {
     );
     *status.borrow_mut() = Some(status_row);
     action_group.add(status.borrow().as_ref().unwrap());
+
+    let installed = UpdateService::installed_churros_version();
+    let churros_row = Row::new(
+        "Utilidades de ChurrOS",
+        Some(&format!("v{installed} instalada")),
+        Some("system.svg"),
+        None,
+        None,
+        None,
+    );
+    *churros_status.borrow_mut() = Some(churros_row);
+    action_group.add(churros_status.borrow().as_ref().unwrap());
     page.add(action_group.widget());
 
     // ---------- Log ----------
@@ -138,24 +152,37 @@ pub fn build(navigator: gtk::Stack) -> Page {
     page
 }
 
-fn check_updates(status: &Rc<RefCell<Option<Row>>>) {
+fn check_updates(status: &Rc<RefCell<Option<Row>>>, churros_status: &Rc<RefCell<Option<Row>>>) {
     if let Some(row) = status.borrow().as_ref() {
         row.set_subtitle("Comprobando...");
     }
+    if let Some(row) = churros_status.borrow().as_ref() {
+        row.set_subtitle("Comprobando...");
+    }
 
-    let (tx, rx) = std::sync::mpsc::channel::<(usize, usize)>();
+    let (tx, rx) = std::sync::mpsc::channel::<(usize, usize, Option<String>)>();
     std::thread::spawn(move || {
         let p = UpdateService::check_pacman().map(|v| v.len()).unwrap_or(0);
         let f = UpdateService::check_flatpak().map(|v| v.len()).unwrap_or(0);
-        let _ = tx.send((p, f));
+        let c = UpdateService::check_churros().map(|u| u.version);
+        let _ = tx.send((p, f, c));
     });
 
     let status_rc = Rc::clone(status);
+    let churros_rc = Rc::clone(churros_status);
     glib::timeout_add_local(std::time::Duration::from_millis(150), move || {
         match rx.try_recv() {
-            Ok((p, f)) => {
+            Ok((p, f, c)) => {
                 if let Some(row) = status_rc.borrow().as_ref() {
                     row.set_subtitle(&format!("{p} actualizaciones (pacman) · {f} (flatpak)"));
+                }
+                let installed = UpdateService::installed_churros_version();
+                let text = match c {
+                    Some(avail) => format!("v{installed} instalada · v{avail} disponible"),
+                    None => format!("al día (v{installed})"),
+                };
+                if let Some(row) = churros_rc.borrow().as_ref() {
+                    row.set_subtitle(&text);
                 }
                 glib::ControlFlow::Break
             }
@@ -184,7 +211,14 @@ fn run_update(log_view: &Rc<RefCell<Option<gtk::TextView>>>) {
                 let _ = tx_f.send(line.to_string());
             })
         };
-        let summary = if ok_pac && ok_flat {
+        let _ = tx.send("\n--- Utilidades de ChurrOS ---\n".to_string());
+        let ok_churros = {
+            let tx_c = tx.clone();
+            UpdateService::update_churros(&move |line| {
+                let _ = tx_c.send(line.to_string());
+            })
+        };
+        let summary = if ok_pac && ok_flat && ok_churros {
             "\n[COMPLETADO] Sistema actualizado correctamente.\n"
         } else {
             "\n[ERROR] La actualización no se completó. Si aparece \

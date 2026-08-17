@@ -224,6 +224,9 @@ python-pywal
 # Notificaciones del actualizador (notify-send -> mako)
 libnotify
 
+# Descarga de releases de utilidades de ChurrOS (churros-update-utils)
+curl
+
 # Calamares installer dependencies
 kcoreaddons
 kpmcore

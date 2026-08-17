@@ -29,6 +29,7 @@ file_permissions=(
   ["/usr/local/bin/choose-mirror"]="0:0:755"
   ["/usr/local/bin/churros-theme"]="0:0:755"
   ["/usr/local/bin/churros-update-auto"]="0:0:755"
+  ["/usr/bin/churros-update-utils"]="0:0:755"
   ["/usr/bin/churros-settings"]="0:0:755"
   ["/usr/bin/churros-control-center"]="0:0:755"
   ["/usr/bin/churros-pick-image"]="0:0:755"

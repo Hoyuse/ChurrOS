@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# churros-update-utils — comprueba y actualiza las utilidades de ChurrOS
+# desde el servidor de releases. Se ejecuta como root vía churros-pkexec
+# (la regla polkit permite los binarios churros-*).
+#
+# Uso:
+#   churros-update-utils [URL_BASE]
+#
+# URL_BASE por defecto: https://download.churroslinux.org/churros/
+#
+
+set -e
+
+BASE="${1:-https://download.churroslinux.org/churros/}"
+BASE="${BASE%/}/"
+
+VERSION_FILE=/etc/churros-version
+
+echo "Comprobando utilidades de ChurrOS ($BASE)..."
+
+MANIFEST="$(curl -fsSL --connect-timeout 10 "$BASE/updates.json" 2>/dev/null)" || {
+    echo "ERROR: no se pudo obtener updates.json"
+    exit 1
+}
+
+version="$(echo "$MANIFEST" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+file="$(echo "$MANIFEST" | sed -n 's/.*"file"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+sha256="$(echo "$MANIFEST" | sed -n 's/.*"sha256"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+
+[ -n "$version" ] && [ -n "$file" ] && [ -n "$sha256" ] || {
+    echo "ERROR: updates.json mal formado"
+    exit 1
+}
+
+installed="$(cat "$VERSION_FILE" 2>/dev/null || echo "")"
+
+if [ -n "$installed" ] && [ "$version" = "$installed" ]; then
+    echo "Utilidades de ChurrOS al día (v$installed)."
+    exit 0
+fi
+
+echo "Actualizando utilidades de ChurrOS: v${installed:-?} -> v$version"
+echo "Descargando $file..."
+tmp="$(mktemp)"
+curl -fSL --connect-timeout 10 -o "$tmp" "$BASE/$file" || {
+    echo "ERROR: descarga fallida"
+    rm -f "$tmp"
+    exit 1
+}
+
+echo "Verificando sha256..."
+got="$(sha256sum "$tmp" | awk '{print $1}')"
+if [ "$got" != "$sha256" ]; then
+    echo "ERROR: sha256 no coincide ($got != $sha256)"
+    rm -f "$tmp"
+    exit 1
+fi
+
+echo "Instalando..."
+tar --zstd -xaf "$tmp" -C / --no-same-owner
+rm -f "$tmp"
+
+echo "Utilidades de ChurrOS actualizadas a v$version."
