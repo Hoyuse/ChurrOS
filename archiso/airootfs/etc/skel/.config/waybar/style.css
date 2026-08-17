@@ -93,7 +93,7 @@ tooltip {
 }
 
 #custom-power {
-  margin-left: 8.75px;
+  margin: 0 8.75px;
   color: alpha(@foreground, 0.9);
 }
 
