@@ -1,5 +1,5 @@
 // ==========================================
-// ThemeService — dark/light + gtk settings + señales a waybar/foot
+// ThemeService — dark/light + gtk settings + señales a foot
 // (equivalente a services/theme.py)
 // ==========================================
 
@@ -152,10 +152,8 @@ fn persist_desktop(dark: bool) {
         .iter()
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
-    let _ = Command::new("pkill")
-        .args(["-SIGUSR2", "waybar"])
-        .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
-        .output();
+    // Waybar no usa el tema GTK: recargarla aquí solo resetea la barra.
+    // Si pywal está activo, regenerate_if_enabled ya escribe colors-waybar.css.
     let _ = Command::new("pkill")
         .args([if dark { "-SIGUSR1" } else { "-SIGUSR2" }, "foot"])
         .envs(env_refs.iter().map(|(k, v)| (*k, *v)))

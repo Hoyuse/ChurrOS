@@ -10,6 +10,7 @@ pub mod brightness;
 pub mod ethernet;
 pub mod jsonc;
 pub mod power;
+pub mod waybar_style;
 pub mod wifi;
 
 use std::io::Read;

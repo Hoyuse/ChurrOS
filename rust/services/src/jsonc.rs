@@ -161,6 +161,14 @@ mod tests {
             .as_array()
             .expect("modules-right es una lista");
         assert!(right.iter().any(|m| m == "clock"));
+        assert!(right.iter().any(|m| m == "custom/power"));
         assert!(value.get("niri/workspaces").is_some());
+        assert!(value.get("custom/power").is_some());
+
+        let pretty = serde_json::to_string_pretty(&value).expect("serializar");
+        let again = parse(&pretty).expect("el JSON pretty-print tiene que seguir parseando");
+        assert!(again.get("custom/power").is_some());
+        assert!(again.get("custom/launcher").is_some());
+        assert!(again.get("niri/workspaces").is_some());
     }
 }
