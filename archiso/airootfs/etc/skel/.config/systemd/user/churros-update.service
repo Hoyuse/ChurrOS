@@ -1,0 +1,6 @@
+[Unit]
+Description=Actualización automática de ChurrOS (pacman + flatpak)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/churros-update-auto

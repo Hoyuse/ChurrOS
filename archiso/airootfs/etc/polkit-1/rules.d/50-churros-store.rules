@@ -1,5 +1,8 @@
 polkit.addRule(function(action, subject) {
-    if (!subject.local || !subject.active) {
+    // NOTA: no usar subject.active — en sesiones de greetd/niri puede
+    // devolver false y pkexec falla sin agente. Se comprueba el grupo
+    // wheel (usuarios administradores), que es el criterio estándar.
+    if (!subject.local || !subject.isInGroup("wheel")) {
         return polkit.Result.NOT_HANDLED;
     }
 

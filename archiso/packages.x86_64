@@ -221,6 +221,9 @@ gnome-calculator
 # Colores dinámicos (pywal) — desde el repo local [churros]; dependencia: imagemagick
 python-pywal
 
+# Notificaciones del actualizador (notify-send -> mako)
+libnotify
+
 # Calamares installer dependencies
 kcoreaddons
 kpmcore

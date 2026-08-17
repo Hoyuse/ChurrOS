@@ -217,6 +217,7 @@ binds {
 // Autostart
 spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.jpeg" "-m" "fill"
 spawn-at-startup "churros-portal-start"
+spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
 spawn-at-startup "churros-welcome"

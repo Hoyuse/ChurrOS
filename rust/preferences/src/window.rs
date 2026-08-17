@@ -137,6 +137,9 @@ impl PreferencesWindow {
     fn register_pages(&mut self) {
         // Páginas principales (13, mismo orden que widgets/sidebar.py)
         self.register_main_page("system", "system.svg", "Sistema", |n| pages::system::build(n));
+        self.register_main_page("update", "system.svg", "Actualizaciones", |n| {
+            pages::update::build(n)
+        });
         self.register_main_page("datetime", "system.svg", "Fecha y hora", |n| {
             pages::datetime::build(n)
         });

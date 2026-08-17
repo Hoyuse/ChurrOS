@@ -23,6 +23,7 @@ pub mod pywal;
 pub mod settings;
 pub mod system;
 pub mod theme;
+pub mod update;
 pub mod users;
 pub mod wallpaper;
 pub mod waybar;
