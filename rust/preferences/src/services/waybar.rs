@@ -7,6 +7,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::time::Duration;
 
 use churros_services::waybar_style;
 
@@ -74,15 +75,14 @@ fn read_jsonc(path: &Path) -> Option<Value> {
     churros_services::jsonc::parse(&raw).ok()
 }
 
-fn write_atomic(path: &Path, content: &str) -> bool {
+/// Escritura in-place: Waybar vigila `style.css` con inotify
+/// (`reload_style_on_change`). Un rename atómico cambia el inode y la
+/// barra deja de enterarse de los siguientes guardados.
+fn write_file(path: &Path, content: &str) -> bool {
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    let tmp = path.with_extension("tmp");
-    if fs::write(&tmp, content).is_err() {
-        return false;
-    }
-    fs::rename(&tmp, path).is_ok()
+    fs::write(path, content).is_ok()
 }
 
 fn write_jsonc(path: &Path, data: &Value) -> bool {
@@ -95,7 +95,7 @@ fn write_jsonc(path: &Path, data: &Value) -> bool {
          // Editalo desde Preferencias -> Waybar\n\
          {text}\n"
     );
-    write_atomic(path, &content)
+    write_file(path, &content)
 }
 
 fn read_default_file(name: &str, embedded: &str) -> String {
@@ -210,7 +210,7 @@ fn write_colors(values: &Value) {
         .unwrap_or(d["foreground"].as_str().unwrap());
     let accent = waybar_style::accent_hex(values)
         .unwrap_or_else(|| d["accent"].as_str().unwrap().to_string());
-    let _ = write_atomic(&colors_path(), &colors_css(bg, fg, &accent));
+    let _ = write_file(&colors_path(), &colors_css(bg, fg, &accent));
 }
 
 /// Parchea font/alpha sobre el CSS actual. Si el archivo es el template
@@ -234,7 +234,7 @@ fn write_style(values: &Value) {
         .and_then(|v| v.as_f64())
         .unwrap_or(d["background-alpha"].as_f64().unwrap());
     let patched = waybar_style::patch_style(&content, font_family, font_size, bg_alpha);
-    let _ = write_atomic(&style_path(), &patched);
+    let _ = write_file(&style_path(), &patched);
 }
 
 fn uid() -> u32 {
@@ -303,13 +303,23 @@ fn waybar_running(env: &[(String, String)]) -> bool {
         .unwrap_or(false)
 }
 
-fn signal_reload(env: &[(String, String)]) {
+/// `--signal NOMBRE -x` evita que procps interprete `-USR2` como `-U SR2`.
+fn signal_waybar(env: &[(String, String)], signal: &str) {
     let _ = Command::new("pkill")
-        .args(["-x", "-USR2", "waybar"])
+        .args(["--signal", signal, "-x", "waybar"])
         .envs(env.iter().cloned())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
+}
+
+fn terminate_waybar(env: &[(String, String)]) {
+    signal_waybar(env, "TERM");
+    std::thread::sleep(Duration::from_millis(400));
+    if waybar_running(env) {
+        signal_waybar(env, "KILL");
+        std::thread::sleep(Duration::from_millis(200));
+    }
 }
 
 fn spawn_waybar(env: &[(String, String)]) {
@@ -447,17 +457,23 @@ impl WaybarService {
     /// Aplica una paleta pywal a waybar (colors-waybar.css) y recarga.
     /// Solo toca los colores, sin pisar config.jsonc/style.css.
     pub fn apply_pywal_colors(bg: &str, fg: &str, accent: &str) {
-        let _ = write_atomic(&colors_path(), &colors_css(bg, fg, accent));
+        let _ = write_file(&colors_path(), &colors_css(bg, fg, accent));
         Self::reload(false);
     }
 
-    /// Recarga in-place con SIGUSR2. Solo relanza el proceso si no hay barra.
-    /// Matar y respawnear era lo que dejaba la barra muerta si el spawn fallaba
-    /// (p.ej. al no poder abrir /tmp/waybar.log).
-    pub fn reload(_full_restart: bool) {
+    /// `true`: mata y relanza (posición, módulos, altura…). SIGUSR2 no
+    /// reaplica el jsonc en varias builds; el código previo lo documentaba.
+    /// `false`: SIGUSR2 (pywal: solo colors-waybar.css).
+    /// El spawn no depende de poder abrir `/tmp/waybar.log`.
+    pub fn reload(full_restart: bool) {
         let env = build_env();
+        if full_restart {
+            terminate_waybar(&env);
+            spawn_waybar(&env);
+            return;
+        }
         if waybar_running(&env) {
-            signal_reload(&env);
+            signal_waybar(&env, "USR2");
             return;
         }
         spawn_waybar(&env);
@@ -467,9 +483,9 @@ impl WaybarService {
     pub fn reset() {
         let dest = home().join(".config").join("waybar");
         let _ = fs::create_dir_all(&dest);
-        let _ = write_atomic(&dest.join("config.jsonc"), &default_config());
-        let _ = write_atomic(&dest.join("style.css"), &default_style());
-        let _ = write_atomic(&dest.join("colors-waybar.css"), &default_colors());
-        Self::reload(false);
+        let _ = write_file(&dest.join("config.jsonc"), &default_config());
+        let _ = write_file(&dest.join("style.css"), &default_style());
+        let _ = write_file(&dest.join("colors-waybar.css"), &default_colors());
+        Self::reload(true);
     }
 }

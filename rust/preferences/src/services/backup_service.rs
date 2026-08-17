@@ -282,11 +282,8 @@ impl BackupService {
 
     /// Recarga waybar/mako/fuzzel (equivalente a _reload_services).
     pub fn reload_services() {
-        for cmd in [
-            vec!["pkill", "-x", "-USR2", "waybar"],
-            vec!["makoctl", "reload"],
-            vec!["pkill", "-x", "fuzzel"],
-        ] {
+        crate::services::waybar::WaybarService::reload(true);
+        for cmd in [vec!["makoctl", "reload"], vec!["pkill", "-x", "fuzzel"]] {
             let _ = Command::new(&cmd[0])
                 .args(&cmd[1..])
                 .stdout(std::process::Stdio::null())
