@@ -83,6 +83,7 @@ docs/                         Project documentation
 
 ## Conventions
 
+- **Git workflow**: every change starts on a new branch (never on `main`). Create the branch, make and verify the changes there, and only merge back into `main` once everything works.
 - Shell scripts: `#!/usr/bin/env bash`, `set -e`, shellcheck-compliant.
 - Calamares modules: `.conf` (and `.yaml` for netinstall) in `installer/calamares/modules/`.
 - Package lists: one package per line in `archiso/packages.x86_64`.

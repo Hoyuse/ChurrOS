@@ -283,7 +283,7 @@ impl BackupService {
     /// Recarga waybar/mako/fuzzel (equivalente a _reload_services).
     pub fn reload_services() {
         for cmd in [
-            vec!["pkill", "-HUP", "waybar"],
+            vec!["pkill", "-x", "-USR2", "waybar"],
             vec!["makoctl", "reload"],
             vec!["pkill", "-x", "fuzzel"],
         ] {

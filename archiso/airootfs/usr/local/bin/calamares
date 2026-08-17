@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# calamares — ejecuta el instalador con privilegios de root de forma
+# automática. Usa sudo -E para preservar el entorno gráfico
+# (WAYLAND_DISPLAY, XDG_RUNTIME_DIR, etc.); el usuario churros tiene
+# sudo NOPASSWD, así que no pide contraseña.
+#
+
+if [ "$(id -u)" -eq 0 ]; then
+    exec /usr/bin/calamares "$@"
+fi
+
+exec sudo -E /usr/bin/calamares "$@"

@@ -20,7 +20,7 @@ use crate::widgets::slider_row::SliderRow;
 
 // Definido en el Python pero nunca usado por la página (paridad).
 #[allow(dead_code)]
-const AVAILABLE_MODULES: [&str; 20] = [
+const AVAILABLE_MODULES: [&str; 21] = [
     "niri/workspaces",
     "clock",
     "cpu",
@@ -37,6 +37,7 @@ const AVAILABLE_MODULES: [&str; 20] = [
     "custom/launcher",
     "custom/control-center",
     "custom/settings",
+    "custom/power",
     "custom/dnd",
     "custom/screenrecording-indicator",
     "custom/screenrecording-toggle",
@@ -288,37 +289,30 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
     content.append(actions_group.widget());
 }
 
-/// Mueve el modulo a la siguiente posicion (left -> center -> right -> left).
-fn cycle_module(state: &WaybarStateRef, module: String) {
-    let mut st = state.borrow_mut();
-
-    let mut current = 0usize;
-    for (i, _pos) in MODULE_POSITIONS.iter().enumerate() {
-        if st.module_states[i].iter().any(|m| *m == module) {
-            current = i;
-            break;
+/// Mueve UNA instancia a la siguiente posicion (left -> center -> right -> left).
+/// Por nombre se perdían todos los `custom/sep` de golpe.
+fn cycle_module(state: &WaybarStateRef, pos: usize, idx: usize) {
+    {
+        let mut st = state.borrow_mut();
+        if pos >= st.module_states.len() || idx >= st.module_states[pos].len() {
+            return;
         }
-    }
-
-    let nxt = (current + 1) % 3;
-
-    st.module_states[current].retain(|m| *m != module);
-    if !st.module_states[nxt].contains(&module) {
+        let module = st.module_states[pos].remove(idx);
+        let nxt = (pos + 1) % MODULE_POSITIONS.len();
         st.module_states[nxt].push(module);
     }
-    drop(st);
-
     rebuild_modules(state);
 }
 
-/// Quita el modulo de su posicion.
-fn remove_module(state: &WaybarStateRef, module: String) {
-    let mut st = state.borrow_mut();
-    for pos in st.module_states.iter_mut() {
-        pos.retain(|m| *m != module);
+/// Quita UNA instancia de su posicion.
+fn remove_module(state: &WaybarStateRef, pos: usize, idx: usize) {
+    {
+        let mut st = state.borrow_mut();
+        if pos >= st.module_states.len() || idx >= st.module_states[pos].len() {
+            return;
+        }
+        st.module_states[pos].remove(idx);
     }
-    drop(st);
-
     rebuild_modules(state);
 }
 
@@ -331,29 +325,24 @@ fn rebuild_modules(state: &WaybarStateRef) {
 
     for (i, position) in MODULE_POSITIONS.iter().enumerate() {
         let modules = st.module_states[i].clone();
-        for module in modules {
+        for (j, module) in modules.iter().enumerate() {
             let subtitle = format!("{position} — clic para mover, clic der. para quitar");
 
             let st_cycle = Rc::clone(state);
-            let module_cycle = module.clone();
             let row = Row::new(
-                &module,
+                module,
                 Some(&subtitle),
                 Some("waybar.svg"),
                 None,
                 None,
-                Some(Box::new(move |_| {
-                    cycle_module(&st_cycle, module_cycle.clone())
-                })),
+                Some(Box::new(move |_| cycle_module(&st_cycle, i, j))),
             );
 
-            // Clic derecho -> quitar modulo
             let gesture = gtk::GestureClick::new();
             gesture.set_button(3);
             let st_remove = Rc::clone(state);
-            let module_remove = module.clone();
             gesture.connect_pressed(move |_g, _n, _x, _y| {
-                remove_module(&st_remove, module_remove.clone());
+                remove_module(&st_remove, i, j);
             });
             row.widget().add_controller(gesture);
 
@@ -367,12 +356,12 @@ fn save_and_reload(state: &WaybarStateRef) {
     let st = state.borrow();
 
     let values = json!({
-        "layer": st.layer.value().unwrap_or_default(),
-        "position": st.position.value().unwrap_or_default(),
+        "layer": st.layer.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "top".into()),
+        "position": st.position.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "top".into()),
         "spacing": st.spacing.get_value() as i64,
         "height": st.height.get_value() as i64,
         "font-size": st.font_size.get_value() as i64,
-        "font-family": st.font_family.value().unwrap_or_default(),
+        "font-family": st.font_family.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "JetBrainsMono Nerd Font".into()),
         "background": st.bg.get_value(),
         "foreground": st.fg.get_value(),
         "accent": st.accent.get_value(),
