@@ -23,6 +23,11 @@ impl SwitchRow {
         let switch = gtk::Switch::new();
         switch.set_active(active);
         switch.set_valign(gtk::Align::Center);
+        // El Switch vive dentro de un GtkButton (la fila). Si el Switch
+        // también recibe el clic, GTK dispara notify::active y luego el
+        // clicked de la fila vuelve a togglear: dos ThemeService::set en
+        // el mismo evento, con gtk-theme a medias, y la app se cierra.
+        switch.set_can_target(false);
 
         let row = Row::new(
             title,

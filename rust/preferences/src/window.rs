@@ -24,6 +24,7 @@ pub struct PreferencesWindow {
     is_narrow: Rc<RefCell<bool>>,
     // Mantener la referencia viva: si se dropea, GLib destruye el objeto y
     // el handler de color-scheme deja de disparar.
+    #[allow(dead_code)]
     gtk_settings: Option<gio::Settings>,
 }
 
@@ -393,8 +394,7 @@ fn refresh_theme(window: &gtk::ApplicationWindow) {
     // lo que hace que botones/switch/entrys cambien al instante, además de
     // los tokens CSS de window.light.
     if let Some(settings) = gtk::Settings::default() {
-        settings.set_gtk_application_prefer_dark_theme(!ThemeService::is_dark());
+        settings.set_gtk_application_prefer_dark_theme(ThemeService::is_dark());
     }
     window.queue_draw();
-    window.queue_resize();
 }

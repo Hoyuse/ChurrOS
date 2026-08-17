@@ -14,6 +14,7 @@ use gtk::prelude::*;
 use gtk::gdk;
 
 use services::accent::AccentService;
+use services::theme::ThemeService;
 use window::PreferencesWindow;
 
 const APP_ID: &str = "org.churros.preferences";
@@ -82,10 +83,14 @@ fn activate(app: &gtk::Application) {
     logging::log("window creada");
     win.present();
     logging::log("presentada");
+    // PreferencesWindow guarda gio::Settings (color-scheme). Si se dropea
+    // al salir de activate, el handler muere aunque la ventana GTK siga.
+    std::mem::forget(win);
 }
 
 fn main() -> glib::ExitCode {
     logging::init("settings");
+    ThemeService::migrate_before_gtk();
 
     let app = gtk::Application::builder()
         .application_id(APP_ID)
