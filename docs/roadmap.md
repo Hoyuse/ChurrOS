@@ -10,9 +10,9 @@ La hoja de ruta puede cambiar conforme evolucione la distribución.
 
 # Estado actual
 
-La versión publicada es **v0.6**. ChurrOS sigue en etapa temprana: hay ISO, escritorio, instalador y apps oficiales, pero aún no es una 1.0.
+La versión publicada es **v0.7**. ChurrOS sigue en etapa temprana: hay ISO, escritorio, instalador, apps oficiales y actualizador, pero aún no es una 1.0.
 
-El objetivo principal es consolidar esa base (identidad de arranque, repositorio propio y actualizador) antes de ampliar el alcance.
+El objetivo principal es consolidar esa base (identidad de arranque y repositorio propio) antes de ampliar el alcance.
 
 ---
 
@@ -95,7 +95,7 @@ Crear herramientas propias.
 - [ ] Repositorio oficial.
 - [ ] Paquetes propios (en desarrollo — Calamares, yay, waypaper y python-pywal se construyen en local).
 - [x] ChurrOS CLI.
-- [ ] Actualizador.
+- [x] Actualizador (pacman, Flatpak y utilidades de ChurrOS).
 - [x] Aplicación de bienvenida (`churros-welcome`, Rust).
 - [x] Herramienta de configuración (`churros-settings`, Rust).
 - [x] Centro de control (`churros-control-center`, Rust).
@@ -111,7 +111,7 @@ Publicar la primera versión estable.
 
 - [ ] Versión 1.0.
 - [ ] Sitio web.
-- [x] GitHub Releases (v0.6 publicada; la ISO va partida en 7z).
+- [x] GitHub Releases (v0.6). La ISO actual (**v0.7**) se publica en download.churroslinux.org.
 - [ ] Wiki oficial.
 - [ ] Manual de usuario.
 - [ ] Comunidad.

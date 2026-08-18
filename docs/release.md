@@ -111,18 +111,18 @@ Verifica:
 
 # 5. Actualizar la versión
 
-El número de versión vive en `VERSION`. Lo muestran `./churros version`, `./churros info`, el footer de welcome, Ajustes y el `os-release` de la ISO. Debe coincidir con el tag de GitHub.
+El número de versión vive en `VERSION`. Lo muestran `./churros version`, `./churros info`, el footer de welcome, Ajustes y el `os-release` de la ISO. Debe coincidir con el tag de GitHub cuando exista.
 
-La versión actual es **0.6** (tag `v0.6`). El esquema previsto es Semantic Versioning (`MAJOR.MINOR.PATCH`); algunos tags históricos omiten el parche (`v0.6`).
+La versión actual es **0.7**. El esquema previsto es Semantic Versioning (`MAJOR.MINOR.PATCH`); algunas ISO y tags omiten el parche (`v0.6`, `v0.7`).
 
 Ejemplo:
 
 ```
-0.6
+0.7
 
 ↓
 
-0.7.0
+0.8
 ```
 
 ---
@@ -133,7 +133,7 @@ Registrar todos los cambios.
 
 ```bash
 git add .
-git commit -m "release: preparar versión 0.7.0"
+git commit -m "release: preparar versión 0.8"
 ```
 
 ---
@@ -143,13 +143,13 @@ git commit -m "release: preparar versión 0.7.0"
 Marcar la versión publicada.
 
 ```bash
-git tag v0.7.0
+git tag v0.8
 ```
 
 Enviar el tag.
 
 ```bash
-git push origin v0.7.0
+git push origin v0.8
 ```
 
 ---
@@ -162,7 +162,7 @@ Subir los cambios al repositorio.
 git push
 ```
 
-Posteriormente publicar la ISO mediante GitHub Releases.
+Posteriormente publicar la ISO y el torrent en download.churroslinux.org. También puede crearse un GitHub Release.
 
 ---
 
@@ -193,7 +193,7 @@ Ejemplos:
 
 0.6
 
-0.7.0
+0.7
 
 1.0.0
 ```

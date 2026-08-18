@@ -69,7 +69,7 @@ ArchISO instala paquetes, genera initramfs y squashfs, crea los cargadores (GRUB
 La ISO queda en `out/`. Ejemplo:
 
 ```text
-out/ChurrOS-2026.08.14-x86_64.v0.6.iso
+out/ChurrOS-2026.08.17-x86_64-v0.7.iso
 ```
 
 Al terminar se borra `work/` y se devuelve `out/` al usuario.
@@ -187,4 +187,4 @@ Mejoras previstas:
 - Generación de checksums desde la CLI.
 - Comando `./churros release`.
 
-`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v0.6 se publica a mano en GitHub Releases (ISO partida en 7z).
+`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v0.7 se publica a mano en download.churroslinux.org (ISO + torrent).

@@ -1,5 +1,13 @@
 # Devlog
 
+## 2026-08-17 — ChurrOS 0.7
+
+Release pública **v0.7**. ISO `ChurrOS-2026.08.17-x86_64-v0.7.iso` y torrent en download.churroslinux.org.
+
+Incluye actualizador (pacman, Flatpak y utilidades de ChurrOS), tienda Bazaar, rediseño de popups y personalización de Waybar.
+
+---
+
 ## 2026-08-13 — ChurrOS 0.6
 
 Release pública **v0.6** (tag `v0.6`). Las apps oficiales corren como binarios Rust (`churros-welcome`, `churros-settings`, `churros-control-center`, `churros-popup`). El tema GRUB se despliega al airootfs para que Calamares lo aplique en el sistema instalado. `build-rust.sh` instala cargo/rust en el host si faltan.
