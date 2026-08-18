@@ -45,6 +45,14 @@ mkdir -p archiso/airootfs/root/branding
 cp -r branding/files \
     archiso/airootfs/root/branding/
 
+cp VERSION archiso/airootfs/root/branding/VERSION
+cp branding/stamp-os-release.sh archiso/airootfs/root/branding/stamp-os-release.sh
+chmod +x archiso/airootfs/root/branding/stamp-os-release.sh
+CHURROS_VERSION=$(tr -d '[:space:]' < VERSION)
+bash branding/stamp-os-release.sh \
+    archiso/airootfs/root/branding/files/os-release \
+    "$CHURROS_VERSION"
+
 if [ -d branding/grub-theme ]; then
     cp -r branding/grub-theme \
         archiso/airootfs/root/branding/grub-theme

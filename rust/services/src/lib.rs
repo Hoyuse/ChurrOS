@@ -10,6 +10,7 @@ pub mod brightness;
 pub mod ethernet;
 pub mod jsonc;
 pub mod power;
+pub mod version;
 pub mod waybar_style;
 pub mod wifi;
 

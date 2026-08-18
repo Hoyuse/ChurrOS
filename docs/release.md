@@ -111,7 +111,7 @@ Verifica:
 
 # 5. Actualizar la versión
 
-El número de versión vive en `VERSION` (lo muestran `./churros version` y `./churros info`). Debe coincidir con el tag de GitHub.
+El número de versión vive en `VERSION`. Lo muestran `./churros version`, `./churros info`, el footer de welcome, Ajustes y el `os-release` de la ISO. Debe coincidir con el tag de GitHub.
 
 La versión actual es **0.6** (tag `v0.6`). El esquema previsto es Semantic Versioning (`MAJOR.MINOR.PATCH`); algunos tags históricos omiten el parche (`v0.6`).
 

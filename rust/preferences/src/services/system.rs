@@ -12,7 +12,7 @@ impl SystemService {
     }
 
     pub fn version() -> &'static str {
-        "Beta"
+        churros_services::version::distro()
     }
 
     pub fn edition() -> &'static str {

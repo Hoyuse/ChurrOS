@@ -19,11 +19,12 @@ pub fn build(navigator: gtk::Stack) -> Page {
     // Información
     let mut information = Group::new("Información");
 
+    let version_label = format!("ChurrOS {}", SystemService::version());
     information.add(&Row::new(
         "Versión",
         None,
         Some("system.svg"),
-        Some("ChurrOS Beta"),
+        Some(&version_label),
         None,
         None,
     ));

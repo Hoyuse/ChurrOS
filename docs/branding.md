@@ -134,7 +134,7 @@ Programas como:
 
 obtienen información desde este archivo.
 
-Debe contener la identidad oficial de ChurrOS.
+Debe contener la identidad oficial de ChurrOS. El archivo en git deja `PRETTY_NAME` en rolling; `./churros build` y `customize_airootfs.sh` escriben `VERSION_ID`, `VERSION` y `PRETTY_NAME` a partir del `VERSION` del repo.
 
 ---
 

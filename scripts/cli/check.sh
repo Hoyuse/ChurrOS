@@ -426,6 +426,55 @@ else
     notice "msgfmt not available (gettext package)"
 fi
 
+# ---------------------------------------------------------- Distro version
+
+section "Distro version"
+
+if [ ! -f VERSION ]; then
+    fail "VERSION missing at repo root"
+else
+    ver=$(tr -d '[:space:]' < VERSION)
+    if [[ ! "$ver" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+        fail "VERSION must be dotted numeric (got '$ver')"
+    else
+        pass "VERSION=$ver"
+    fi
+fi
+
+if grep -q 'include_str!("../../../VERSION")' rust/services/src/version.rs 2>/dev/null; then
+    pass "churros-services bakes VERSION at compile time"
+else
+    fail "rust/services/src/version.rs must include_str the repo VERSION file"
+fi
+
+if grep -qE 'const VERSION:[[:space:]]*&str[[:space:]]*=[[:space:]]*"[0-9]' rust/churros-welcome/src/footer.rs; then
+    fail "welcome footer has a hardcoded version; use churros_services::version::distro()"
+elif grep -q 'churros_services::version::distro' rust/churros-welcome/src/footer.rs; then
+    pass "welcome footer reads churros_services::version::distro"
+else
+    fail "welcome footer must call churros_services::version::distro()"
+fi
+
+if grep -qE 'fn version\(\) -> &' rust/preferences/src/services/about.rs \
+    && grep -q 'churros_services::version::distro' rust/preferences/src/services/about.rs; then
+    pass "Settings About reads churros_services::version::distro"
+else
+    fail "preferences AboutService::version must call churros_services::version::distro()"
+fi
+
+if [ -f branding/stamp-os-release.sh ]; then
+    pass "branding/stamp-os-release.sh present"
+else
+    fail "branding/stamp-os-release.sh missing"
+fi
+
+if grep -q 'stamp-os-release.sh' branding/customize_airootfs.sh \
+    && grep -q 'stamp-os-release.sh' scripts/cli/build.sh; then
+    pass "ISO build stamps os-release from VERSION"
+else
+    fail "build.sh and customize_airootfs.sh must stamp os-release from VERSION"
+fi
+
 # --------------------------------------------------------------- Hygiene
 
 section "Repository hygiene"

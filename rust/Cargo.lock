@@ -110,6 +110,7 @@ dependencies = [
 name = "churros-welcome"
 version = "0.1.0"
 dependencies = [
+ "churros-services",
  "gio",
  "glib",
  "gtk4",

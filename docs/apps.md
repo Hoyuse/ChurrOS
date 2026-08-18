@@ -34,7 +34,7 @@ Pantalla de bienvenida al iniciar la sesión Live.
 - Dar la bienvenida al usuario.
 - Ofrecer accesos a instalación, GitHub y comunidad.
 
-`system_card.rs` y `system_info.rs` existen (leen `/proc` y `/etc/os-release`) pero la `SystemCard` **no se monta** en la ventana actual. El footer muestra `Linux • Niri • ChurrOS` (versión embebida en el crate; hoy no lee `VERSION` del repo).
+`system_card.rs` y `system_info.rs` existen (leen `/proc` y `/etc/os-release`) pero la `SystemCard` **no se monta** en la ventana actual. El footer muestra `Linux • Niri • ChurrOS` más la versión de `churros_services::version::distro()` (archivo `VERSION` del repo, embebido al compilar).
 
 ## Stack
 
@@ -189,7 +189,6 @@ cargo build --release --manifest-path rust/Cargo.toml
 # Future Work
 
 - Empaquetar las apps como paquetes pacman propios.
-- Leer `VERSION` del repo en el footer de welcome (hoy está embebida en el crate).
 - Completar i18n (los `.po` existen; las apps Rust aún no cargan gettext).
 - churros-ui: widgets y CSS compartidos.
 - Tests automatizados de las apps GTK.
