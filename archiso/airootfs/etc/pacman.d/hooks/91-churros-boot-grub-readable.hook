@@ -1,0 +1,14 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/modules/*/vmlinuz
+Target = boot/vmlinuz-*
+Target = boot/initramfs-*.img
+Target = boot/*-ucode.img
+
+[Action]
+Description = Rewriting /boot images so GRUB can read them on btrfs
+When = PostTransaction
+Depends = coreutils
+Exec = /usr/share/churros/scripts/make-boot-grub-readable

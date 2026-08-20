@@ -243,6 +243,9 @@ else
     netinstall_i=$(step_index 'netinstall' || true)
     post_i=$(step_index 'shellprocess@post-install' || true)
     umount_i=$(step_index 'umount' || true)
+    mount_i=$(step_index 'mount' || true)
+    bootnocow_i=$(step_index 'shellprocess@boot-nocow' || true)
+    unpackfs_i=$(step_index 'unpackfs' || true)
 
     order_ok=1
     for pair in \
@@ -251,7 +254,10 @@ else
         "shellprocess@churros-repo:$repo_i" \
         "netinstall:$netinstall_i" \
         "shellprocess@post-install:$post_i" \
-        "umount:$umount_i"
+        "umount:$umount_i" \
+        "mount:$mount_i" \
+        "shellprocess@boot-nocow:$bootnocow_i" \
+        "unpackfs:$unpackfs_i"
     do
         name=${pair%%:*}
         idx=${pair##*:}
@@ -278,9 +284,17 @@ else
             fail "shellprocess@post-install must be the last step before umount"
             order_ok=0
         fi
+        if [ "$mount_i" -ge "$bootnocow_i" ]; then
+            fail "shellprocess@boot-nocow must run after mount"
+            order_ok=0
+        fi
+        if [ "$bootnocow_i" -ge "$unpackfs_i" ]; then
+            fail "shellprocess@boot-nocow must run before unpackfs"
+            order_ok=0
+        fi
     fi
 
-    [ "$order_ok" -eq 1 ] && pass "pacman-init → fix-boot → churros-repo → netinstall; post-install before umount"
+    [ "$order_ok" -eq 1 ] && pass "boot-nocow after mount; pacman-init → fix-boot → churros-repo → netinstall; post-install before umount"
 fi
 
 # --------------------------------------------- Calamares shellprocess confs
@@ -352,6 +366,48 @@ else
     done
 
     [ "$conf_ok" -eq 1 ] && pass "${#INSTANCE_CONFIGS[@]} shellprocess configs present and referenced"
+fi
+
+# Calamares reads defaultFileSystemType (capital S). The other spelling is ignored and ext4 is used.
+PARTITION_CONF=installer/calamares/modules/partition.conf
+if [ -f "$PARTITION_CONF" ]; then
+    if grep -qE '^[[:space:]]*defaultFilesystemType:' "$PARTITION_CONF"; then
+        fail "$PARTITION_CONF uses defaultFilesystemType (ignored); need defaultFileSystemType"
+    elif grep -qE '^[[:space:]]*defaultFileSystemType:' "$PARTITION_CONF"; then
+        pass "partition.conf defaultFileSystemType is the key Calamares reads"
+    else
+        notice "$PARTITION_CONF has no defaultFileSystemType (Calamares falls back to ext4)"
+    fi
+fi
+
+# GRUB gfxmenu rejects unknown global properties (install then fails to boot
+# the kernel *and* prints theme.txt errors). /boot on btrfs+zstd is unreadable.
+GRUB_THEME_TXT=branding/grub-theme/theme.txt
+if [ -f "$GRUB_THEME_TXT" ]; then
+    if grep -qE '^[[:space:]]*title-align:' "$GRUB_THEME_TXT"; then
+        fail "$GRUB_THEME_TXT: title-align is not a GRUB gfxmenu property"
+    elif grep -qE 'selected_item_pixmap_style_(left|right)' "$GRUB_THEME_TXT"; then
+        fail "$GRUB_THEME_TXT: selected_item_pixmap_style_left/right are not GRUB properties"
+    else
+        pass "GRUB theme.txt uses only gfxmenu global properties"
+    fi
+fi
+
+BOOT_GRUB_SCRIPT=archiso/airootfs/usr/share/churros/scripts/make-boot-grub-readable
+GRUB_THEME_CONF=installer/calamares/modules/shellprocess-grub-theme.conf
+BOOT_GRUB_HOOK=archiso/airootfs/etc/pacman.d/hooks/91-churros-boot-grub-readable.hook
+if [ ! -f "$BOOT_GRUB_SCRIPT" ]; then
+    fail "$BOOT_GRUB_SCRIPT missing (GRUB premature EOF on btrfs zstd /boot)"
+elif [ ! -f "$GRUB_THEME_CONF" ] || ! grep -q 'make-boot-grub-readable' "$GRUB_THEME_CONF"; then
+    fail "$GRUB_THEME_CONF does not run make-boot-grub-readable after grub-mkconfig"
+elif ! grep -q 'conv=fsync' "$BOOT_GRUB_SCRIPT" || grep -qE 'cp -a --' "$BOOT_GRUB_SCRIPT"; then
+    fail "$BOOT_GRUB_SCRIPT must full-copy into a +C inode (cp -a reflinks zstd extents on btrfs)"
+elif [ ! -f "$BOOT_GRUB_HOOK" ]; then
+    fail "$BOOT_GRUB_HOOK missing (kernel updates would rewrite compressed /boot images)"
+elif grep -q 'remove from airootfs' "$BOOT_GRUB_HOOK"; then
+    fail "$BOOT_GRUB_HOOK would be deleted by the ISO-only hook cleaner"
+else
+    pass "GRUB btrfs /boot rewrite is wired (install + pacman hook)"
 fi
 
 # ------------------------------------------- Local AUR extras ↔ netinstall

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# GRUB cannot reliably read zstd-compressed or sparse files from btrfs.
+# That shows up as: premature end of file /@/boot/vmlinuz-linux
+# (then "you need to load the kernel first" for the initramfs).
+#
+# Mark /boot No_COW + compression=none. Rewrite each image into a new
+# empty +C inode with a full copy. `cp -a` on btrfs reflinks by default
+# and keeps the compressed extents, so GRUB still fails.
+# A pacman hook re-runs this after kernel/initramfs updates.
+
+set -euo pipefail
+
+root_fstype="$(findmnt -n -o FSTYPE / 2>/dev/null || true)"
+boot_fstype="$(findmnt -n -o FSTYPE /boot 2>/dev/null || true)"
+if [ "$root_fstype" != btrfs ] && [ "$boot_fstype" != btrfs ]; then
+    exit 0
+fi
+case "$boot_fstype" in
+    vfat|fat|msdos|exfat)
+        exit 0
+        ;;
+esac
+
+if [ -d /boot ]; then
+    chattr +C /boot >/dev/null 2>&1 || true
+    if command -v btrfs >/dev/null 2>&1; then
+        btrfs property set /boot compression none >/dev/null 2>&1 || true
+    fi
+fi
+
+# chattr +C only applies to a newly created empty file. Write into that
+# inode (dd, never reflink/sparse) and rename over the original.
+rewrite_for_grub() {
+    local f=$1
+    local tmp="${f}.grub-rewr"
+
+    rm -f -- "$tmp"
+    touch -- "$tmp"
+    chattr +C -- "$tmp" >/dev/null 2>&1 || true
+    dd if="$f" of="$tmp" bs=8M status=none conv=fsync
+    chmod --reference="$f" "$tmp"
+    chown --reference="$f" "$tmp"
+    mv -f -- "$tmp" "$f"
+}
+
+shopt -s nullglob
+for f in /boot/vmlinuz-* /boot/initramfs-*.img /boot/*-ucode.img; do
+    [ -f "$f" ] || continue
+    case "$f" in
+        *.grub-rewr) continue ;;
+    esac
+    rewrite_for_grub "$f"
+done

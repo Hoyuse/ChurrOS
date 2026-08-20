@@ -85,9 +85,13 @@ El GRUB del sistema **instalado** (vía Calamares) usa un tema propio con menú 
 
 1. `./churros build` regenera las fuentes si faltan (`build-grub-theme.sh`) y copia `branding/grub-theme` al airootfs.
 2. En el arranque live, `customize_airootfs.sh` lo despliega en `/usr/share/churros/grub-theme/`.
-3. Calamares (instancia `shellprocess@grub-theme`, tras el módulo `bootloader`) lo copia a `/boot/grub/themes/churros/`, añade `GRUB_THEME` a `/etc/default/grub` y regenera `/boot/grub/grub.cfg` con `grub-mkconfig`.
+3. Calamares (instancia `shellprocess@grub-theme`, tras el módulo `bootloader`) lo copia a `/boot/grub/themes/churros/`, añade `GRUB_THEME` a `/etc/default/grub`, regenera `/boot/grub/grub.cfg` con `grub-mkconfig` y reescribe las imágenes de `/boot` sin compresión Btrfs para que GRUB pueda leer el kernel.
 
 `grubcfg.conf` usa `GRUB_TERMINAL_OUTPUT: "gfxterm"` para que el tema se renderice con gráficos.
+
+El tema no usa `title-align` ni otras claves globales que `theme_set_string` de GRUB no reconoce (eso aborta la carga del tema). El título centrado es un `+ label` con `align = "center"`.
+
+Con Btrfs + `compress=zstd`, GRUB suele fallar al leer `/@/boot/vmlinuz-linux` (`premature end of file`). Antes de unpackfs, `shellprocess@boot-nocow` marca `/boot` con `chattr +C` y `compression=none`. Tras el bootloader, `make-boot-grub-readable` reescribe vmlinuz/initramfs en un inodo nuevo sin CoW (copia completa; `cp -a` en Btrfs hace reflink y deja el archivo comprimido). Un hook de pacman (`91-churros-boot-grub-readable.hook`) lo vuelve a correr tras actualizar el kernel.
 
 ---
 

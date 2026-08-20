@@ -92,15 +92,16 @@ docs/                         Project documentation
 
 ## Calamares Sequence
 
-`installer/calamares/settings.conf` defines four `shellprocess` instances and the exec order. The exec sequence IS order-sensitive — keypin requirements:
+`installer/calamares/settings.conf` defines five `shellprocess` instances and the exec order. The exec sequence IS order-sensitive — keypin requirements:
 
+- `shellprocess@boot-nocow` runs after `mount` and **MUST** come before `unpackfs`: `chattr +C` + `compression=none` on the target `/boot` so vmlinuz is never stored as btrfs zstd (GRUB `premature end of file`).
 - `shellprocess@pacman-init` (keyring init) **MUST** come before `shellprocess@fix-boot` (mkinitcpio preset rewrite + kernel modules) — both already ordered this way; do not reorder.
 - `shellprocess@fix-boot` runs before `shellprocess@churros-repo`, which registers the build-time `[churros]` repo (`Server = file:///root/packages`) in the target's pacman.conf so `netinstall` can resolve yay/waypaper/python-pywal.
 - `shellprocess@churros-repo` **MUST** run before `netinstall`/`packages`; the repo is removed again by `shellprocess@post-install` (unanchored `sed /churros/d` is forbidden — use the anchored `[churros]` block removal).
 - `shellprocess@post-install` (cleanup: drops `[churros]`, `userdel -r churros`, removes live-only `/root` artifacts) is the last exec step before `umount`.
-- `shellprocess@grub-theme` runs right after `bootloader`: copies `branding/grub-theme` (deployed to `/usr/share/churros/grub-theme/` at live boot) into `/boot/grub/themes/churros/`, appends `GRUB_THEME` to the target's `/etc/default/grub` and reruns `grub-mkconfig -o /boot/grub/grub.cfg` so the installed system boots with the themed, centered menu.
+- `shellprocess@grub-theme` runs right after `bootloader`: copies `branding/grub-theme` (deployed to `/usr/share/churros/grub-theme/` at live boot) into `/boot/grub/themes/churros/`, appends `GRUB_THEME` to the target's `/etc/default/grub`, reruns `grub-mkconfig -o /boot/grub/grub.cfg`, then `make-boot-grub-readable` so GRUB can read `/boot` on btrfs+zstd.
 
-Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.conf`, `shellprocess-repo.conf`, `shellprocess-grub-theme.conf`, `shellprocess-cleanup.conf`. Module IDs in `instances:` are `pacman-init`, `fix-boot`, `churros-repo`, `grub-theme`, `post-install`.
+Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.conf`, `shellprocess-repo.conf`, `shellprocess-grub-theme.conf`, `shellprocess-cleanup.conf`, `shellprocess-boot-nocow.conf`. Module IDs in `instances:` are `pacman-init`, `fix-boot`, `churros-repo`, `grub-theme`, `post-install`, `boot-nocow`.
 
 ## Key Architecture
 

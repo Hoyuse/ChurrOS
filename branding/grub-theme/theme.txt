@@ -1,15 +1,26 @@
 # ChurrOS GRUB theme
 # Fondo oscuro + menu centrado con seleccion naranja.
+# Global properties are only those in gfxmenu theme_set_string (no title-align).
 
-title-text: "ChurrOS"
+title-text: ""
 title-font: "DejaVu Sans Bold 22.pf2"
 title-color: "#F97316"
-title-align: "center"
 
 desktop-image: "background.png"
 desktop-color: "#111827"
 
 terminal-font: "DejaVu Sans 16.pf2"
+
++ label {
+    left = 0
+    width = 100%
+    top = 8%
+    height = 40
+    text = "ChurrOS"
+    font = "DejaVu Sans Bold 22.pf2"
+    color = "#F97316"
+    align = "center"
+}
 
 + boot_menu {
     left = "50% - 260"
@@ -24,6 +35,4 @@ terminal-font: "DejaVu Sans 16.pf2"
     item_spacing = 10
     item_padding = 12
     selected_item_pixmap_style = "select.png"
-    selected_item_pixmap_style_left = 16
-    selected_item_pixmap_style_right = 16
 }
