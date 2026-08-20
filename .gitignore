@@ -30,6 +30,7 @@ archiso/packages/churros.db.tar.gz.old
 archiso/packages/churros.files
 archiso/packages/churros.files.tar.gz
 archiso/packages/churros.files.tar.gz.old
+archiso/packages/.calamares-build.stamp
 
 # Rust workspace: build artifacts and deployed binaries.
 # Produced by scripts/build-rust.sh — binaries land in the airootfs tree

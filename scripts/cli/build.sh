@@ -64,16 +64,13 @@ fi
 
 echo "[2/5] Checking packages..."
 
+# Always invoke: rebuilds if the package is missing or linked against a
+# different libpython than the ISO's `python` package (pacstrap).
+bash scripts/build-calamares.sh
 CALAMARES_PKG=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
 PYWAL_PKG=$(ls archiso/packages/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 WAYPAPER_PKG=$(ls archiso/packages/waypaper-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 BAZAAR_PKG=$(ls archiso/packages/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-
-if [ -z "$CALAMARES_PKG" ]; then
-    echo "  Calamares not found — building..."
-    bash scripts/build-calamares.sh
-    CALAMARES_PKG=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
-fi
 
 if [ -z "$PYWAL_PKG" ] || [ -z "$WAYPAPER_PKG" ]; then
     echo "  AUR extras not found — building..."

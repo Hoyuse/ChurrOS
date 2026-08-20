@@ -1,73 +1,352 @@
-QWidget {
-    background-color: #111827;
-    color: #F8FAFC;
-    font-family: "DejaVu Sans", sans-serif;
+/*
+ * ChurrOS Calamares stylesheet.
+ * Tokens match rust apps (churros.css / welcome): dark glass, orange accent.
+ * Avoid QWidget { } — PartitionLabelsView fills palette().window() and
+ * would inherit a global fill. The partition-labels patch picks text color
+ * from that fill. IDs: #mainApp, #sidebarApp, #logoApp (Calamares deploy guide).
+ * Sidebar step list is a C++ delegate (`sidebar: widget`).
+ */
+
+#mainApp {
+    background-color: #0F0F10;
+    color: #F5F5F5;
+    font-family: "Inter", "Noto Sans", "DejaVu Sans", sans-serif;
+}
+
+#sidebarApp {
+    background-color: #121214;
+    color: #F5F5F5;
+}
+
+#logoApp {
+    padding: 16px;
+}
+
+/* View stack + scroll viewports stay Fusion-light unless painted. */
+QStackedWidget {
+    background-color: #0F0F10;
+    color: #F5F5F5;
+}
+
+QScrollArea {
+    background-color: #0F0F10;
+    border: none;
+}
+
+QScrollArea > QWidget,
+#scrollAreaWidgetContents,
+#m_itemsScrollArea {
+    background-color: #0F0F10;
+    color: #F5F5F5;
+}
+
+/*
+ * Partition ChoicePage is an unstyled QWidget, so Fusion paints it light.
+ * QLabel { color } is light, which made Erase/Manual unreadable (white on white).
+ * Do not use a global QWidget { } — PartitionLabelsView paints Qt::black on
+ * palette().window() and would vanish. Keep that view on Fusion's light fill.
+ */
+ChoicePage,
+PartitionPage,
+EncryptWidget {
+    background-color: #0F0F10;
+    color: #F5F5F5;
+}
+
+Calamares--Widgets--PrettyRadioButton,
+PrettyRadioButton {
+    background-color: #1A1A1C;
+    color: #F5F5F5;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 10px;
+}
+
+Calamares--Widgets--PrettyRadioButton QRadioButton,
+PrettyRadioButton QRadioButton {
+    background: transparent;
+    color: #F5F5F5;
+}
+
+Calamares--Widgets--ClickableLabel,
+ClickableLabel {
+    background: transparent;
+    color: #F5F5F5;
+}
+
+#m_messageLabel,
+#m_drivesLabel,
+#m_previewBeforeLabel,
+#m_previewAfterLabel,
+#m_selectLabel,
+#bootInfoLabel,
+#deviceInfoLabel {
+    color: #F5F5F5;
+    background: transparent;
+}
+
+#m_previewBeforeFrame,
+#m_previewAfterFrame {
+    background-color: #0F0F10;
+    border: none;
+}
+
+/*
+ * Summary page (SummaryPage.cpp): #summaryItemBody is a QLabel with
+ * autoFillBackground and Window = palette.lighter(108). That wins over
+ * parent QSS and yields white text on a white card. The scroll contents
+ * and unlabeled QWidget wrappers stay Fusion-light unless painted here.
+ * PartitionBarsView / PartitionLabelsView fill palette().window(). Upstream
+ * titles are Qt::black and size/fs is Qt::gray (unreadable here). The
+ * calamares-partition-labels.patch picks pens from that fill, so this view
+ * can stay on the dark page. QQuickWidget has no QSS fill — show.qml paints it.
+ */
+#summaryStep,
+#summaryStep QScrollArea,
+#summaryStep QScrollArea > QWidget,
+#summaryStep QWidget {
+    background-color: #0F0F10;
+    color: #F5F5F5;
+}
+
+#summaryTitle {
+    color: rgba(245, 245, 245, 0.75);
+    padding: 4px 0 12px 0;
+    background: transparent;
+}
+
+#summaryItemTitle {
+    color: #F5F5F5;
+    background: transparent;
+}
+
+QLabel#summaryItemBody,
+#summaryStep QLabel {
+    background-color: #1A1A1C;
+    color: #F5F5F5;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+
+#summaryStep #summaryItemTitle,
+#summaryStep #summaryTitle {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+#summaryStep PartitionBarsView,
+#summaryStep PartitionLabelsView,
+#summaryStep #partitionBarView,
+#summaryStep #partitionLabel,
+ChoicePage PartitionBarsView,
+ChoicePage PartitionLabelsView,
+ChoicePage #partitionBarView,
+ChoicePage #partitionLabel {
+    background-color: #1A1A1C;
+    color: #F5F5F5;
+    border: none;
+    border-radius: 8px;
+}
+
+QQuickWidget,
+QTabWidget,
+QTabWidget::pane {
+    background-color: #0F0F10;
+    color: #F5F5F5;
+    border: none;
+}
+
+QTabBar::tab {
+    background-color: #121214;
+    color: #A8A8A8;
+    border: none;
+    padding: 8px 14px;
+}
+
+QTabBar::tab:selected {
+    background-color: #1A1A1C;
+    color: #F5F5F5;
+}
+
+QToolButton {
+    background: transparent;
+    color: #F5F5F5;
+    border: none;
+}
+
+QDialogButtonBox QPushButton:disabled {
+    color: rgba(245, 245, 245, 0.45);
 }
 
 QLabel {
-    color: #F8FAFC;
+    color: #F5F5F5;
+    font-family: "Inter", "Noto Sans", "DejaVu Sans", sans-serif;
 }
 
 QProgressBar {
-    border: 1px solid #374151;
-    border-radius: 4px;
-    background: #1F2937;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: #1A1A1C;
     text-align: center;
-    color: #F8FAFC;
+    color: #F5F5F5;
+    height: 10px;
 }
 
 QProgressBar::chunk {
     background: #F97316;
-    border-radius: 3px;
+    border-radius: 10px;
 }
 
 QPushButton {
-    background: #F97316;
-    color: #111827;
-    border: none;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #F5F5F5;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
     padding: 8px 20px;
-    font-weight: bold;
+    font-weight: 600;
+    font-family: "Inter", "Noto Sans", "DejaVu Sans", sans-serif;
 }
 
 QPushButton:hover {
-    background: #EA580C;
+    background: rgba(249, 115, 22, 0.14);
+    border-color: #F97316;
 }
 
 QPushButton:pressed {
+    background: rgba(194, 65, 12, 0.35);
+}
+
+QPushButton:disabled {
+    color: rgba(245, 245, 245, 0.35);
+    border-color: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+QPushButton:default {
+    background: #F97316;
+    color: #FFFFFF;
+    border: none;
+}
+
+QPushButton:default:hover {
+    background: #FB923C;
+}
+
+QPushButton:default:pressed {
     background: #C2410C;
 }
 
-QLineEdit, QTextEdit, QComboBox {
-    background: #1F2937;
-    border: 1px solid #374151;
-    border-radius: 4px;
-    padding: 6px 10px;
-    color: #F8FAFC;
+#aboutButton,
+#debugButton,
+#donateButton,
+#supportButton,
+#releaseNotesButton,
+#knownIssuesButton {
+    background: rgba(255, 255, 255, 0.05);
+    color: #F5F5F5;
+    border: 1px solid rgba(249, 115, 22, 0.28);
+    border-radius: 12px;
 }
 
-QLineEdit:focus, QTextEdit:focus, QComboBox:focus {
+/* Widget sidebar only: two buttons in ~190px. QML sidebar stacks them. */
+#aboutButton,
+#debugButton {
+    padding: 6px 8px;
+    min-width: 0;
+    font-size: 12px;
+}
+
+#aboutButton:hover,
+#debugButton:hover,
+#donateButton:hover,
+#supportButton:hover,
+#releaseNotesButton:hover,
+#knownIssuesButton:hover {
+    background: rgba(249, 115, 22, 0.14);
+    border-color: #FB923C;
+}
+
+QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox, QComboBox {
+    background: #1A1A1C;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: #F5F5F5;
+    selection-background-color: rgba(249, 115, 22, 0.35);
+    selection-color: #FFFFFF;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus, QComboBox:focus {
     border-color: #F97316;
 }
 
 QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 24px;
     border: none;
+    background: transparent;
+}
+
+QComboBox::down-arrow {
+    image: url("combo-arrow.svg");
+    width: 12px;
+    height: 8px;
 }
 
 QComboBox QAbstractItemView {
-    background: #1F2937;
-    color: #F8FAFC;
-    selection-background-color: #F97316;
-    selection-color: #111827;
+    background: #1A1A1C;
+    color: #F5F5F5;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    selection-background-color: rgba(249, 115, 22, 0.28);
+    selection-color: #FFFFFF;
+    outline: none;
+}
+
+QListView, QListWidget, QTreeWidget {
+    background-color: #1A1A1C;
+    alternate-background-color: #161618;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 6px;
+    color: #F5F5F5;
+    outline: none;
+}
+
+QListView::item, QListWidget::item {
+    padding: 8px 10px;
+    border-radius: 10px;
+}
+
+QListView::item:hover, QListWidget::item:hover {
+    background-color: rgba(249, 115, 22, 0.12);
+}
+
+QListView::item:selected, QListWidget::item:selected {
+    background-color: rgba(249, 115, 22, 0.28);
+    color: #FFFFFF;
 }
 
 QCheckBox, QRadioButton {
-    color: #F8FAFC;
+    color: #F5F5F5;
+    spacing: 8px;
 }
 
 QCheckBox::indicator, QRadioButton::indicator {
-    background: #1F2937;
-    border: 1px solid #374151;
+    width: 18px;
+    height: 18px;
+    background: #1A1A1C;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+QCheckBox::indicator {
+    border-radius: 5px;
+}
+
+QRadioButton::indicator {
+    border-radius: 9px;
 }
 
 QCheckBox::indicator:checked, QRadioButton::indicator:checked {
@@ -76,49 +355,81 @@ QCheckBox::indicator:checked, QRadioButton::indicator:checked {
 }
 
 QScrollBar:vertical {
-    background: #111827;
+    background: transparent;
     width: 8px;
+    margin: 4px 2px;
 }
 
 QScrollBar::handle:vertical {
-    background: #374151;
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 4px;
     min-height: 30px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background: #4B5563;
+    background: rgba(249, 115, 22, 0.45);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+    height: 0;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 8px;
+    margin: 2px 4px;
+}
+
+QScrollBar::handle:horizontal {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    min-width: 30px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: rgba(249, 115, 22, 0.45);
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+    width: 0;
 }
 
 QGroupBox {
-    border: 1px solid #374151;
-    border-radius: 6px;
-    margin-top: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-top: 16px;
     padding-top: 16px;
-    color: #F8FAFC;
+    color: #F5F5F5;
+    background-color: #1A1A1C;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
-    left: 12px;
-    padding: 0 6px;
+    left: 16px;
+    padding: 0 8px;
+    color: rgba(245, 245, 245, 0.65);
 }
 
 QTreeView {
-    background-color: #1F2937;
-    alternate-background-color: #182234;
-    border: 1px solid #374151;
-    border-radius: 10px;
+    background-color: #1A1A1C;
+    alternate-background-color: #161618;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     padding: 6px;
     selection-background-color: rgba(249, 115, 22, 0.28);
     selection-color: #FFFFFF;
     outline: none;
     font-size: 13px;
+    color: #F5F5F5;
 }
 
 QTreeView::item {
     padding: 9px 8px;
-    border-radius: 6px;
+    border-radius: 10px;
     margin: 1px 4px;
 }
 
@@ -139,8 +450,8 @@ QTreeView::indicator {
     width: 18px;
     height: 18px;
     border-radius: 5px;
-    border: 1px solid #4B5563;
-    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #0F0F10;
 }
 
 QTreeView::indicator:hover {
@@ -153,26 +464,24 @@ QTreeView::indicator:checked {
 }
 
 QHeaderView::section {
-    background-color: #16202E;
-    color: #9CA3AF;
+    background-color: #161618;
+    color: rgba(245, 245, 245, 0.55);
     border: none;
-    border-bottom: 1px solid #374151;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 8px 10px;
-    font-weight: bold;
+    font-weight: 600;
     font-size: 12px;
 }
 
-QScrollBar:horizontal {
-    background: #111827;
-    height: 8px;
+QDialog, QMessageBox {
+    background-color: #1A1A1C;
+    color: #F5F5F5;
 }
 
-QScrollBar::handle:horizontal {
-    background: #374151;
-    border-radius: 4px;
-    min-width: 30px;
-}
-
-QScrollBar::handle:horizontal:hover {
-    background: #4B5563;
+QToolTip {
+    background: #1A1A1C;
+    color: #F5F5F5;
+    border: 1px solid rgba(249, 115, 22, 0.35);
+    padding: 6px 10px;
+    border-radius: 8px;
 }

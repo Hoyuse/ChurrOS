@@ -101,10 +101,12 @@ installer
 ├── apply-calamares.sh
 └── calamares/
     ├── settings.conf
+    ├── branding/churros/
+    ├── preview/            # solo ./churros apps calamares; no va a la ISO
     └── modules/
 ```
 
-`apply-calamares.sh` despliega la config y la regla polkit al airootfs durante el build.
+`apply-calamares.sh` despliega la config y la regla polkit al airootfs durante el build. `preview/` no se copia.
 
 ---
 
@@ -118,7 +120,7 @@ Traducciones gettext (`*.po`). `./churros check` las valida con `msgfmt --check`
 
 Scripts de desarrollo. No forman parte del sistema instalado.
 
-- `scripts/cli/` — subcomandos de `./churros` (`build`, `run`, `check`, `doctor`, …)
+- `scripts/cli/` — subcomandos de `./churros` (`build`, `run`, `check`, `apps`, `doctor`, …)
 - `scripts/build-rust.sh`, `build-calamares.sh`, `build-aur.sh`, `build-grub-theme.sh`
 
 ---

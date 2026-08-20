@@ -114,6 +114,7 @@ Revisa:
 - Que los comandos del autostart de Niri existan como binario, crate Rust desplegable o paquete de la ISO.
 - Que `Exec=` / `TryExec=` de los `.desktop` resuelvan, y que las rutas absolutas existan en airootfs.
 - Orden crítico de Calamares y que cada instancia `shellprocess` tenga su `.conf`.
+- Que el branding de Calamares cargue (`componentName`, slideshow API 2, imágenes existentes).
 - Que los paquetes de `scripts/build-aur.sh` figuren en `netinstall.yaml`.
 - Que los archivos de traducción `po/*.po` compilen.
 
@@ -130,6 +131,28 @@ Comprueba que las herramientas del entorno de desarrollo estén instaladas (`mka
 ```bash
 ./churros doctor
 ```
+
+---
+
+## apps
+
+Abre las apps propias de ChurrOS en el host, sin construir la ISO ni QEMU.
+
+```bash
+./churros apps
+./churros apps doctor
+./churros apps welcome
+./churros apps settings
+./churros apps control-center
+./churros apps popup audio
+./churros apps calamares
+```
+
+Los targets GTK (`welcome`, `settings`, `control-center`, `popup`) se compilan desde `rust/`. Hace falta sesión gráfica y gtk4/libadwaita. Por defecto corren en modo preview: `HOME` es un directorio temporal y los comandos que cambian el sistema (volumen, red, energía, gsettings, pkill) no se ejecutan. Aparecen como `[churros-dev] blocked:` en stderr. `--live-host` desactiva ese aislamiento.
+
+`calamares` copia la config del repo a un directorio temporal y lanza el instalador con `-c` sobre ese overlay: no escribe `/etc/calamares`, no usa `sudo`, no pide contraseña, no abre la página de particiones (eso dispara Polkit/KPMCore contra discos reales) y no aplica teclado ni zona horaria a esta sesión. El paso de instalar es un `sleep` (para ver el slideshow) y la página final no ofrece reiniciar. El overlay incluye `qml/` del paquete extraído. `--live-host` está prohibido con este target.
+
+No sustituye `./churros run`.
 
 ---
 

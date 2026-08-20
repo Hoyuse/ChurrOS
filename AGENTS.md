@@ -8,7 +8,8 @@
 ./churros run --nokvm  # Force software emulation (no /dev/kvm)
 ./churros run --fresh  # Reset OVMF_VARS.fd so UEFI boots from CD-ROM instead of an existing install
 ./churros clean      # Remove work/ and out/ (also runs sudo rm -rf)
-./churros check      # Static checks: bash, python, package list, niri autostart, po files
+./churros check      # Static checks: bash, python, package list, niri autostart, Calamares branding, po files
+./churros apps       # Open distro apps on the host (GTK preview is dummy; Calamares uses a tmp overlay)
 ./churros doctor     # Check for mkarchiso, qemu, xorriso, mksquashfs, mcopy, mkinitcpio
 ./scripts/build-calamares.sh  # Build Calamares .pkg.tar.zst from AUR into archiso/packages/
 ./scripts/build-aur.sh        # Build python-pywal + waypaper + yay AUR packages
@@ -22,7 +23,7 @@ The `churros` dispatcher is at repo root and `cd`s to its own dir before delegat
 Five ordered steps, runs from repo root:
 
 1. Copy `branding/customize_airootfs.sh` + `branding/files/` into `archiso/airootfs/root/`.
-2. Build missing local packages: `scripts/build-calamares.sh`, `scripts/build-aur.sh`. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `waypaper-*.pkg.tar.zst`, `yay-*.pkg.tar.zst` in `archiso/packages/`.
+2. `scripts/build-calamares.sh` (rebuilds if missing, if libpython does not match host/`python` on the ISO, or if `installer/patches/calamares-*.patch` changed), then `scripts/build-aur.sh` if those pkgs are missing. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `waypaper-*.pkg.tar.zst`, `yay-*.pkg.tar.zst` in `archiso/packages/`.
 3. If Calamares pkg exists: run `installer/apply-calamares.sh` (deploys `settings.conf`, `modules/*.conf`, `modules/*.yaml`, `branding/churros/`, plus a polkit rule `49-calamares.rules` allowing user `churros` to pkexec calamares) and copy all `archiso/packages/*.pkg.tar.zst` into `airootfs/root/packages/`.
 4. Run `scripts/build-rust.sh`: compiles every crate in `rust/` (release) and deploys binaries into `archiso/airootfs/usr/bin/`. Binary names match crate names (e.g. `churros-welcome`).
 5. `sudo rm -rf work out` then `sudo mkarchiso -v -w work -o out archiso`.
@@ -34,7 +35,7 @@ A trap on EXIT cleans generated files out of `archiso/airootfs/` (`root/customiz
 
 There are no unit tests yet. Two layers of verification exist today.
 
-`./churros check` runs the static checks (`scripts/cli/check.sh`): bash syntax, shellcheck at error level, Python syntax, duplicate entries in `packages.x86_64`, commands spawned by niri that resolve to a binary/crate/package, desktop `Exec`/`TryExec` resolution, Calamares exec order and shellprocess configs, local AUR extras listed in `netinstall.yaml`, and `msgfmt --check` on `po/*.po`. It needs no ISO build and runs in seconds. The same script runs in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request.
+`./churros check` runs the static checks (`scripts/cli/check.sh`): bash syntax, shellcheck at error level, Python syntax, duplicate entries in `packages.x86_64`, commands spawned by niri that resolve to a binary/crate/package, desktop `Exec`/`TryExec` resolution, Calamares exec order and shellprocess configs, Calamares branding (`componentName`, slideshow API 2, image files), Calamares host preview (`./churros apps calamares`), local AUR extras listed in `netinstall.yaml`, and `msgfmt --check` on `po/*.po`. It needs no ISO build and runs in seconds. The same script runs in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request.
 
 Behaviour on the live system is verified in QEMU:
 
@@ -59,7 +60,7 @@ rust/                         Rust workspace (apps portadas a gtk4-rs/libadwaita
   popups/                     Crate de los popups (binario churros-popup + toggle nativo)
   control-center/             Crate del control center (binario churros-control-center)
 scripts/
-  cli/                        build.sh, run.sh, clean.sh, doctor.sh, info.sh, version.sh, logo.sh
+  cli/                        build.sh, run.sh, clean.sh, check.sh, doctor.sh, apps.sh, info.sh, version.sh, logo.sh
   build-calamares.sh          Produces archiso/packages/calamares-*.pkg.tar.zst
   build-aur.sh                Produces python-pywal + waypaper + yay pkgs
   build-rust.sh               Compiles rust/* crates -> archiso/airootfs/usr/bin/
@@ -77,6 +78,7 @@ installer/
   calamares/settings.conf     Instance + sequence definition (see below)
   calamares/modules/*.conf    One .conf per Calamares module
   calamares/modules/*.yaml    netinstall package groups
+  calamares/preview/          Host-only overlay for ./churros apps calamares (not copied to the ISO)
   apply-calamares.sh          Copies config + polkit rule into airootfs
 docs/                         Project documentation
 ```
@@ -125,5 +127,5 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 ## Notes
 
 - `customize_airootfs.sh` lives in `branding/`, not in `archiso/`. It is copied into `airootfs/root/` on every build; editing the copy has no effect.
-- `scripts/build-calamares.sh` and `scripts/build-aur.sh` run on the host (Arch Linux assumed) and produce pacman packages in `archiso/packages/`. They are skipped by `build.sh` if matching pkgs already exist.
+- `scripts/build-calamares.sh` and `scripts/build-aur.sh` run on the host (Arch Linux assumed) and produce pacman packages in `archiso/packages/`. `build.sh` always calls `build-calamares.sh` (it no-ops if libpython and `installer/patches` already match). `build-aur.sh` is skipped if those pkgs already exist.
 - README and most `docs/*.md` are in Spanish; code and shell scripts are in English.

@@ -3,8 +3,21 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-WORK_DIR="$PROJECT_DIR/work/calamares-build"
 PACKAGE_DIR="$PROJECT_DIR/archiso/packages"
+
+choose_work_dir() {
+    local parent="$PROJECT_DIR/work"
+    if [ -e "$parent" ] && [ ! -w "$parent" ]; then
+        echo "[warn] $parent is not writable (usually leftover from sudo mkarchiso)."
+        echo "       Fix with: ./churros clean"
+        echo "       or: sudo chown -R $USER:$USER $parent"
+        WORK_DIR="$(mktemp -d /tmp/churros-calamares-build.XXXXXX)"
+        echo "[warn] Building in $WORK_DIR instead."
+        return
+    fi
+    mkdir -p "$parent"
+    WORK_DIR="$parent/calamares-build"
+}
 
 echo "======================================"
 echo "  Building Calamares from AUR"
@@ -12,58 +25,97 @@ echo "======================================"
 
 mkdir -p "$PACKAGE_DIR"
 
-HOST_PYTHON="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+HOST_PYTHON="$(/usr/bin/python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+PATCHES_DIR="$PROJECT_DIR/installer/patches"
+STAMP_FILE="$PACKAGE_DIR/.calamares-build.stamp"
 
-if ls "$PACKAGE_DIR"/calamares-*.pkg.tar.zst 1>/dev/null 2>&1; then
-    PKG="$(ls "$PACKAGE_DIR"/calamares-*.pkg.tar.zst | head -1)"
-    TMP_DIR="$(mktemp -d)"
-    bsdtar -xf "$PKG" -C "$TMP_DIR" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
-        bsdtar -xf "$PKG" -C "$TMP_DIR" usr/lib/libcalamares.so 2>/dev/null || true
-    PKG_PYTHON="$(ldd "$TMP_DIR"/usr/lib/libcalamares.so* 2>/dev/null \
-        | sed -n 's/.*libpython\([0-9.]*\)\.so.*/\1/p' | head -1)"
-    rm -rf "$TMP_DIR"
-    if [ "$PKG_PYTHON" != "$HOST_PYTHON" ]; then
-        echo "[rebuild] Calamares links Python ${PKG_PYTHON:-<none>} but host has $HOST_PYTHON."
-        echo "          Rebuilding to link the matching libpython."
-    else
-        echo "[skip] Calamares already built (Python $PKG_PYTHON matches host)."
+calamares_want_stamp() {
+    (
+        cd "$PATCHES_DIR"
+        ls calamares-*.patch | sort | xargs sha256sum
+        echo "python=$HOST_PYTHON"
+    ) | sha256sum | awk '{print $1}'
+}
+
+WANT_STAMP="$(calamares_want_stamp)"
+
+if ls "$PACKAGE_DIR"/calamares-[0-9]*.pkg.tar.zst 1>/dev/null 2>&1; then
+    HAVE_STAMP="$(cat "$STAMP_FILE" 2>/dev/null || true)"
+    if [ "$HAVE_STAMP" = "$WANT_STAMP" ]; then
+        echo "[skip] Calamares already built (python $HOST_PYTHON + patches stamp match)."
         exit 0
     fi
+    echo "[rebuild] Calamares stamp mismatch (libpython or installer/patches changed)."
+    rm -f "$PACKAGE_DIR"/calamares-[0-9]*.pkg.tar.zst
 fi
 
+choose_work_dir
 rm -rf "$WORK_DIR" 2>/dev/null || true
 
 echo "[1/4] Cloning calamares from AUR..."
 git clone https://aur.archlinux.org/calamares.git "$WORK_DIR"
 
-echo "[2/4] Applying netinstall UI patch..."
+echo "[2/4] Applying installer/patches/calamares-*.patch..."
 
-PATCH_FILE="$PROJECT_DIR/installer/patches/calamares-netinstall-columns.patch"
-cp "$PATCH_FILE" "$WORK_DIR/calamares-netinstall-columns.patch"
+PATCH_LIST="$WORK_DIR/churros-patches.list"
+: > "$PATCH_LIST"
+shopt -s nullglob
+for patch in "$PATCHES_DIR"/calamares-*.patch; do
+    name="$(basename "$patch")"
+    sha="$(sha256sum "$patch" | cut -d' ' -f1)"
+    cp "$patch" "$WORK_DIR/$name"
+    printf '%s %s\n' "$name" "$sha" >> "$PATCH_LIST"
+    echo "    $name"
+done
+shopt -u nullglob
 
-PATCH_SHA="$(sha256sum "$PATCH_FILE" | cut -d' ' -f1)"
+if [ ! -s "$PATCH_LIST" ]; then
+    echo "ERROR: no calamares-*.patch files in $PATCHES_DIR" >&2
+    exit 1
+fi
 
-python3 - "$WORK_DIR/PKGBUILD" "$PATCH_SHA" <<'PY'
+python3 - "$WORK_DIR/PKGBUILD" "$HOST_PYTHON" "$PATCH_LIST" <<'PY'
 import sys
 
-path, sha = sys.argv[1], sys.argv[2]
+path, pyver, patch_list = sys.argv[1], sys.argv[2], sys.argv[3]
+
+pairs = []
+for raw in open(patch_list, encoding="utf-8"):
+    name, sha = raw.split()
+    pairs.append((name, sha))
 
 lines = open(path, encoding="utf-8").read().splitlines()
 out = []
-inserted = False
+inserted_prepare = False
+inserted_python = False
+extra_src = " ".join(f"'{name}'" for name, _ in pairs)
+extra_sha = " ".join(f"'{sha}'" for _, sha in pairs)
 
 for line in lines:
     if line.startswith("source=("):
-        line = line.rstrip(")") + " 'calamares-netinstall-columns.patch')"
+        line = line.rstrip(")") + f" {extra_src})"
     elif line.startswith("sha256sums=("):
-        line = line.rstrip(")") + " '" + sha + "')"
-    elif line.startswith("build() {") and not inserted:
+        line = line.rstrip(")") + f" {extra_sha})"
+    elif line.startswith("build() {") and not inserted_prepare:
         out.append("prepare() {")
-        out.append("    patch -Np1 -d \"$_pkgname-$pkgver\" -i \"$srcdir/calamares-netinstall-columns.patch\"")
+        for name, _ in pairs:
+            out.append(f'    patch -Np1 -d "$_pkgname-$pkgver" -i "$srcdir/{name}"')
         out.append("}")
         out.append("")
-        inserted = True
+        inserted_prepare = True
     out.append(line)
+    if (not inserted_python) and line.strip() == "-DBUILD_TESTING=OFF":
+        # Pin distro Python so CMake does not pick ~/.local uv interpreters
+        # (FindPython was linking libpython3.11 while the ISO ships 3.14).
+        out.append(f"    -DPYTHONLIBS_VERSION={pyver}")
+        out.append("    -DPython_ROOT_DIR=/usr")
+        out.append("    -DPython_EXECUTABLE=/usr/bin/python3")
+        out.append("    -DPython3_EXECUTABLE=/usr/bin/python3")
+        out.append("    -DPython_FIND_VIRTUALENV=STANDARD")
+        inserted_python = True
+
+if not inserted_python:
+    raise SystemExit("PKGBUILD: did not find -DBUILD_TESTING=OFF to pin PYTHONLIBS_VERSION")
 
 open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
@@ -105,11 +157,12 @@ if [[ "$(sha256sum "$SRC_FILE" | cut -d' ' -f1)" != "$EXPECTED_SHA" ]]; then
 fi
 echo "    Source ready: $SRC_FILE ($(du -h "$SRC_FILE" | cut -f1))"
 
-echo "[4/4] Building calamares (this may take a while)..."
+echo "[4/4] Building calamares against Python $HOST_PYTHON (this may take a while)..."
 
 (
     cd "$WORK_DIR"
-    makepkg -sf --noconfirm
+    # Prefer /usr/bin over ~/.local so ninja/cmake helpers match the ISO.
+    PATH="/usr/bin:$PATH" makepkg -sf --noconfirm
 )
 
 echo "    makepkg done."
@@ -125,6 +178,8 @@ rm -f "$PACKAGE_DIR"/calamares-debug-*.pkg.tar.zst 2>/dev/null || true
 )
 
 rm -rf "$WORK_DIR"
+
+echo "$WANT_STAMP" > "$STAMP_FILE"
 
 echo
 echo "======================================"
