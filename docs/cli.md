@@ -114,6 +114,7 @@ Revisa:
 - Que los comandos del autostart de Niri existan como binario, crate Rust desplegable o paquete de la ISO.
 - Que `Exec=` / `TryExec=` de los `.desktop` resuelvan, y que las rutas absolutas existan en airootfs.
 - Orden crítico de Calamares y que cada instancia `shellprocess` tenga su `.conf`.
+- Que el branding de Calamares cargue (`componentName`, slideshow API 2, imágenes existentes).
 - Que los paquetes de `scripts/build-aur.sh` figuren en `netinstall.yaml`.
 - Que los archivos de traducción `po/*.po` compilen.
 

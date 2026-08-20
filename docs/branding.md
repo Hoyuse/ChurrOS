@@ -50,7 +50,7 @@ branding
 └── ui-guidelines.md
 ```
 
-Los wallpapers, logos de escritorio y Fastfetch viven en `archiso/airootfs/usr/share/churros/`. Plymouth y un tema propio de greetd aún no están. El branding de Calamares está en `installer/calamares/branding/churros/` (no se edita salvo que el cambio lo pida).
+Los wallpapers, logos de escritorio y Fastfetch viven en `archiso/airootfs/usr/share/churros/`. Plymouth y un tema propio de greetd aún no están. El branding de Calamares está en `installer/calamares/branding/churros/`.
 
 ---
 
@@ -178,7 +178,9 @@ Permitirá personalizar completamente la animación de arranque.
 
 # Instalador
 
-El branding de Calamares está en `installer/calamares/branding/churros/` (slideshow, QSS). No se toca salvo que el cambio lo pida explícitamente.
+El branding de Calamares está en `installer/calamares/branding/churros/` (`branding.desc`, `stylesheet.qss`, `show.qml`, `calamares-sidebar.qml`, logo SVG). Calamares sale del proceso si `componentName` no coincide con la carpeta, si una imagen de `images:` no existe o si el QML del slideshow falta. `./churros check` cubre esos casos.
+
+El slideshow usa la API 2 de Calamares (`Presentation` / `Slide`, `onActivate` / `onLeave`). `Presentation` no rellena el panel: `show.qml` pone un `Rectangle` `#0F0F10` detrás (no es un `Slide`). El QSS no pinta `QWidget` global. `PartitionLabelsView` rellena `palette().window()` y upstream pinta negro/`Qt::gray`; `installer/patches/calamares-partition-labels.patch` elige el texto según ese fondo para poder dejar las leyendas en oscuro. La página de particiones (`ChoicePage`, `PrettyRadioButton`) sí se pinta a oscuro para que Erase/Manual no queden en blanco sobre blanco. El paso activo del sidebar lo pinta un delegate C++ (`sidebar: widget`); `calamares-sidebar.qml` queda para un cambio posterior. Colores y radios siguen las apps GTK (fondo `#0F0F10`, acento `#F97316`, Inter). No se usa `productWallpaper` (Calamares lo repite de fondo y queda ilegible).
 
 ---
 

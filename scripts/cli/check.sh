@@ -420,6 +420,134 @@ else
     pass "partition labels secondary-text patch present"
 fi
 
+# ----------------------------------------------- Calamares branding files
+
+section "Calamares branding"
+
+# Stdlib only (CI has no PyYAML). Mirrors Branding.cpp bail() checks:
+# componentName == directory, slideshow exists, image paths exist and
+# are non-empty, slideshowAPI 2 requires onActivate/onLeave.
+if python3 - installer/calamares/branding <<'PY'
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+errors = 0
+
+
+def fail(msg: str) -> None:
+    global errors
+    errors += 1
+    print(f"    {msg}")
+
+
+def unquote(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value
+
+
+def parse_desc(path: Path) -> dict[str, object]:
+    text = path.read_text(encoding="utf-8")
+    data: dict[str, object] = {"images": {}}
+    section = None
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip() or line.strip() == "---":
+            continue
+        if re.match(r"^[A-Za-z][A-Za-z0-9_]*:\s*$", line):
+            section = line.split(":", 1)[0]
+            if section == "images":
+                data["images"] = {}
+            continue
+        m = re.match(r"^([A-Za-z][A-Za-z0-9_]*):\s*(.*)$", line)
+        if m:
+            section = None
+            data[m.group(1)] = unquote(m.group(2))
+            continue
+        if section == "images":
+            m = re.match(r"^\s+([A-Za-z][A-Za-z0-9_]*):\s*(.*)$", line)
+            if m:
+                data["images"][m.group(1)] = unquote(m.group(2))  # type: ignore[index]
+    return data
+
+
+if not root.is_dir():
+    fail(f"{root} missing")
+    sys.exit(1)
+
+for component in sorted(p for p in root.iterdir() if p.is_dir()):
+    desc = component / "branding.desc"
+    if not desc.is_file():
+        fail(f"{desc} missing")
+        continue
+    data = parse_desc(desc)
+    name = str(data.get("componentName") or "")
+    if name != component.name:
+        fail(f"{desc}: componentName '{name}' != directory '{component.name}'")
+
+    sidebar = str(data.get("sidebar") or "widget")
+    if sidebar.split(",")[0].strip() == "qml":
+        qml_sidebar = component / "calamares-sidebar.qml"
+        if not qml_sidebar.is_file():
+            fail(f"{desc}: sidebar: qml requires {qml_sidebar}")
+
+    slideshow = str(data.get("slideshow") or "")
+    if not slideshow:
+        fail(f"{desc}: slideshow is missing")
+    else:
+        show = component / slideshow
+        if not show.is_file():
+            fail(f"{desc}: slideshow file {show} does not exist")
+        else:
+            api = str(data.get("slideshowAPI") or "")
+            if api == "2":
+                qml = show.read_text(encoding="utf-8")
+                if not re.search(r"function\s+onActivate\s*\(", qml):
+                    fail(f"{show}: slideshowAPI 2 requires onActivate()")
+                if not re.search(r"function\s+onLeave\s*\(", qml):
+                    fail(f"{show}: slideshowAPI 2 requires onLeave()")
+                if "#0F0F10" not in qml:
+                    fail(f"{show}: slideshow has no dark fill (Install page stays Fusion-white)")
+
+    images = data.get("images") or {}
+    if not isinstance(images, dict) or not images:
+        fail(f"{desc}: images: must list productLogo/productIcon files")
+    else:
+        for key, value in images.items():
+            if value == "":
+                fail(f"{desc}: images.{key} is empty (Calamares exits)")
+                continue
+            image_path = component / value
+            if not image_path.is_file():
+                fail(f"{desc}: images.{key} file {image_path} does not exist")
+            elif image_path.stat().st_size == 0:
+                fail(f"{desc}: images.{key} file {image_path} is empty")
+
+    qss = component / "stylesheet.qss"
+    if qss.is_file():
+        qss_text = qss.read_text(encoding="utf-8")
+        if re.search(r"^QWidget\s*\{", qss_text, re.M):
+            fail(f"{qss}: QWidget {{ }} paints PartitionLabelsView unreadable")
+        if "PrettyRadioButton" not in qss_text or "ChoicePage" not in qss_text:
+            fail(f"{qss}: partition ChoicePage/PrettyRadioButton styles missing (white-on-white)")
+        if "#summaryStep QWidget" not in qss_text:
+            fail(f"{qss}: summary page QWidget styles missing (white-on-white)")
+        if "PartitionLabelsView" not in qss_text or "QQuickWidget" not in qss_text:
+            fail(f"{qss}: PartitionLabelsView/QQuickWidget styles missing (Fusion-white panels)")
+        if "combo-arrow.svg" in qss_text and not (component / "combo-arrow.svg").is_file():
+            fail(f"{qss}: combo-arrow.svg is referenced but missing")
+
+sys.exit(1 if errors else 0)
+PY
+then
+    pass "branding component would load"
+else
+    fail "branding component would make Calamares exit"
+fi
+
 # ------------------------------------------- Local AUR extras ↔ netinstall
 
 section "Local AUR extras in netinstall"

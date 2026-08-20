@@ -8,7 +8,7 @@
 ./churros run --nokvm  # Force software emulation (no /dev/kvm)
 ./churros run --fresh  # Reset OVMF_VARS.fd so UEFI boots from CD-ROM instead of an existing install
 ./churros clean      # Remove work/ and out/ (also runs sudo rm -rf)
-./churros check      # Static checks: bash, python, package list, niri autostart, po files
+./churros check      # Static checks: bash, python, package list, niri autostart, Calamares branding, po files
 ./churros doctor     # Check for mkarchiso, qemu, xorriso, mksquashfs, mcopy, mkinitcpio
 ./scripts/build-calamares.sh  # Build Calamares .pkg.tar.zst from AUR into archiso/packages/
 ./scripts/build-aur.sh        # Build python-pywal + waypaper + yay AUR packages
@@ -34,7 +34,7 @@ A trap on EXIT cleans generated files out of `archiso/airootfs/` (`root/customiz
 
 There are no unit tests yet. Two layers of verification exist today.
 
-`./churros check` runs the static checks (`scripts/cli/check.sh`): bash syntax, shellcheck at error level, Python syntax, duplicate entries in `packages.x86_64`, commands spawned by niri that resolve to a binary/crate/package, desktop `Exec`/`TryExec` resolution, Calamares exec order and shellprocess configs, local AUR extras listed in `netinstall.yaml`, and `msgfmt --check` on `po/*.po`. It needs no ISO build and runs in seconds. The same script runs in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request.
+`./churros check` runs the static checks (`scripts/cli/check.sh`): bash syntax, shellcheck at error level, Python syntax, duplicate entries in `packages.x86_64`, commands spawned by niri that resolve to a binary/crate/package, desktop `Exec`/`TryExec` resolution, Calamares exec order and shellprocess configs, Calamares branding (`componentName`, slideshow API 2, image files), local AUR extras listed in `netinstall.yaml`, and `msgfmt --check` on `po/*.po`. It needs no ISO build and runs in seconds. The same script runs in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request.
 
 Behaviour on the live system is verified in QEMU:
 

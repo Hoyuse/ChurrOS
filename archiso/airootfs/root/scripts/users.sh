@@ -16,6 +16,7 @@ passwd -d churros
 mkdir -p /etc/sudoers.d
 
 echo "churros ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/churros
+echo 'Defaults:churros env_keep += "WAYLAND_DISPLAY XDG_RUNTIME_DIR QT_QPA_PLATFORM QT_WAYLAND_DISABLE_WINDOWDECORATION DISPLAY XAUTHORITY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP DBUS_SESSION_BUS_ADDRESS"' >> /etc/sudoers.d/churros
 
 chmod 440 /etc/sudoers.d/churros
 

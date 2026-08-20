@@ -1,13 +1,48 @@
 #!/usr/bin/env bash
 #
-# calamares — ejecuta el instalador con privilegios de root de forma
-# automática. Usa sudo -E para preservar el entorno gráfico
-# (WAYLAND_DISPLAY, XDG_RUNTIME_DIR, etc.); el usuario churros tiene
-# sudo NOPASSWD, así que no pide contraseña.
+# Live wrapper: install jobs need a root Calamares process. sudo resets the
+# environment by default, so Qt looks for root's runtime dir and never
+# connects to niri. Keep the session Wayland variables and open the
+# compositor socket for uid 0.
 #
+
+set -euo pipefail
 
 if [ "$(id -u)" -eq 0 ]; then
     exec /usr/bin/calamares "$@"
 fi
 
-exec sudo -E /usr/bin/calamares "$@"
+if [ ! -x /usr/bin/calamares ]; then
+    echo "calamares: /usr/bin/calamares is missing" >&2
+    exit 1
+fi
+
+missing="$(ldd /usr/bin/calamares 2>/dev/null | awk '/not found/ {print}' || true)"
+if [ -n "$missing" ]; then
+    echo "calamares: missing libraries:" >&2
+    echo "$missing" >&2
+    if command -v zenity >/dev/null 2>&1; then
+        zenity --error --title="Calamares" --no-wrap \
+            --text="El instalador no pudo arrancar (faltan bibliotecas):
+
+$missing" || true
+    fi
+    exit 1
+fi
+
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-wayland}"
+    if [ "${WAYLAND_DISPLAY#/}" != "$WAYLAND_DISPLAY" ]; then
+        sock=$WAYLAND_DISPLAY
+    elif [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+        sock="${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}"
+    else
+        sock=
+    fi
+    if [ -n "${sock:-}" ] && [ -S "$sock" ]; then
+        chmod a+x "$(dirname "$sock")" || true
+        chmod a+rw "$sock" || true
+    fi
+fi
+
+exec sudo -n --preserve-env=WAYLAND_DISPLAY,XDG_RUNTIME_DIR,QT_QPA_PLATFORM,QT_WAYLAND_DISABLE_WINDOWDECORATION,XDG_SESSION_TYPE,XDG_CURRENT_DESKTOP,DBUS_SESSION_BUS_ADDRESS /usr/bin/calamares "$@"
