@@ -169,11 +169,25 @@ Hoy cada app tiene su propio CSS. A largo plazo convendría un crate o styleshee
 # Development
 
 1. Edita el crate en `rust/<app>/`.
-2. Compila en el host:
+2. Ábrelo en el host (sin ISO):
 
 ```bash
-cargo build --release --manifest-path rust/Cargo.toml
+./churros apps doctor
+./churros apps welcome
+./churros apps settings
+./churros apps control-center
+./churros apps popup audio
 ```
+
+Compila desde `rust/`. Los crates resuelven assets a `rust/<crate>/assets/` si no existe `/usr/share/churros/`. Hace falta sesión gráfica. Por defecto el modo preview no escribe configs del host ni ejecuta apagar/red/audio/gsettings; `--live-host` sí lo haría.
+
+El instalador se previsualiza igual:
+
+```bash
+./churros apps calamares
+```
+
+Usa un overlay temporal: no toca `/etc/calamares`, no particiona, no pide Polkit y no reinicia el host. `./churros check` no abre ventanas; valida que el branding de Calamares cargue (YAML, imágenes, API del slideshow) y que el preview no cargue el módulo de particiones.
 
 3. Para verlo en el Live:
 
@@ -181,8 +195,6 @@ cargo build --release --manifest-path rust/Cargo.toml
 ./churros build
 ./churros run
 ```
-
-`./churros check` no compila Rust; valida scripts, paquetes, desktop entries y que los `spawn` de Niri resuelvan a un binario, crate con `deploy = true` o paquete de la ISO.
 
 ---
 

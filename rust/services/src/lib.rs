@@ -7,6 +7,7 @@ pub mod audio;
 pub mod battery;
 pub mod bluetooth;
 pub mod brightness;
+pub mod dev;
 pub mod ethernet;
 pub mod jsonc;
 pub mod power;
@@ -27,6 +28,11 @@ pub type RunOut = (i32, String, String);
 /// Devuelve None si falla el spawn, el timeout se agota o la salida no es UTF-8
 /// (equivalente al `try/except` de los módulos Python).
 pub fn run(cmd: &[&str], timeout_ms: u64) -> Option<RunOut> {
+    if dev::enabled() && dev::is_mutation(cmd) {
+        dev::log_blocked(cmd);
+        return Some((0, String::new(), String::new()));
+    }
+
     let mut child = Command::new(cmd[0])
         .args(&cmd[1..])
         .stdout(Stdio::piped())
@@ -71,6 +77,11 @@ pub fn run(cmd: &[&str], timeout_ms: u64) -> Option<RunOut> {
 
 /// Ejecuta un comando al vuelo (fire-and-forget, equivale a subprocess.Popen).
 pub fn spawn(cmd: &[&str]) {
+    if dev::enabled() {
+        dev::log_blocked(cmd);
+        return;
+    }
+
     let _ = Command::new(cmd[0])
         .args(&cmd[1..])
         .stdout(Stdio::null())
