@@ -15,6 +15,7 @@ PUBLIC_COMMANDS=(
     info
     version
     logo
+    apps
 )
 
 run_script() {
@@ -61,6 +62,7 @@ show_help() {
     printf "  %-12s %s\n" "run"     "Build (if needed) and launch QEMU"
     printf "  %-12s %s\n" "clean"   "Remove build artifacts"
     printf "  %-12s %s\n" "check"   "Run static checks over the repository"
+    printf "  %-12s %s\n" "apps"    "Open distro apps on the host (no ISO)"
     printf "  %-12s %s\n" "doctor"  "Check development environment"
     printf "  %-12s %s\n" "info"    "Display project information"
     printf "  %-12s %s\n" "version" "Display CLI version"
@@ -78,6 +80,7 @@ show_help() {
     echo "  ./churros run --clean"
     echo "  ./churros check"
     echo "  ./churros doctor"
+    echo "  ./churros apps calamares"
     echo
 }
 

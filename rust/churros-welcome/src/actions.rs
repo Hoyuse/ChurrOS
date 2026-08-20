@@ -99,6 +99,20 @@ fn desktop_exec(app_id: &str) -> Option<String> {
 }
 
 fn launch_installer(parent: &gtk::Button) {
+    if std::env::var("CHURROS_DEV").ok().as_deref() == Some("1") {
+        eprintln!("[churros-dev] blocked: launch calamares");
+        let dialog = gtk::AlertDialog::builder()
+            .message("Preview: the installer is not launched on the host.")
+            .modal(true)
+            .build();
+        if let Some(root) = parent.root().and_downcast::<gtk::Window>() {
+            dialog.show(Some(&root));
+        } else {
+            dialog.show(None::<&gtk::Window>);
+        }
+        return;
+    }
+
     match desktop_exec("calamares.desktop") {
         Some(exec) => {
             let launched = Command::new("sh")

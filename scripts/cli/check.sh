@@ -548,6 +548,34 @@ else
     fail "branding component would make Calamares exit"
 fi
 
+# ------------------------------------------- Calamares host preview (no ISO)
+
+section "Calamares host preview"
+
+PREVIEW=installer/calamares/preview
+if [ ! -f "$PREVIEW/settings.conf" ]; then
+    fail "$PREVIEW/settings.conf missing"
+else
+    preview_ok=1
+    if grep -E '^[[:space:]]+-[[:space:]]*partition[[:space:]]*$' "$PREVIEW/settings.conf" >/dev/null; then
+        fail "preview settings.conf must not load partition (polkit / real disks)"
+        preview_ok=0
+    fi
+    if [ -f "$PREVIEW/finished.conf" ] && ! grep -q '^restartNowMode:[[:space:]]*never' "$PREVIEW/finished.conf"; then
+        fail "preview finished.conf must set restartNowMode: never"
+        preview_ok=0
+    fi
+    if [ -f "$PREVIEW/locale.conf" ] && ! grep -q '^adjustLiveTimezone:[[:space:]]*false' "$PREVIEW/locale.conf"; then
+        fail "preview locale.conf must set adjustLiveTimezone: false"
+        preview_ok=0
+    fi
+    if [ -f "$PREVIEW/keyboard.conf" ] && ! grep -q '^useLocale1:[[:space:]]*false' "$PREVIEW/keyboard.conf"; then
+        fail "preview keyboard.conf must set useLocale1: false"
+        preview_ok=0
+    fi
+    [ "$preview_ok" -eq 1 ] && pass "preview does not partition, reboot, or push layout/timezone"
+fi
+
 # ------------------------------------------- Local AUR extras ↔ netinstall
 
 section "Local AUR extras in netinstall"
