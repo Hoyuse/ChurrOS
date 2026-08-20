@@ -1,0 +1,33 @@
+--- calamares-3.4.2/src/modules/partition/gui/PartitionLabelsView.cpp
++++ calamares-3.4.2/src/modules/partition/gui/PartitionLabelsView.cpp
+@@ -373,7 +373,11 @@
+                                 const QPoint& pos,
+                                 bool selected )
+ {
+-    painter->setPen( Qt::black );
++    const QColor bg = palette().color( QPalette::Window );
++    const bool lightBg = bg.lightness() > 128;
++    const QColor primary = lightBg ? QColor( 0x11, 0x11, 0x11 ) : QColor( 0xF5, 0xF5, 0xF5 );
++    const QColor secondary = lightBg ? QColor( 0x3D, 0x3D, 0x40 ) : QColor( 0xB0, 0xB0, 0xB4 );
++    painter->setPen( primary );
+     int vertOffset = 0;
+     int width = 0;
+     for ( const QString& textLine : text )
+@@ -382,7 +386,7 @@
+         painter->drawText(
+             pos.x() + LABEL_PARTITION_SQUARE_MARGIN, pos.y() + vertOffset + textSize.height() / 2, textLine );
+         vertOffset += textSize.height();
+-        painter->setPen( Qt::gray );
++        painter->setPen( secondary );
+         width = qMax( width, textSize.width() );
+     }
+ 
+@@ -395,7 +399,7 @@
+         drawSelectionSquare( painter, partitionSquareRect.adjusted( 2, 2, -2, -2 ), color );
+     }
+ 
+-    painter->setPen( Qt::black );
++    painter->setPen( primary );
+ }
+ 
+ QModelIndex

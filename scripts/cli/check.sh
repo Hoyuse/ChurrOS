@@ -410,6 +410,16 @@ else
     pass "GRUB btrfs /boot rewrite is wired (install + pacman hook)"
 fi
 
+# PartitionLabelsView fills palette().window() and upstream paints Qt::black / Qt::gray.
+LABELS_PATCH=installer/patches/calamares-partition-labels.patch
+if [ ! -f "$LABELS_PATCH" ]; then
+    fail "$LABELS_PATCH missing (partition size/fs text stays Qt::gray on the legend)"
+elif ! grep -q 'bg.lightness()' "$LABELS_PATCH"; then
+    fail "$LABELS_PATCH does not pick label pens from the view background"
+else
+    pass "partition labels secondary-text patch present"
+fi
+
 # ------------------------------------------- Local AUR extras ↔ netinstall
 
 section "Local AUR extras in netinstall"
@@ -436,6 +446,48 @@ else
         fi
     done
     [ "$aur_ok" -eq 1 ] && pass "${aur_checked} local AUR packages listed in netinstall"
+fi
+
+# ------------------------------------------- Calamares Python ABI
+
+section "Calamares libpython"
+
+CALAMARES_LOCAL=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
+if [ -z "$CALAMARES_LOCAL" ]; then
+    notice "no local calamares package (ISO build will compile it)"
+elif ! command -v readelf >/dev/null 2>&1; then
+    notice "readelf not available; skip libpython check"
+else
+    host_python=$(/usr/bin/python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    abi_tmp=$(mktemp -d)
+    bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
+        bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
+    abi_so=$(find "$abi_tmp" -name 'libcalamares.so*' -type f | head -1 || true)
+    pkg_python=""
+    if [ -n "$abi_so" ]; then
+        pkg_python=$(readelf -d "$abi_so" | sed -n 's/.*libpython\([0-9.]*\)\.so.*/\1/p' | head -1)
+    fi
+    rm -rf "$abi_tmp"
+    if [ -z "$pkg_python" ]; then
+        fail "$(basename "$CALAMARES_LOCAL"): could not read libpython NEEDED"
+    elif [ "$pkg_python" != "$host_python" ]; then
+        fail "$(basename "$CALAMARES_LOCAL") links libpython${pkg_python} but ISO python is ${host_python} (Calamares will not start). Run ./scripts/build-calamares.sh"
+    else
+        pass "Calamares links libpython${pkg_python} (matches host)"
+    fi
+    want_stamp=$(
+        (
+            cd installer/patches
+            ls calamares-*.patch | sort | xargs sha256sum
+            echo "python=$host_python"
+        ) | sha256sum | awk '{print $1}'
+    )
+    have_stamp=$(cat archiso/packages/.calamares-build.stamp 2>/dev/null || true)
+    if [ "$have_stamp" != "$want_stamp" ]; then
+        fail "local calamares package is stale vs installer/patches (run ./scripts/build-calamares.sh)"
+    else
+        pass "local calamares package matches installer/patches stamp"
+    fi
 fi
 
 # ------------------------------------------------------- Live overlay size
