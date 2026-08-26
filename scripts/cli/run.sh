@@ -11,7 +11,7 @@ VARS="$VM_DIR/OVMF_VARS.fd"
 OVMF_CODE=$(find /usr -type f -name 'OVMF_CODE_4M.fd' -print -quit 2>/dev/null)
 OVMF_VARS=$(find /usr -type f -name 'OVMF_VARS_4M.fd' -print -quit 2>/dev/null)
 
-ISO=$(find out -name "*.iso" | head -n1)
+ISO=$(find out -name "*.iso" 2>/dev/null | head -n1)
 
 FORCE_NOKVM=false
 FORCE_FRESH=false
