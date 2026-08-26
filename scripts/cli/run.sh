@@ -33,7 +33,6 @@ else
     echo "  OVMF_CODE: $OVMF_CODE"
     echo "  OVMF_VARS: $OVMF_VARS"
 fi
-fi
 
 # If no ISO was found, prompt the user to build ChurrOS
 if [ -z "$ISO" ]; then
