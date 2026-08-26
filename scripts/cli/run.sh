@@ -7,6 +7,7 @@ DISK="$VM_DIR/ChurrOS.qcow2"
 VARS="$VM_DIR/OVMF_VARS.fd"
 
 # Search OVMF firmware files in /usr
+# modify this if you have them in a different location that isn't /usr
 OVMF_CODE=$(find /usr -type f -name 'OVMF_CODE_4M.fd' -print -quit 2>/dev/null)
 OVMF_VARS=$(find /usr -type f -name 'OVMF_VARS_4M.fd' -print -quit 2>/dev/null)
 
