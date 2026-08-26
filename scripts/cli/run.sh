@@ -6,6 +6,10 @@ VM_DIR="vm"
 DISK="$VM_DIR/ChurrOS.qcow2"
 VARS="$VM_DIR/OVMF_VARS.fd"
 
+# Search OVMF firmware files in /usr
+OVMF_CODE=$(find /usr -type f -name 'OVMF_CODE_4M.fd' -print -quit 2>/dev/null)
+OVMF_VARS=$(find /usr -type f -name 'OVMF_VARS_4M.fd' -print -quit 2>/dev/null)
+
 ISO=$(find out -name "*.iso" | head -n1)
 
 FORCE_NOKVM=false
@@ -19,13 +23,37 @@ for arg in "$@"; do
     esac
 done
 
+# If OVMF firmware files couldn't be found, exit 1
+if [ -z "$OVMF_CODE" ] || [ -z "$OVMF_VARS" ]; then
+    echo "Error: OVMF firmware not found, do you have QEMU installed?"
+    echo "Please configure the OVMF firmware paths manually otherwaise."
+    exit 1
+fi
+
+# If no ISO was found, prompt the user to build ChurrOS
 if [ -z "$ISO" ]; then
     echo "No ISO found."
-    echo "Building..."
+    read -r -p "Do you want to build ChurrOS? [y/N] " answer
 
-    ./churros build
+    case "$answer" in
+        [yY]|[yY][eE][sS])
+            echo "Building..."
+            ./churros build
 
-    ISO=$(find out -name "*.iso" | head -n1)
+            ISO=$(find out -name "*.iso" -print -quit)
+
+            if [ -z "$ISO" ]; then
+                echo "Error: Build completed, but no ISO was found."
+                exit 1
+            fi
+
+            echo "ISO found: $ISO"
+            ;;
+        *)
+            echo "Please specify the path to the ISO file."
+            exit 1
+            ;;
+    esac
 fi
 
 mkdir -p "$VM_DIR"
@@ -48,8 +76,9 @@ if [ ! -f "$DISK" ]; then
     qemu-img create -f qcow2 "$DISK" 64G
 fi
 
+# If the OVMF vars file doesn't exist, copy the default one to the VM directory.
 if [ ! -f "$VARS" ]; then
-    cp /usr/share/edk2/x64/OVMF_VARS.4m.fd "$VARS"
+    cp "$OVMF_VARS" "$VARS"
 fi
 
 echo
@@ -93,7 +122,7 @@ qemu-system-x86_64 \
     -device usb-tablet \
     -device intel-hda \
     -device hda-duplex \
-    -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2/x64/OVMF_CODE.4m.fd \
+    -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
     -drive if=pflash,format=raw,file="$VARS" \
     -drive file="$DISK",format=qcow2,if=virtio \
     -cdrom "$ISO" \
