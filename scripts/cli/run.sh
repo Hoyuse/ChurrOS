@@ -28,6 +28,11 @@ if [ -z "$OVMF_CODE" ] || [ -z "$OVMF_VARS" ]; then
     echo "Error: OVMF firmware not found, do you have QEMU installed?"
     echo "Please configure the OVMF firmware paths manually otherwaise."
     exit 1
+else
+    echo "OVMF firmware found:"
+    echo "  OVMF_CODE: $OVMF_CODE"
+    echo "  OVMF_VARS: $OVMF_VARS"
+fi
 fi
 
 # If no ISO was found, prompt the user to build ChurrOS
