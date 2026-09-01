@@ -11,6 +11,59 @@ setopt SHARE_HISTORY
 autoload -Uz compinit
 compinit
 
+# ============================================================
+# NORMAL WORD MOVEMENT
+
+# Ctrl + Left
+power-left() {
+    REGION_ACTIVE=0
+    zle backward-word
+}
+
+# Ctrl + Right
+power-right() {
+    REGION_ACTIVE=0
+    zle forward-word
+}
+
+zle -N power-left
+zle -N power-right
+
+# ============================================================
+# DELETE WORD
+
+# Ctrl + Backspace
+power-backspace() {
+    if (( REGION_ACTIVE )); then
+        zle kill-region
+    else
+        zle backward-kill-word
+    fi
+}
+
+# Ctrl + Delete
+power-delete() {
+    if (( REGION_ACTIVE )); then
+        zle kill-region
+    else
+        zle kill-word
+    fi
+}
+
+zle -N power-backspace
+zle -N power-delete
+
+# ==============================================================
+# KEY BINDINGS
+
+# Normal word movement
+bindkey $'\e[1;5D' power-left
+bindkey $'\e[1;5C' power-right
+
+# Delete words
+bindkey $'\e[99~' power-backspace
+bindkey $'\e[98~' power-delete
+
 # --- Prompt (starship style) ---
 setopt PROMPT_SUBST EXTENDED_GLOB
 
