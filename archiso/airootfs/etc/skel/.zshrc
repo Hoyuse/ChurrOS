@@ -62,7 +62,7 @@ bindkey $'\e[1;5C' power-right
 
 # Delete words
 bindkey $'\e[99~' power-backspace
-bindkey $'\e[98~' power-delete
+bindkey $'\e[3;5~' power-delete
 
 # --- Prompt (starship style) ---
 setopt PROMPT_SUBST EXTENDED_GLOB
