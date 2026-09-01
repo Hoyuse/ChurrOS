@@ -4,13 +4,41 @@ import subprocess
 class WifiService:
 
     @staticmethod
+    def _split_nmcli(line):
+        """Split nmcli terse output, honoring escaped separators."""
+        fields = []
+        field = []
+        escaped = False
+
+        for char in line:
+            if escaped:
+                field.append(char)
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == ":":
+                fields.append("".join(field))
+                field = []
+            else:
+                field.append(char)
+
+        if escaped:
+            field.append("\\")
+        fields.append("".join(field))
+        return fields
+
+    @staticmethod
     def _run(command):
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True
-        )
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=False
+            )
+        except (FileNotFoundError, OSError) as error:
+            return 127, "", str(error)
 
         return (
             result.returncode,
@@ -38,7 +66,10 @@ class WifiService:
 
             try:
 
-                _, dev_type = line.split(":")
+                fields = WifiService._split_nmcli(line)
+                if len(fields) != 2:
+                    continue
+                _, dev_type = fields
 
                 if dev_type == "wifi":
                     return True
@@ -123,7 +154,7 @@ class WifiService:
 
                 continue
 
-            parts = line.split(":")
+            parts = WifiService._split_nmcli(line)
 
             while len(parts) < 4:
 
@@ -193,7 +224,10 @@ class WifiService:
 
             try:
 
-                name, conn_type = line.split(":")
+                fields = WifiService._split_nmcli(line)
+                if len(fields) != 2:
+                    continue
+                name, conn_type = fields
 
                 if conn_type == "802-11-wireless":
 

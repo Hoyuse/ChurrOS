@@ -6,10 +6,13 @@ class BatteryService:
     @staticmethod
     def get():
 
-        devices = subprocess.check_output(
-            ["upower", "-e"],
-            text=True
-        ).splitlines()
+        try:
+            devices = subprocess.check_output(
+                ["upower", "-e"],
+                text=True
+            ).splitlines()
+        except (FileNotFoundError, OSError, subprocess.CalledProcessError):
+            return {"available": False}
 
         battery = None
 
@@ -26,10 +29,13 @@ class BatteryService:
                 "available": False
             }
 
-        output = subprocess.check_output(
-            ["upower", "-i", battery],
-            text=True
-        )
+        try:
+            output = subprocess.check_output(
+                ["upower", "-i", battery],
+                text=True
+            )
+        except (FileNotFoundError, OSError, subprocess.CalledProcessError):
+            return {"available": False}
 
         info = {
             "available": True,
@@ -49,11 +55,14 @@ class BatteryService:
 
             elif line.startswith("percentage:"):
 
-                percentage = int(
-                    line.split(":", 1)[1]
-                    .replace("%", "")
-                    .strip()
-                )
+                try:
+                    percentage = int(
+                        line.split(":", 1)[1]
+                        .replace("%", "")
+                        .strip()
+                    )
+                except (IndexError, ValueError):
+                    continue
 
                 info["percentage"] = percentage
 

@@ -7,4 +7,6 @@
 work/
 out/
 build/
-*.iso
+__pycache__/
+*.py[cod]
+*$py.class

@@ -4,13 +4,38 @@ import subprocess
 class EthernetService:
 
     @staticmethod
+    def _split_nmcli(line):
+        fields = []
+        field = []
+        escaped = False
+        for char in line:
+            if escaped:
+                field.append(char)
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == ":":
+                fields.append("".join(field))
+                field = []
+            else:
+                field.append(char)
+        if escaped:
+            field.append("\\")
+        fields.append("".join(field))
+        return fields
+
+    @staticmethod
     def _run(command):
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True
-        )
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=False
+            )
+        except (FileNotFoundError, OSError) as error:
+            return 127, "", str(error)
 
         return (
             result.returncode,
@@ -61,7 +86,7 @@ class EthernetService:
 
         for line in out.splitlines():
 
-            parts = line.split(":")
+            parts = EthernetService._split_nmcli(line)
 
             while len(parts) < 4:
 

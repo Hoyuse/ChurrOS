@@ -1,0 +1,36 @@
+name: Quality checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Compile Python files
+        run: python -m compileall -q apps archiso/airootfs/usr/share/churros
+
+      - name: Check Bash syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            bash -n "$file"
+          done < <(find . -type f \( -name '*.sh' -o -name 'churros' \) \
+            -not -path '*/__pycache__/*' -print0)
+
+      - name: Run service tests
+        run: python -m unittest discover -s tests -v
