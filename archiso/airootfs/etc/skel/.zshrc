@@ -61,7 +61,8 @@ zle -N power-delete
 bindkey $'\e[1;5D' power-left
 bindkey $'\e[1;5C' power-right
 
-# ctrl+del works ctrl + backspace is being fixed
+# ctrl+del tested and working
+## ctrl + backspace tested and working
 # Delete words
 bindkey $'\e[99~' power-backspace
 bindkey $'\e[3;5~' power-delete
