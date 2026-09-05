@@ -37,6 +37,9 @@ fi
 
 echo "[rust] Compilando apps Rust (release)..."
 
+# Evitar stack overflow (SIGSEGV en ModuleInlinerWrapperPass de LLVM) al optimizar gtk4
+export RUST_MIN_STACK="${RUST_MIN_STACK:-67108864}"
+
 # Usar todos los núcleos disponibles para compilar en paralelo
 cargo build --release --manifest-path "$RUST_DIR/Cargo.toml" --jobs "$(nproc)"
 
