@@ -3,10 +3,18 @@
 // (equivalente a services/accent.py)
 // ==========================================
 
+use std::cell::RefCell;
 use std::fs;
 use std::path::PathBuf;
 
+use gtk::prelude::*;
+use gtk::gdk;
+
 use crate::services::settings;
+
+thread_local! {
+    static ACCENT_PROVIDER: RefCell<Option<gtk::CssProvider>> = const { RefCell::new(None) };
+}
 
 pub struct AccentService;
 
@@ -93,13 +101,52 @@ impl AccentService {
         )
     }
 
+    /// Inicializa el CssProvider singleton para accent.css y lo registra
+    /// una única vez en el Display con prioridad USER.
+    pub fn init_css_provider() {
+        let provider = gtk::CssProvider::new();
+        let path = Self::accent_css_path();
+        let css = if path.exists() {
+            fs::read_to_string(&path).unwrap_or_else(|_| {
+                let base = Self::hex_for(&Self::current());
+                Self::build_accent_css(&base, "churros set-accent")
+            })
+        } else {
+            let base = Self::hex_for(&Self::current());
+            Self::build_accent_css(&base, "churros set-accent")
+        };
+        provider.load_from_data(&css);
+
+        if let Some(display) = gdk::Display::default() {
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_USER,
+            );
+        }
+
+        ACCENT_PROVIDER.with(|p| {
+            *p.borrow_mut() = Some(provider);
+        });
+    }
+
+    fn apply_css_to_provider(css: &str) {
+        ACCENT_PROVIDER.with(|p| {
+            if let Some(provider) = p.borrow().as_ref() {
+                provider.load_from_data(css);
+            }
+        });
+    }
+
     fn write_accent_css(color_name: &str) {
         let path = Self::accent_css_path();
         if let Some(parent) = path.parent() {
             let _ = fs::create_dir_all(parent);
         }
         let base = Self::hex_for(color_name);
-        let _ = fs::write(path, Self::build_accent_css(&base, "churros set-accent"));
+        let css = Self::build_accent_css(&base, "churros set-accent");
+        let _ = fs::write(path, &css);
+        Self::apply_css_to_provider(&css);
     }
 
     pub fn set(color: &str) {
@@ -127,10 +174,9 @@ impl AccentService {
         if let Some(parent) = path.parent() {
             let _ = fs::create_dir_all(parent);
         }
-        let _ = fs::write(
-            path,
-            Self::build_accent_css(&base, "dynamic colors (pywal)"),
-        );
+        let css = Self::build_accent_css(&base, "dynamic colors (pywal)");
+        let _ = fs::write(path, &css);
+        Self::apply_css_to_provider(&css);
     }
 
     pub fn ensure() {

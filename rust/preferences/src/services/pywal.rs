@@ -59,7 +59,7 @@ impl PywalService {
             return None;
         }
         let _ = std::process::Command::new("wal")
-            .args(["-q", "-i", &wallpaper, "-n", "-e"])
+            .args(["-q", "-i", &wallpaper, "-n", "-e", "-s", "-t"])
             .status();
         Self::read_cache()
     }
