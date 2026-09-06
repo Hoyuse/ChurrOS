@@ -76,11 +76,15 @@ impl PreferencesWindow {
         toggle_button.set_visible(false);
         header_bar.pack_start(&toggle_button);
 
-        window.set_titlebar(Some(&header_bar));
-
         // Layout principal
         let root = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        window.set_content(Some(&root));
+        root.set_hexpand(true);
+        root.set_vexpand(true);
+
+        let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        main_box.append(&header_bar);
+        main_box.append(&root);
+        window.set_content(Some(&main_box));
 
         // Sidebar + revealer
         let sidebar = Rc::new(RefCell::new(Sidebar::new()));
