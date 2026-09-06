@@ -210,24 +210,45 @@ impl WallpaperService {
 
         // Backend 2: swaybg
         if which("swaybg") {
-            let _ = Command::new("pkill")
-                .args(["-x", "swaybg"])
-                .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
-                .output();
-            let _ = Command::new("swaybg")
-                .args(["-i", path, "-m", "fill"])
-                .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .spawn();
-            std::thread::sleep(Duration::from_millis(500));
-            let ok = Command::new("pgrep")
+            let old_pids = Command::new("pgrep")
                 .args(["-x", "swaybg"])
                 .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
                 .output()
-                .map(|o| o.status.success())
-                .unwrap_or(false);
-            if ok {
+                .ok()
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+                .unwrap_or_default();
+
+            use std::os::unix::process::CommandExt;
+            let mut cmd = Command::new("swaybg");
+            cmd.args(["-i", path, "-m", "fill"])
+                .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .process_group(0);
+            let child = cmd.spawn();
+
+            std::thread::sleep(Duration::from_millis(600));
+
+            let new_running = match &child {
+                Ok(c) => Command::new("kill")
+                    .args(["-0", &c.id().to_string()])
+                    .status()
+                    .map(|s| s.success())
+                    .unwrap_or(false),
+                Err(_) => false,
+            };
+
+            if new_running {
+                // Terminar solo las instancias anteriores tras confirmar arranque
+                if !old_pids.is_empty() {
+                    for pid in old_pids.lines() {
+                        let pid = pid.trim();
+                        if !pid.is_empty() {
+                            let _ = Command::new("kill").arg(pid).output();
+                        }
+                    }
+                }
                 println!("[wallpaper] swaybg OK: {path}");
                 return true;
             }

@@ -50,6 +50,9 @@ impl AccentService {
     // Convierte #rrggbb a HLS y ajusta luminosidad/saturación (como colorsys)
     fn adjust(hex: &str, light_delta: f64, sat_delta: f64) -> String {
         let hex = hex.trim_start_matches('#');
+        if hex.len() < 6 {
+            return "#DE8636".to_string();
+        }
         let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0) as f64 / 255.0;
         let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0) as f64 / 255.0;
         let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0) as f64 / 255.0;
@@ -176,7 +179,10 @@ impl AccentService {
         }
         let css = Self::build_accent_css(&base, "dynamic colors (pywal)");
         let _ = fs::write(path, &css);
-        Self::apply_css_to_provider(&css);
+        let css_clone = css.clone();
+        glib::idle_add_once(move || {
+            Self::apply_css_to_provider(&css_clone);
+        });
     }
 
     pub fn ensure() {

@@ -92,10 +92,9 @@ apply_awww() {
         echo "$LOG_PREFIX lanzando awww-daemon (WAYLAND=$WAYLAND_DISPLAY)..." >&2
 
         WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-            nohup awww-daemon >> /tmp/awww-daemon.log 2>&1 &
-        disown 2>/dev/null || true
+            setsid awww-daemon >> /tmp/awww-daemon.log 2>&1 &
 
-        for _ in 1 2 3 4 5 6 7 8 9 10; do
+        for _ in 1 2 3 4; do
             sleep 0.2
             if _awww_running; then
                 echo "$LOG_PREFIX awww-daemon listo (PID $(pgrep -x awww-daemon))" >&2
@@ -112,30 +111,22 @@ apply_awww() {
     echo "$LOG_PREFIX awww img $path (WAYLAND=$WAYLAND_DISPLAY XDG=$XDG_RUNTIME_DIR)" >&2
 
     local attempt
-    for attempt in 1 2 3 4 5; do
+    for attempt in 1 2; do
         WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
             awww img "$path" >/tmp/awww-img.log 2>&1
         local rc=$?
 
         if [ "$rc" -eq 0 ]; then
             echo "$LOG_PREFIX awww OK intento $attempt: $path" >&2
+            _swaybg_kill
             return 0
         fi
 
         echo "$LOG_PREFIX awww intento $attempt fallo rc=$rc: $(head -3 /tmp/awww-img.log 2>/dev/null)" >&2
-
-        if ! _awww_running; then
-            echo "$LOG_PREFIX awww-daemon murio, relanzando..." >&2
-            WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-                nohup awww-daemon >> /tmp/awww-daemon.log 2>&1 &
-            disown 2>/dev/null || true
-            sleep 0.5
-        fi
-
         sleep 0.3
     done
 
-    echo "$LOG_PREFIX awww fallo tras 5 intentos" >&2
+    echo "$LOG_PREFIX awww fallo tras $attempt intentos" >&2
     return 1
 }
 
@@ -147,18 +138,49 @@ apply_swaybg() {
         return 1
     fi
 
-    _swaybg_kill
-    sleep 0.2
+    # Si awww-daemon estaba activo, detenerlo para no solapar layer surfaces
+    if _awww_running; then
+        _awww_kill
+        sleep 0.2
+    fi
 
     echo "$LOG_PREFIX swaybg -i $path -m fill" >&2
 
+    # Capturar PIDs previos para no dejar la pantalla en gris mientras inicializa
+    local old_pids
+    old_pids=$(pgrep -x swaybg || true)
+
     WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-        nohup swaybg -i "$path" -m fill >> /tmp/swaybg.log 2>&1 &
-    disown 2>/dev/null || true
+        setsid swaybg -i "$path" -m fill >> /tmp/swaybg.log 2>&1 &
 
-    sleep 0.5
+    local ok=0
+    for _ in 1 2 3 4 5 6; do
+        sleep 0.2
+        local current_pids
+        current_pids=$(pgrep -x swaybg || true)
+        if [ -z "$old_pids" ]; then
+            if [ -n "$current_pids" ]; then
+                ok=1
+                break
+            fi
+        else
+            for p in $current_pids; do
+                if ! echo "$old_pids" | grep -qw "$p"; then
+                    ok=1
+                    break 2
+                fi
+            done
+        fi
+    done
 
-    if _swaybg_running; then
+    if [ "$ok" -eq 1 ]; then
+        # Esperar brevemente a que el nuevo swaybg enlace los buffers Wayland
+        sleep 0.3
+        if [ -n "$old_pids" ]; then
+            for pid in $old_pids; do
+                kill "$pid" 2>/dev/null || true
+            done
+        fi
         echo "$LOG_PREFIX swaybg OK: $path" >&2
         return 0
     fi

@@ -411,11 +411,14 @@ fn apply_theme_class(window: &gtk::ApplicationWindow) {
 
 fn refresh_theme(window: &gtk::ApplicationWindow) {
     apply_theme_class(window);
-    // Flip del tema de los widgets GTK en vivo (Adwaita dark/light). Esto es
-    // lo que hace que botones/switch/entrys cambien al instante, además de
-    // los tokens CSS de window.light.
-    if let Some(settings) = gtk::Settings::default() {
-        settings.set_gtk_application_prefer_dark_theme(ThemeService::is_dark());
-    }
+    // Flip del tema de los widgets Libadwaita/GTK en vivo. Usar StyleManager de
+    // Libadwaita es la forma oficial y segura en GTK4 (evita conflictos y cierres
+    // inesperados por reload de stylesheets).
+    let style_manager = adw::StyleManager::default();
+    style_manager.set_color_scheme(if ThemeService::is_dark() {
+        adw::ColorScheme::ForceDark
+    } else {
+        adw::ColorScheme::ForceLight
+    });
     window.queue_draw();
 }
