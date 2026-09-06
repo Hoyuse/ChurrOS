@@ -5,6 +5,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
 use serde_json::{json, Value};
 
@@ -58,8 +59,11 @@ impl PywalService {
         if !Self::available() {
             return None;
         }
-        let _ = std::process::Command::new("wal")
+        let _ = Command::new("wal")
             .args(["-q", "-i", &wallpaper, "-n", "-e", "-s", "-t"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status();
         Self::read_cache()
     }

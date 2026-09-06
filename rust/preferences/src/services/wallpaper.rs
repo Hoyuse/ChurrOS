@@ -72,6 +72,7 @@ fn run_with_timeout(
     let mut child = Command::new(args[0])
         .args(&args[1..])
         .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
+        .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()

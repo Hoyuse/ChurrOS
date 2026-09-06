@@ -150,9 +150,9 @@ fn persist_desktop(dark: bool) {
         if dark { "1" } else { "0" },
     );
     update_ini_key(&gtk_ini("gtk-3.0"), "gtk-theme-name", "Adwaita");
-    // En GTK4 gtk-application-prefer-dark-theme está deprecado y causa fallos al recargar;
-    // el tema oscuro se gestiona globalmente con color-scheme en gsettings/portal.
-    clean_gtk4_ini(&gtk_ini("gtk-4.0"));
+    // NO tocar archivos de gtk-4.0 en caliente: cualquier modificación de settings.ini
+    // a runtime dispara recarga inotify de hojas de estilo y cierra las ventanas.
+    // La migración de claves obsoletas se realiza antes de gtk_init en migrate_before_gtk.
 
     let _ = Command::new("gsettings")
         .args([

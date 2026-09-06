@@ -100,6 +100,10 @@ fn activate(app: &adw::Application) {
 }
 
 fn main() -> glib::ExitCode {
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_IGN);
+    }
+
     let app = adw::Application::builder()
         .application_id(APP_ID)
         .build();
