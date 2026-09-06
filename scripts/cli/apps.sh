@@ -173,7 +173,7 @@ STUB_NAMES=(
     calamares wal timedatectl localectl ufw makoctl niri hyprctl swaymsg swaybg
     swaylock swayidle wlsunset waybar install pacman flatpak
     sh bash foot churros-apply-wallpaper waypaper churros-update-utils
-    churros-pick-image setxkbmap loadkeys
+    churros-pick-image setxkbmap loadkeys awww awww-daemon
 )
 
 prepare_dev_sandbox() {
