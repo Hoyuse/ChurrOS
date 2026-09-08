@@ -75,29 +75,48 @@ fi
 
 section "ISO package list"
 
-duplicates=$(grep -v '^#' archiso/packages.x86_64 | grep -v '^$' | sort | uniq -d)
+ARCH_FOR_PACKAGES="${ARCH:-$(uname -m)}"
+case "$ARCH_FOR_PACKAGES" in
+    x86_64|amd64)
+        ARCH_FOR_PACKAGES="x86_64"
+        ;;
+    arm64|aarch64)
+        ARCH_FOR_PACKAGES="aarch64"
+        ;;
+    *)
+        ARCH_FOR_PACKAGES="x86_64"
+        ;;
+esac
+
+BASE_PACKAGE_FILE="archiso/packages.${ARCH_FOR_PACKAGES}"
+if [ ! -f "$BASE_PACKAGE_FILE" ]; then
+    BASE_PACKAGE_FILE="archiso/packages.x86_64"
+fi
+
+duplicates=$(grep -v '^#' "$BASE_PACKAGE_FILE" | grep -v '^$' | sort | uniq -d)
 if [ -n "$duplicates" ]; then
-    fail "duplicate entries in archiso/packages.x86_64:"
+    fail "duplicate entries in $BASE_PACKAGE_FILE:"
     # shellcheck disable=SC2086
     printf '      %s\n' $duplicates
 else
-    pass "no duplicates (packages.x86_64)"
+    pass "no duplicates ($BASE_PACKAGE_FILE)"
 fi
 
-if [ -f archiso/packages.xfce.x86_64 ]; then
-    duplicates_xfce=$(grep -v '^#' archiso/packages.xfce.x86_64 | grep -v '^$' | sort | uniq -d)
+XFCE_PACKAGE_FILE="archiso/packages.xfce.${ARCH_FOR_PACKAGES}"
+if [ -f "$XFCE_PACKAGE_FILE" ]; then
+    duplicates_xfce=$(grep -v '^#' "$XFCE_PACKAGE_FILE" | grep -v '^$' | sort | uniq -d)
     if [ -n "$duplicates_xfce" ]; then
-        fail "duplicate entries in archiso/packages.xfce.x86_64:"
+        fail "duplicate entries in $XFCE_PACKAGE_FILE:"
         # shellcheck disable=SC2086
         printf '      %s\n' $duplicates_xfce
     else
-        pass "no duplicates (packages.xfce.x86_64)"
+        pass "no duplicates ($XFCE_PACKAGE_FILE)"
     fi
 fi
 
 # ------------------------------------------------------- Shared resolvers
 
-mapfile -t PACKAGES < <(grep -v '^#' archiso/packages.x86_64 | grep -v '^$')
+mapfile -t PACKAGES < <(grep -v '^#' "$BASE_PACKAGE_FILE" | grep -v '^$')
 
 # AUR extras built into archiso/packages/ by scripts/build-aur.sh
 mapfile -t LOCAL_AUR < <(
@@ -152,7 +171,7 @@ mapfile -t COMMANDS < <(
 missing=0
 for command in "${COMMANDS[@]}"; do
     if ! command_exists "$command"; then
-        fail "'$command' is spawned by Niri but is neither in usr/bin nor in packages.x86_64"
+        fail "'$command' is spawned by Niri but is neither in usr/bin nor in $BASE_PACKAGE_FILE"
         missing=$((missing + 1))
     fi
 done
@@ -193,7 +212,7 @@ for desktop in "$DESKTOP_DIR"/*.desktop; do
         continue
     fi
     if ! command_exists "$cmd"; then
-        fail "$base: '$cmd' does not resolve (usr/bin, deployable crate, packages.x86_64, or local build)"
+        fail "$base: '$cmd' does not resolve (usr/bin, deployable crate, $BASE_PACKAGE_FILE, or local build)"
         desktop_missing=$((desktop_missing + 1))
     fi
 

@@ -22,6 +22,7 @@ check mksquashfs
 check mcopy
 check mkinitcpio
 check grub-mkstandalone
+check qemu-img
 
 echo
 echo "Diagnostics complete."

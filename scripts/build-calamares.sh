@@ -75,6 +75,7 @@ if [ ! -s "$PATCH_LIST" ]; then
 fi
 
 python3 - "$WORK_DIR/PKGBUILD" "$HOST_PYTHON" "$PATCH_LIST" <<'PY'
+import re
 import sys
 
 path, pyver, patch_list = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -84,7 +85,11 @@ for raw in open(patch_list, encoding="utf-8"):
     name, sha = raw.split()
     pairs.append((name, sha))
 
-lines = open(path, encoding="utf-8").read().splitlines()
+text = open(path, encoding="utf-8").read()
+if "aarch64" not in text and "arch=(" in text:
+    text = re.sub(r"arch=\((.*?)\)", 'arch=("aarch64" "x86_64")', text, count=1, flags=re.S)
+
+lines = text.splitlines()
 out = []
 inserted_prepare = False
 inserted_python = False

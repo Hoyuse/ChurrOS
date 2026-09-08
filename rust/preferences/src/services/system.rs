@@ -50,7 +50,18 @@ impl SystemService {
     pub fn cpu() -> String {
         if let Ok(content) = std::fs::read_to_string("/proc/cpuinfo") {
             for line in content.lines() {
+                let line = line.trim();
                 if let Some(rest) = line.strip_prefix("model name") {
+                    if let Some((_, value)) = rest.split_once(':') {
+                        return value.trim().to_string();
+                    }
+                }
+                if let Some(rest) = line.strip_prefix("Hardware") {
+                    if let Some((_, value)) = rest.split_once(':') {
+                        return value.trim().to_string();
+                    }
+                }
+                if let Some(rest) = line.strip_prefix("CPU") {
                     if let Some((_, value)) = rest.split_once(':') {
                         return value.trim().to_string();
                     }

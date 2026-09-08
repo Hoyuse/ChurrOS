@@ -31,10 +31,33 @@ fi
 rm -rf "$WORK_DIR" 2>/dev/null || true
 mkdir -p "$WORK_DIR"
 
-echo "[1/4] Fetching Arch PKGBUILD for bazaar..."
+ARCH_TARGET="${ARCH:-$(uname -m)}"
+case "$ARCH_TARGET" in
+    arm64|aarch64)
+        PKGBUILD_URLS=(
+            "https://raw.githubusercontent.com/ArchLinuxARM/PKGBUILDs/master/community/bazaar/PKGBUILD"
+            "https://gitlab.archlinux.org/archlinux/packaging/packages/bazaar/-/raw/main/PKGBUILD"
+        )
+        ;;
+    *)
+        PKGBUILD_URLS=(
+            "https://gitlab.archlinux.org/archlinux/packaging/packages/bazaar/-/raw/main/PKGBUILD"
+        )
+        ;;
+esac
+
+echo "[1/4] Fetching Arch PKGBUILD for bazaar (${ARCH_TARGET})..."
 for f in PKGBUILD bazaar.install; do
-    curl -fsSL "https://gitlab.archlinux.org/archlinux/packaging/packages/bazaar/-/raw/main/$f" \
-        -o "$WORK_DIR/$f" 2>/dev/null || true
+    for url in "${PKGBUILD_URLS[@]}"; do
+        if curl -fsSL "${url%/PKGBUILD}/$f" -o "$WORK_DIR/$f" 2>/dev/null; then
+            break
+        fi
+    done
+    if [ ! -f "$WORK_DIR/$f" ]; then
+        echo "[warn] Could not download $f from the chosen Arch mirror(s)."
+        curl -fsSL "https://gitlab.archlinux.org/archlinux/packaging/packages/bazaar/-/raw/main/$f" \
+            -o "$WORK_DIR/$f" 2>/dev/null || true
+    fi
 done
 
 echo "[2/4] Patching PKGBUILD (libdex conflict)..."

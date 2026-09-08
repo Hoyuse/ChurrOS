@@ -3,6 +3,7 @@
 set -e
 HOST_REPO_SYMLINK=0
 EDITION="niri"
+ARCH_TARGET="x86_64"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --edition|-e)
@@ -13,11 +14,32 @@ while [[ $# -gt 0 ]]; do
             EDITION="${1#*=}"
             shift
             ;;
+        --arch)
+            ARCH_TARGET="$2"
+            shift 2
+            ;;
+        --arch=*)
+            ARCH_TARGET="${1#*=}"
+            shift
+            ;;
         *)
             shift
             ;;
     esac
 done
+
+case "$ARCH_TARGET" in
+    x86_64|amd64)
+        ARCH_TARGET="x86_64"
+        ;;
+    arm64|aarch64)
+        ARCH_TARGET="aarch64"
+        ;;
+    *)
+        echo "Error: unsupported arch '$ARCH_TARGET' (supported: x86_64, aarch64)" >&2
+        exit 1
+        ;;
+esac
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
 if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
@@ -33,8 +55,8 @@ cleanup_temp() {
         echo "[cleanup] Removing host /root/packages symlink..."
         sudo rm -f /root/packages 2>/dev/null || true
     fi
-    if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f archiso/packages.x86_64.orig ]; then
-        mv archiso/packages.x86_64.orig archiso/packages.x86_64
+    if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f archiso/packages.${ARCH_TARGET}.orig ]; then
+        mv archiso/packages.${ARCH_TARGET}.orig archiso/packages.${ARCH_TARGET}
     fi
     if [ "$GREETD_BACKED_UP" -eq 1 ] && [ -f archiso/airootfs/etc/greetd/config.toml.orig ]; then
         mv archiso/airootfs/etc/greetd/config.toml.orig archiso/airootfs/etc/greetd/config.toml
@@ -59,18 +81,26 @@ trap cleanup_temp EXIT
 echo "======================================"
 echo "      ChurrOS Build System"
 echo "      Edition: ${EDITION^^}"
+echo "      Arch: ${ARCH_TARGET}"
 echo "======================================"
 echo
+
+BASE_PACKAGE_FILE="archiso/packages.${ARCH_TARGET}"
+if [ ! -f "$BASE_PACKAGE_FILE" ]; then
+    echo "Error: $BASE_PACKAGE_FILE not found for arch '$ARCH_TARGET'." >&2
+    exit 1
+fi
 
 # 0. Configurar paquetes según la edición
 if [ "$EDITION" = "xfce" ]; then
     echo "[0/5] Selecting XFCE packages..."
-    if [ -f archiso/packages.xfce.x86_64 ]; then
-        cp archiso/packages.x86_64 archiso/packages.x86_64.orig
+    XFCE_FILE="archiso/packages.xfce.${ARCH_TARGET}"
+    if [ -f "$XFCE_FILE" ]; then
+        cp "$BASE_PACKAGE_FILE" "$BASE_PACKAGE_FILE.orig"
         PACKAGES_BACKED_UP=1
-        cp archiso/packages.xfce.x86_64 archiso/packages.x86_64
+        cp "$XFCE_FILE" "$BASE_PACKAGE_FILE"
     else
-        echo "Error: archiso/packages.xfce.x86_64 not found!" >&2
+        echo "Error: $XFCE_FILE not found!" >&2
         exit 1
     fi
 fi
