@@ -14,6 +14,11 @@ cursor {
 prefer-no-csd
 
 // Blur
+// NOTA: el blur de niri (este bloque y "background-effect { blur true }" en las
+// window-rules) requiere niri >= 26.04 (ahi llego el soporte de blur via el
+// protocolo ext-background-effect). Con niri mas viejo estas opciones se ignoran
+// y las apps quedan solidas (el glassmorphism no aparece). Si el glass no se ve,
+// revisar la version con: niri --version
 blur {
     passes 3
     offset 3

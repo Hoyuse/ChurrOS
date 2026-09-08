@@ -12,6 +12,8 @@ La configuración se aplica a todo usuario nuevo del sistema gracias a que vive 
 
 Niri es el compositor Wayland usado por ChurrOS. Es un compositor desplazable (scrollable-tiling) escrito en Rust. Toda la configuración vive en un solo archivo `config.kdl` en formato KDL.
 
+> Requisito para el glassmorphism: el blur de niri (`blur { }` y `background-effect { blur true }`) necesita **niri >= 26.04**, versión donde llegó el soporte de blur. Con un niri más viejo esas opciones se ignoran y las apps quedan sólidas. En la edición XFCE el blur lo hace picom, así que no depende de la versión de niri.
+
 ## Structure
 
 ```text
