@@ -1,14 +1,13 @@
 /*
     ChurrOS Brightness Popup — Liquid Glass
-    Accent: #F97316
 */
 
 .brightness-widget {
     padding: 18px;
-    background: rgba(255,255,255,.04);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 18px;
-    border: 1px solid rgba(255,255,255,.07);
-    box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
 }
 
 .brightness-label {
@@ -20,27 +19,27 @@
 
 .brightness-slider trough {
     min-height: 8px;
-    background: rgba(255,255,255,.10);
+    background: rgba(255, 255, 255, 0.10);
     border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.06);
-    box-shadow: 0 1px 2px rgba(0,0,0,.30) inset;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.30) inset;
 }
 
 .brightness-slider highlight {
-    background: linear-gradient(90deg, #F97316, #FB923C);
+    background: linear-gradient(90deg, var(--accent, #38BDF8), var(--accent-soft, #60A5FA));
     border-radius: 999px;
-    box-shadow: 0 0 10px rgba(249,115,22,.35);
+    box-shadow: 0 0 10px var(--accent-bg-hover, rgba(56, 189, 248, 0.35));
 }
 
 .brightness-slider slider {
-    background: #F97316;
+    background: #ffffff;
     min-width: 18px;
     min-height: 18px;
     margin: -5px;
     border-radius: 999px;
-    box-shadow: 0 0 12px rgba(249,115,22,.45),
-                0 2px 6px rgba(0,0,0,.35);
-    border: 2px solid rgba(255,255,255,.30);
+    box-shadow: 0 0 12px var(--accent-bg-hover, rgba(56, 189, 248, 0.45)),
+                0 2px 6px rgba(0, 0, 0, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.50);
 }
 
 .brightness-slider slider:hover {
@@ -48,7 +47,7 @@
 }
 
 .brightness-info {
-    color: rgba(255,255,255,.60);
+    color: rgba(255, 255, 255, 0.60);
     font-size: 12px;
     margin-top: 8px;
     line-height: 1.4;

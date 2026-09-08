@@ -1,13 +1,12 @@
 /*
     ChurrOS Bluetooth Popup — Liquid Glass
-    Accent: #F97316
 */
 
 .bluetooth-toggle {
-    background: rgba(255,255,255,.04);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 14px 16px;
-    border: 1px solid rgba(255,255,255,.07);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     margin-bottom: 14px;
 }
 
@@ -28,7 +27,7 @@
 }
 
 .section-title {
-    color: #FB923C;
+    color: var(--accent-soft, #60A5FA);
     font-size: 13px;
     font-weight: 700;
     letter-spacing: .6px;
@@ -39,17 +38,17 @@
 .device-item {
     padding: 12px 14px;
     border-radius: 14px;
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.05);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     margin-bottom: 6px;
-    transition: 160ms cubic-bezier(.4,0,.2,1);
-    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+    transition: 160ms cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .device-item:hover {
-    background: rgba(249,115,22,.10);
-    border-color: rgba(249,115,22,.20);
-    box-shadow: 0 4px 16px rgba(249,115,22,.12);
+    background: var(--accent-bg-hover, rgba(56, 189, 248, 0.10));
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
 }
 
 .device-item label {
@@ -72,8 +71,8 @@
 }
 
 .device-action {
-    background: rgba(249,115,22,.14);
-    border: 1px solid rgba(249,115,22,.25);
+    background: var(--accent-bg-hover, rgba(56, 189, 248, 0.14));
+    border: 1px solid rgba(56, 189, 248, 0.25);
     color: white;
     border-radius: 10px;
     min-height: 30px;
@@ -83,23 +82,23 @@
 }
 
 .device-action:hover {
-    background: rgba(249,115,22,.26);
-    border-color: rgba(249,115,22,.45);
+    background: rgba(56, 189, 248, 0.26);
+    border-color: var(--accent, rgba(56, 189, 248, 0.45));
 }
 
 .device-action.connected {
-    background: rgba(74,222,128,.12);
-    border-color: rgba(74,222,128,.30);
+    background: rgba(74, 222, 128, 0.12);
+    border-color: rgba(74, 222, 128, 0.30);
 }
 
 .device-action.connected:hover {
-    background: rgba(74,222,128,.22);
+    background: rgba(74, 222, 128, 0.22);
 }
 
 .device-forget {
     background: transparent;
     border: 1px solid transparent;
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
     border-radius: 10px;
     min-height: 30px;
     min-width: 30px;
@@ -108,8 +107,8 @@
 }
 
 .device-forget:hover {
-    background: rgba(239,68,68,.14);
-    border-color: rgba(239,68,68,.30);
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.30);
     color: #f87171;
 }
 
@@ -124,15 +123,15 @@ switch {
 switch > slider {
     background: white;
     border-radius: 999px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.40);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40);
 }
 
 switch:checked {
-    background: linear-gradient(135deg, #F97316, #C2410C);
-    box-shadow: 0 0 14px rgba(249,115,22,.30);
+    background: linear-gradient(135deg, var(--accent, #38BDF8), var(--accent-strong, #0284C7));
+    box-shadow: 0 0 14px var(--accent-bg-hover, rgba(56, 189, 248, 0.30));
 }
 
 switch:not(:checked) {
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }

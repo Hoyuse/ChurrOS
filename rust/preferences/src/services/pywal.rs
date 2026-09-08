@@ -38,7 +38,7 @@ impl PywalService {
     }
 
     pub fn enabled() -> bool {
-        settings::get_bool("theme.dynamic_colors", false)
+        settings::get_bool("theme.dynamic_colors", true)
     }
 
     fn current_wallpaper() -> Option<String> {
@@ -53,19 +53,24 @@ impl PywalService {
         None
     }
 
-    /// Corre `wal -i <wallpaper>` y devuelve la paleta (colors.json) o None.
-    pub fn generate() -> Option<Value> {
-        let wallpaper = Self::current_wallpaper()?;
-        if !Self::available() {
+    /// Corre `wal -i <wallpaper>` para una ruta dada y devuelve la paleta o None.
+    pub fn generate_for(wallpaper: &str) -> Option<Value> {
+        if !Self::available() || wallpaper.is_empty() || !Path::new(wallpaper).is_file() {
             return None;
         }
         let _ = Command::new("wal")
-            .args(["-q", "-i", &wallpaper, "-n", "-e", "-s", "-t"])
+            .args(["-i", wallpaper, "-q", "-n", "-e", "-s", "-t"])
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status();
         Self::read_cache()
+    }
+
+    /// Corre `wal -i <wallpaper>` del wallpaper actual y devuelve la paleta (colors.json) o None.
+    pub fn generate() -> Option<Value> {
+        let wallpaper = Self::current_wallpaper()?;
+        Self::generate_for(&wallpaper)
     }
 
     fn read_cache() -> Option<Value> {
@@ -98,11 +103,13 @@ impl PywalService {
         let fg = get_special("foreground").unwrap_or("#F8FAFC");
 
         // Acento GTK (accent.css)
+        crate::logging::log(&format!("[pywal] aplicando acento hex: {accent}, bg: {bg}, fg: {fg}"));
         AccentService::set_hex(accent);
 
-        // Waybar: colors-waybar.css + recarga
+        // Waybar: colors-waybar.css
         WaybarService::apply_pywal_colors(bg, fg, accent);
 
+        crate::logging::log("[pywal] apply_accent completado OK");
         true
     }
 
@@ -135,6 +142,20 @@ impl PywalService {
         let Some(palette) = Self::generate() else {
             return false;
         };
+        Self::apply_accent(&palette)
+    }
+
+    pub fn regenerate_for_wallpaper(path: &str) -> bool {
+        if !Self::enabled() {
+            crate::logging::log("[pywal] no habilitado, skip");
+            return false;
+        }
+        crate::logging::log(&format!("[pywal] ejecutando wal para {path}..."));
+        let Some(palette) = Self::generate_for(path) else {
+            crate::logging::log("[pywal] wal fallo o no devolvio paleta");
+            return false;
+        };
+        crate::logging::log("[pywal] paleta obtenida, aplicando...");
         Self::apply_accent(&palette)
     }
 }

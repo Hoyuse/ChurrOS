@@ -8,7 +8,7 @@ mod header;
 use gtk::prelude::*;
 use adw::prelude::*;
 
-const APP_ID: &str = "org.churros.Welcome";
+const APP_ID: &str = "org.churros.welcome";
 
 fn load_css() {
     // Cada archivo en su propio provider: load_from_path REEMPLAZA el
@@ -16,9 +16,20 @@ fn load_css() {
     // el churros.css (el style.css de welcome es autocontenido, pero el
     // CSS compartido aporta tokens/paleta a la ISO).
     let shared = "/usr/share/churros/styles/churros.css";
-    if std::path::Path::new(shared).exists() {
+    let dev_shared = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../archiso/airootfs/usr/share/churros/styles/churros.css"
+    );
+    let shared_path = if std::path::Path::new(shared).exists() {
+        Some(std::path::Path::new(shared))
+    } else if std::path::Path::new(dev_shared).exists() {
+        Some(std::path::Path::new(dev_shared))
+    } else {
+        None
+    };
+    if let Some(path) = shared_path {
         let provider = gtk::CssProvider::new();
-        provider.load_from_path(shared);
+        provider.load_from_path(path);
         if let Some(display) = gtk::gdk::Display::default() {
             gtk::style_context_add_provider_for_display(
                 &display,
@@ -28,7 +39,7 @@ fn load_css() {
         }
     }
 
-    // CSS local de la app (pisa al compartido)
+    // CSS local de la app (pisa al compartido y a stylesheets del sistema)
     let local = assets::css_path();
     let provider = gtk::CssProvider::new();
     if local.is_file() {
@@ -43,6 +54,21 @@ fn load_css() {
             gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
         );
     }
+
+    // Colores dinámicos (accent.css de pywal o preferencias)
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
+    if let Ok(css) = std::fs::read_to_string(&accent_path) {
+        let provider = gtk::CssProvider::new();
+        provider.load_from_data(&css);
+        if let Some(display) = gtk::gdk::Display::default() {
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_USER,
+            );
+        }
+    }
 }
 
 fn activate(app: &adw::Application) {
@@ -53,6 +79,7 @@ fn activate(app: &adw::Application) {
         .title("ChurrOS Welcome")
         .build();
 
+    window.add_css_class("welcome");
     window.set_default_size(900, 680);
     window.set_size_request(480, 400);
     window.set_resizable(true);
@@ -62,11 +89,6 @@ fn activate(app: &adw::Application) {
     header_bar.set_show_end_title_buttons(true);
     header_bar.set_show_start_title_buttons(true);
     header_bar.add_css_class("flat");
-
-    let desktop = churros_services::version::edition();
-    if desktop.contains("niri") {
-        window.maximize();
-    }
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 24);
     content.set_margin_top(20);

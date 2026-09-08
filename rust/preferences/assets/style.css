@@ -1,75 +1,88 @@
 /*
     ChurrOS Preferences — Liquid Glass
     ──────────────────────────────────
-    Glassmorphism + manteniendo colores Churros
-    Accent: #F97316 (naranja cálido)
-    Fondo:  #0f0f10 / #1a1a1c
+    Glassmorphism de alta fidelidad
 */
 
 /* ── Tokens (dark default) ─────────────────────────────── */
 window {
-    --bg-window:        rgba(15,15,16,.62);
-    --bg-sidebar:       rgba(18,18,20,.70);
-    --bg-group:         rgba(22,22,24,.75);
-    --bg-group-hover:   rgba(30,30,34,.80);
+    --bg-window:        rgba(13, 16, 22, 0.82);
+    --bg-sidebar:       rgba(18, 22, 30, 0.60);
+    --bg-group:         rgba(255, 255, 255, 0.07);
+    --bg-group-hover:   rgba(255, 255, 255, 0.11);
     --row-bg:           transparent;
-    --row-bg-hover:     rgba(255,255,255,.04);
-    --row-bg-active:    rgba(255,255,255,.08);
-    --text-primary:     rgba(255,255,255,.96);
-    --text-secondary:   rgba(255,255,255,.65);
-    --text-tertiary:    rgba(255,255,255,.45);
-    --border-soft:      rgba(255,255,255,.06);
-    --border-strong:    rgba(255,255,255,.12);
+    --row-bg-hover:     rgba(255, 255, 255, 0.08);
+    --row-bg-active:    rgba(255, 255, 255, 0.12);
+    --text-primary:     rgba(255, 255, 255, 0.96);
+    --text-secondary:   rgba(255, 255, 255, 0.68);
+    --text-tertiary:    rgba(255, 255, 255, 0.45);
+    --border-soft:      rgba(255, 255, 255, 0.13);
+    --border-strong:    rgba(255, 255, 255, 0.22);
     --glass-blur:       16px;
-    --glass-shadow:     0 8px 32px rgba(0,0,0,.60);
-    --glass-inset:      0 1px 0 rgba(255,255,255,.03) inset;
+    --glass-shadow:     0 24px 64px rgba(0, 0, 0, 0.55);
+    --glass-inset:      0 1px 0 rgba(255, 255, 255, 0.20) inset, 0 0 20px rgba(255, 255, 255, 0.02) inset;
     --accent:           #F97316;
     --accent-soft:      #FB923C;
-    --accent-strong:    #C2410C;
+    --accent-strong:    #EA580C;
     --accent-text:      #ffffff;
-    --accent-bg-hover:  rgba(249,115,22,.14);
-    --accent-glow:      0 0 20px rgba(249,115,22,.20);
-    --scroller-thumb:   rgba(255,255,255,.10);
+    --accent-bg-hover:  rgba(249, 115, 22, 0.16);
+    --accent-glow:      0 0 24px rgba(249, 115, 22, 0.28);
+    --scroller-thumb:   rgba(255, 255, 255, 0.14);
 }
 
 /* Light override */
 window.light {
-    --bg-window:        rgba(242,242,245,.60);
-    --bg-sidebar:       rgba(255,255,255,.50);
-    --bg-group:         rgba(255,255,255,.62);
-    --bg-group-hover:   rgba(0,0,0,.04);
+    --bg-window:        rgba(240, 244, 250, 0.65);
+    --bg-sidebar:       rgba(255, 255, 255, 0.40);
+    --bg-group:         rgba(255, 255, 255, 0.60);
+    --bg-group-hover:   rgba(255, 255, 255, 0.80);
     --row-bg:           transparent;
-    --row-bg-hover:     rgba(0,0,0,.04);
-    --row-bg-active:    rgba(0,0,0,.08);
-    --text-primary:     rgba(28,28,30,.96);
-    --text-secondary:   rgba(28,28,30,.58);
-    --text-tertiary:    rgba(28,28,30,.40);
-    --border-soft:      rgba(0,0,0,.08);
-    --border-strong:    rgba(0,0,0,.14);
+    --row-bg-hover:     rgba(0, 0, 0, 0.04);
+    --row-bg-active:    rgba(0, 0, 0, 0.08);
+    --text-primary:     rgba(24, 28, 36, 0.96);
+    --text-secondary:   rgba(24, 28, 36, 0.60);
+    --text-tertiary:    rgba(24, 28, 36, 0.40);
+    --border-soft:      rgba(0, 0, 0, 0.08);
+    --border-strong:    rgba(0, 0, 0, 0.14);
     --glass-blur:       16px;
-    --glass-shadow:     0 8px 32px rgba(0,0,0,.12);
-    --glass-inset:      0 1px 0 rgba(255,255,255,.45) inset;
-    --accent:           #EA580C;
-    --accent-soft:      #F97316;
-    --accent-strong:    #9A3412;
-    --accent-text:      #ffffff;
-    --accent-bg-hover:  rgba(234,88,12,.12);
-    --accent-glow:      0 0 20px rgba(234,88,12,.18);
-    --scroller-thumb:   rgba(0,0,0,.16);
+    --glass-shadow:     0 16px 40px rgba(0, 0, 0, 0.12);
+    --glass-inset:      0 1px 0 rgba(255, 255, 255, 0.70) inset;
+    --scroller-thumb:   rgba(0, 0, 0, 0.16);
 }
 
 /* ── Window base (glass) ───────────────────────────────── */
-/*
-    El blur NO se puede hacer con CSS de GTK (backdrop-filter no
-    existe): lo aplica niri (window-rule background-effect blur true
-    para org.churros.preferences). Aquí solo va el alpha del fondo.
-*/
+@define-color window_bg_color transparent;
+@define-color view_bg_color transparent;
+
 window,
 window.background,
+adwapplicationwindow,
+windowhandle {
+    background-color: transparent;
+}
+
 window.preferences,
 .preferences {
-    background: var(--bg-window);
     background-color: var(--bg-window);
+    border-radius: 18px;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+}
+
+window.light.preferences,
+.preferences.light {
+    background-color: var(--bg-window);
+}
+
+.preferences > box,
+.preferences contents,
+.preferences scrolledwindow,
+.preferences stack,
+scrolledwindow,
+scrolledwindow viewport,
+stack {
+    background: transparent;
+    background-color: transparent;
 }
 
 headerbar {
@@ -84,14 +97,12 @@ headerbar windowhandle {
     background: transparent;
 }
 
-/*
-    Cuando la ventana esta maximizada o fullscreen, quitamos el
-    border-radius: el fondo del monitor ya es visible detras, asi que
-    mezclarlos hace la interfaz ilegible y amplifica el brillo de
-    wallpapers claros en dark mode.
-*/
 window.maximized,
-window.fullscreen {
+window.fullscreen,
+window.maximized.preferences,
+window.fullscreen.preferences,
+.preferences.maximized,
+.preferences.fullscreen {
     background: var(--bg-window);
     background-color: var(--bg-window);
     border-radius: 0;
@@ -153,7 +164,7 @@ button.sidebar-item.selected,
     background-color: var(--accent);
     color: #FFFFFF;
     font-weight: 700;
-    box-shadow: 0 4px 16px var(--accent), 0 0 20px var(--accent-glow);
+    box-shadow: 0 4px 16px var(--accent-bg-hover), var(--accent-glow);
     border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -208,7 +219,7 @@ searchentry {
 searchentry:focus {
     border: 1px solid var(--accent);
     background: var(--accent-bg-hover);
-    box-shadow: 0 0 0 3px var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 .preferences-search image,
@@ -242,11 +253,11 @@ searchentry image {
 /* ── Group (glass card) ───────────────────────────────── */
 .group {
     background: var(--bg-group);
-    border-radius: 14px;
-    padding: 4px;
+    border-radius: 16px;
+    padding: 6px;
     border: 1px solid var(--border-soft);
     margin-bottom: 18px;
-    box-shadow: var(--glass-shadow), var(--glass-inset);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.20), var(--glass-inset);
 }
 
 .group-title {
@@ -362,7 +373,7 @@ scale trough {
 scale highlight {
     background: linear-gradient(90deg, var(--accent), var(--accent-soft));
     border-radius: 8px;
-    box-shadow: 0 0 8px var(--accent);
+    box-shadow: 0 0 8px var(--accent-bg-hover);
 }
 
 scale slider {
@@ -377,7 +388,7 @@ scale slider {
 }
 
 scale slider:hover {
-    box-shadow: 0 2px 12px var(--accent), 0 0 0 4px var(--accent);
+    box-shadow: 0 2px 12px var(--accent), 0 0 0 4px var(--accent-bg-hover);
 }
 
 /* ── DropDown ─────────────────────────────────────────── */
@@ -398,11 +409,11 @@ dropdown:hover,
 button.combo:hover {
     background: var(--accent-bg-hover);
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 popover contents list {
-    background: rgba(26,26,28,.92);
+    background: rgba(18, 22, 30, 0.94);
 }
 
 popover contents listview row {
@@ -421,7 +432,7 @@ popover contents listview row:selected {
 }
 
 popover.search-results list {
-    background: var(--popover-bg, rgba(26,26,28,.96));
+    background: var(--popover-bg, rgba(18, 22, 30, 0.96));
 }
 
 popover.search-results row {
@@ -511,7 +522,7 @@ scrollbar slider:hover {
 
 .wallpaper-button:hover {
     border-color: var(--accent);
-    box-shadow: 0 6px 20px var(--accent);
+    box-shadow: 0 6px 20px var(--accent-bg-hover);
     transform: translateY(-2px);
 }
 
@@ -528,7 +539,7 @@ scrollbar slider:hover {
 .wallpaper-selected {
     border: 3px solid var(--accent);
     border-radius: 14px;
-    box-shadow: var(--accent-glow), 0 4px 16px var(--accent);
+    box-shadow: var(--accent-glow), 0 4px 16px var(--accent-bg-hover);
 }
 
 .wallpaper-preview {
@@ -582,7 +593,7 @@ scrollbar slider:hover {
 .back-button:hover {
     background: var(--accent-bg-hover);
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 /* ── Misc cleanup ─────────────────────────────────────── */
@@ -599,12 +610,12 @@ button.suggested-action {
     color: var(--accent-text);
     border-radius: 10px;
     border: 1px solid var(--accent);
-    box-shadow: var(--accent-glow), 0 4px 14px var(--accent);
+    box-shadow: var(--accent-glow), 0 4px 14px var(--accent-bg-hover);
 }
 
 button.suggested-action:hover {
     background: linear-gradient(135deg, var(--accent-soft), var(--accent));
-    box-shadow: var(--accent-glow), 0 6px 18px var(--accent);
+    box-shadow: var(--accent-glow), 0 6px 18px var(--accent-bg-hover);
 }
 
 button.destructive-action {
@@ -630,7 +641,7 @@ entry {
 
 entry:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 /* ── Color picker ────────────────────────────────────── */

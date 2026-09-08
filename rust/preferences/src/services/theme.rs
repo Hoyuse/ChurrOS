@@ -36,25 +36,39 @@ fn gtk_ini(dir: &str) -> PathBuf {
 
 fn build_env() -> Vec<(String, String)> {
     let mut env: Vec<(String, String)> = std::env::vars().collect();
+    let uid = libc_getuid();
+    let xrd = format!("/run/user/{uid}");
+
+    if env.iter().all(|(k, _)| k != "XDG_RUNTIME_DIR") {
+        env.push(("XDG_RUNTIME_DIR".to_string(), xrd.clone()));
+    }
+
     if env.iter().all(|(k, _)| k != "WAYLAND_DISPLAY") {
-        let uid = libc_getuid();
-        let xrd = format!("/run/user/{uid}");
         if std::path::Path::new(&xrd).is_dir() {
             if let Ok(entries) = fs::read_dir(&xrd) {
-                for entry in entries.flatten() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if name.starts_with("wayland-") {
-                        env.push(("WAYLAND_DISPLAY".to_string(), name));
-                        break;
-                    }
+                let mut valid_socks: Vec<(std::time::SystemTime, String)> = entries
+                    .flatten()
+                    .filter_map(|e| {
+                        let name = e.file_name().to_string_lossy().to_string();
+                        if name.starts_with("wayland-") && !name.ends_with(".lock") {
+                            let mtime = e
+                                .metadata()
+                                .and_then(|m| m.modified())
+                                .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                            Some((mtime, name))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                valid_socks.sort_by(|a, b| b.0.cmp(&a.0));
+                if let Some((_, name)) = valid_socks.first() {
+                    env.push(("WAYLAND_DISPLAY".to_string(), name.clone()));
                 }
             }
         }
     }
-    if env.iter().all(|(k, _)| k != "XDG_RUNTIME_DIR") {
-        let uid = libc_getuid();
-        env.push(("XDG_RUNTIME_DIR".to_string(), format!("/run/user/{uid}")));
-    }
+
     env
 }
 

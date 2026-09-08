@@ -249,35 +249,38 @@ fn uid() -> u32 {
 fn build_env() -> Vec<(String, String)> {
     let mut env: Vec<(String, String)> = std::env::vars().collect();
 
+    let u = uid();
+    let xrd = std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| format!("/run/user/{u}"));
+
+    if !env.iter().any(|(k, _)| k == "XDG_RUNTIME_DIR") {
+        env.push(("XDG_RUNTIME_DIR".to_string(), xrd.clone()));
+    }
+
     let has_wayland = env.iter().any(|(k, _)| k == "WAYLAND_DISPLAY");
     if !has_wayland {
-        let xrd =
-            std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| format!("/run/user/{}", uid()));
         if std::path::Path::new(&xrd).is_dir() {
             if let Ok(entries) = fs::read_dir(&xrd) {
-                let mut socks: Vec<String> = entries
+                let mut valid_socks: Vec<(std::time::SystemTime, String)> = entries
                     .flatten()
-                    .filter_map(|e| e.file_name().into_string().ok())
-                    .filter(|n| n.starts_with("wayland-"))
+                    .filter_map(|e| {
+                        let name = e.file_name().to_string_lossy().to_string();
+                        if name.starts_with("wayland-") && !name.ends_with(".lock") {
+                            let mtime = e
+                                .metadata()
+                                .and_then(|m| m.modified())
+                                .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                            Some((mtime, name))
+                        } else {
+                            None
+                        }
+                    })
                     .collect();
-                socks.sort();
-                if let Some(sock) = socks.first() {
-                    if let Some(slot) = env.iter_mut().find(|(k, _)| k == "WAYLAND_DISPLAY") {
-                        slot.1 = sock.clone();
-                    } else {
-                        env.push(("WAYLAND_DISPLAY".to_string(), sock.clone()));
-                    }
+                valid_socks.sort_by(|a, b| b.0.cmp(&a.0));
+                if let Some((_, sock)) = valid_socks.first() {
+                    env.push(("WAYLAND_DISPLAY".to_string(), sock.clone()));
                 }
             }
         }
-    }
-
-    let has_xrd = env.iter().any(|(k, _)| k == "XDG_RUNTIME_DIR");
-    if !has_xrd {
-        env.push((
-            "XDG_RUNTIME_DIR".to_string(),
-            format!("/run/user/{}", uid()),
-        ));
     }
 
     env
@@ -454,11 +457,12 @@ impl WaybarService {
         write_style(values);
     }
 
-    /// Aplica una paleta pywal a waybar (colors-waybar.css) y recarga.
-    /// Solo toca los colores, sin pisar config.jsonc/style.css.
+    /// Aplica una paleta pywal a waybar (colors-waybar.css).
+    /// Waybar vigila el archivo con inotify (reload_style_on_change: true)
+    /// y se recarga automáticamente. Evitamos enviar SIGUSR2 aquí para no
+    /// provocar condiciones de carrera o crashes en Waybar.
     pub fn apply_pywal_colors(bg: &str, fg: &str, accent: &str) {
         let _ = write_file(&colors_path(), &colors_css(bg, fg, accent));
-        Self::reload(false);
     }
 
     /// `true`: mata y relanza (posición, módulos, altura…). SIGUSR2 no

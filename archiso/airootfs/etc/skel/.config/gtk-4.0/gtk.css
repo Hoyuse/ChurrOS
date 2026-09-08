@@ -23,8 +23,12 @@
 @define-color popover_bg_color #18181B;
 @define-color popover_fg_color #FFFFFF;
 
-*:selected,
-*:selected:focus {
+row:selected,
+row:selected:focus,
+listview row:selected,
+listview row:selected:focus,
+flowboxchild:selected,
+flowboxchild:selected:focus {
     background-color: #F97316;
     color: #FFFFFF;
 }

@@ -1,31 +1,44 @@
 /* ==========================================================
    ChurrOS Welcome — Liquid Glass
-   Accent: #F97316  Fondo: #0f0f10
-
-   Transparencia vía alpha del fondo; el blur lo aplica niri
-   (window-rule background-effect blur true para org.churros.Welcome).
+   Transparencia vía alpha del fondo; el blur lo aplica niri / hyprland.
    ========================================================== */
 
-window {
-    background: rgba(15,15,16,.58);
+@define-color window_bg_color transparent;
+@define-color view_bg_color transparent;
+
+window,
+window.background,
+adwapplicationwindow {
+    background-color: transparent;
     color: #f5f5f5;
     min-width: 320px;
     min-height: 320px;
 }
 
+window.welcome,
+.welcome {
+    background-color: rgba(13, 16, 22, 0.70);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55),
+                0 1px 0 rgba(255, 255, 255, 0.20) inset,
+                0 0 20px rgba(255, 255, 255, 0.02) inset;
+}
+
 headerbar {
-    background: transparent;
+    background-color: transparent;
     border: none;
     box-shadow: none;
     min-height: 44px;
 }
 
 headerbar windowhandle {
-    background: transparent;
+    background-color: transparent;
 }
 
+flowbox,
 flowboxchild {
-    background: transparent;
+    background-color: transparent;
     padding: 0;
     margin: 0;
 }
@@ -34,12 +47,15 @@ flowboxchild:hover,
 flowboxchild:selected,
 flowboxchild:active,
 flowboxchild:focus {
-    background: transparent;
+    background-color: transparent;
     outline: none;
 }
 
+scroller,
+scrolledwindow,
+scrolledwindow > viewport,
 .content-scroller {
-    background: transparent;
+    background-color: transparent;
 }
 
 .logo {
@@ -50,15 +66,12 @@ flowboxchild:focus {
     font-size: 52px;
     font-weight: 800;
     letter-spacing: -0.04em;
-    /* Los colores del texto los pone el markup (span white + #ff8c00);
-       background/-gtk-gradient-text aquí pintaban una CAJA naranja opaca
-       detrás del texto y hacían el "OS" naranja invisible. */
-    color: #F97316;
-    text-shadow: 0 0 30px rgba(249,115,22,.30);
+    color: #ffffff;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
 }
 
 .subtitle {
-    color: rgba(255,255,255,.55);
+    color: rgba(255, 255, 255, 0.70);
     font-size: 15px;
     margin-bottom: 16px;
     line-height: 1.6;
@@ -66,29 +79,39 @@ flowboxchild:focus {
 
 /* ── Cards (liquid glass) ─────────────────────────────── */
 
+button.action-card,
 .action-card,
 .system-card {
-    background: rgba(255,255,255,.05);
-    border-radius: 24px;
-    border: 1px solid rgba(249,115,22,.14);
+    background-color: rgba(255, 255, 255, 0.08);
+    background-image: none;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
     min-width: 280px;
     min-height: 340px;
-    padding: 20px;
-    transition: transform 200ms cubic-bezier(.4,0,.2,1),
-                background 200ms ease,
+    padding: 22px;
+    transition: transform 200ms cubic-bezier(.4, 0, .2, 1),
+                background-color 200ms ease,
                 border-color 200ms ease,
                 box-shadow 200ms ease;
-    box-shadow: 0 20px 54px rgba(0,0,0,.35),
-                0 1px 0 rgba(255,255,255,.06) inset;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35),
+                0 1px 0 rgba(255, 255, 255, 0.16) inset;
 }
 
+button.action-card:hover,
 .action-card:hover,
 .system-card:hover {
-    background: rgba(249,115,22,.08);
-    border-color: rgba(251,146,60,.32);
-    box-shadow: 0 24px 64px rgba(249,115,22,.25),
-                0 1px 0 rgba(255,255,255,.08) inset;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-color: rgba(249, 115, 22, 0.50);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45),
+                0 0 24px rgba(249, 115, 22, 0.22),
+                0 1px 0 rgba(255, 255, 255, 0.28) inset;
     transform: translateY(-3px);
+}
+
+button.action-card:active,
+.action-card:active {
+    background-color: rgba(249, 115, 22, 0.18);
+    transform: translateY(0);
 }
 
 /* ── Icon ─────────────────────────────────────────────── */
@@ -101,15 +124,15 @@ flowboxchild:focus {
 /* ── Card Title ────────────────────────────────────────── */
 
 .card-title {
-    color: #f5f5f5;
+    color: #ffffff;
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 /* ── Card Description ──────────────────────────────────── */
 
 .card-description {
-    color: rgba(255,255,255,.60);
+    color: rgba(255, 255, 255, 0.70);
     font-size: 13px;
     line-height: 1.6;
 }
@@ -117,7 +140,7 @@ flowboxchild:focus {
 /* ── Footer ────────────────────────────────────────────── */
 
 .footer {
-    color: rgba(255,255,255,.50);
+    color: rgba(255, 255, 255, 0.55);
     font-size: 12px;
     margin-top: 28px;
 }
@@ -132,40 +155,43 @@ flowboxchild:focus {
 }
 
 .system-value {
-    color: rgba(255,255,255,.80);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* ── Action buttons ────────────────────────────────────── */
 
 button.suggested-action {
-    background: linear-gradient(135deg, #F97316, #C2410C);
-    color: white;
-    border-radius: 12px;
-    border: 1px solid rgba(249,115,22,.40);
+    background-color: #F97316;
+    background-image: linear-gradient(135deg, #F97316, #EA580C);
+    color: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
     padding: 10px 20px;
     font-weight: 600;
-    box-shadow: 0 8px 24px rgba(249,115,22,.25),
-                0 1px 0 rgba(255,255,255,.15) inset;
-    transition: 200ms cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35),
+                0 1px 0 rgba(255, 255, 255, 0.30) inset;
+    transition: 200ms cubic-bezier(.4, 0, .2, 1);
 }
 
 button.suggested-action:hover {
-    background: linear-gradient(135deg, #FB923C, #F97316);
-    box-shadow: 0 12px 32px rgba(249,115,22,.35),
-                0 1px 0 rgba(255,255,255,.18) inset;
+    background-image: linear-gradient(135deg, #FB923C, #F97316);
+    box-shadow: 0 12px 32px rgba(249, 115, 22, 0.50),
+                0 1px 0 rgba(255, 255, 255, 0.40) inset;
     transform: translateY(-1px);
 }
 
 button.suggested-action:active {
     transform: translateY(0);
-    box-shadow: 0 4px 12px rgba(249,115,22,.20);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
 }
 
 /* ── Window content frame ──────────────────────────────── */
 
 .welcome-frame {
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,.08);
-    box-shadow: 0 8px 40px rgba(0,0,0,.45),
-                0 1px 0 rgba(255,255,255,.06) inset;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45),
+                0 1px 0 rgba(255, 255, 255, 0.14) inset;
 }
+
+
