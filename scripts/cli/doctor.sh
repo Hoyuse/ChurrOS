@@ -14,10 +14,14 @@ check() {
 check mkarchiso
 check git
 check qemu-system-x86_64
+check qemu-system-aarch64
+check edk2-aarch64
+check systemd-binfmt
 check xorriso
 check mksquashfs
 check mcopy
 check mkinitcpio
+check grub-mkstandalone
 
 echo
 echo "Diagnostics complete."
