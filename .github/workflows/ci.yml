@@ -35,3 +35,6 @@ jobs:
 
       - name: cargo test -p churros-services
         run: cargo test -p churros-services --manifest-path rust/Cargo.toml
+
+      - name: cargo check aarch64 target
+        run: cargo check --target aarch64-unknown-linux-gnu -p churros-services --manifest-path rust/Cargo.toml
