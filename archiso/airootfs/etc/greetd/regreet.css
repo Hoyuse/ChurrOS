@@ -1,69 +1,137 @@
-/* =========================================================
- * ChurrOS — ReGreet Login Screen Theme
- * ========================================================= */
+/* ChurrOS ReGreet — macOS Liquid Glass Theme */
+
+@define-color accent_color #F97316;
+@define-color accent_hover #FB923C;
 
 window {
     background-color: transparent;
+    color: #ffffff;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.card {
-    background-color: rgba(18, 18, 20, 0.92);
-    border: 1px solid rgba(249, 115, 22, 0.35);
-    border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(249, 115, 22, 0.18);
-    padding: 30px;
+/* Reloj superior estilo macOS */
+.clock, label.clock, #clock {
+    font-size: 42px;
+    font-weight: 300;
+    color: #ffffff;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+    margin-top: 32px;
+    margin-bottom: 12px;
 }
 
-entry {
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(249, 115, 22, 0.3);
-    border-radius: 12px;
-    padding: 10px 14px;
-    color: #FFFFFF;
+/* Mensaje de bienvenida / Usuario */
+.greeting, .user-name, label.title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #ffffff;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.40);
+    margin-bottom: 8px;
+}
+
+/* Avatar de usuario circular macOS */
+.user-image, image.avatar, .avatar {
+    border-radius: 9999px;
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    background-color: rgba(255, 255, 255, 0.10);
+    margin-bottom: 16px;
+}
+
+/* Campo de contraseña tipo píldora translúcida macOS */
+entry,
+passwordentry,
+.password-entry {
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 9999px;
+    color: #ffffff;
     caret-color: #F97316;
-}
-
-entry:focus {
-    border-color: #F97316;
-    box-shadow: 0 0 12px rgba(249, 115, 22, 0.45);
-    background-color: rgba(255, 255, 255, 0.12);
-}
-
-button.suggested-action,
-button.default,
-button.primary {
-    background-color: #F97316;
-    color: #FFFFFF;
-    border-radius: 12px;
-    font-weight: bold;
+    font-size: 15px;
     padding: 10px 20px;
-    border: none;
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+    min-height: 42px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+    transition: all 200ms ease;
 }
 
-button.suggested-action:hover,
-button.default:hover,
-button.primary:hover {
-    background-color: #FB923C;
-    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+entry:focus,
+passwordentry:focus,
+.password-entry:focus {
+    background-color: rgba(255, 255, 255, 0.24);
+    border-color: #F97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35), 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
+entry placeholder,
+passwordentry placeholder {
+    color: rgba(255, 255, 255, 0.60);
+}
+
+/* Botones de acción píldora flotante */
 button {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    color: #E4E4E7;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 9999px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 20px;
+    min-height: 38px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.20);
+    transition: all 180ms ease;
 }
 
 button:hover {
-    background-color: rgba(249, 115, 22, 0.2);
-    border-color: rgba(249, 115, 22, 0.4);
-    color: #FFFFFF;
+    background-color: #F97316;
+    border-color: #FB923C;
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.45);
+    color: #ffffff;
 }
 
-label.greeting {
-    font-size: 26px;
-    font-weight: 800;
+button:active {
+    background-color: #EA580C;
+    transform: scale(0.97);
+}
+
+/* Selector de sesión / usuario */
+combobox,
+dropdown,
+.combo {
+    background-color: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 9999px;
+    color: #ffffff;
+    padding: 6px 14px;
+    transition: all 180ms ease;
+}
+
+combobox:hover,
+dropdown:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+    border-color: #F97316;
+}
+
+/* Menús desplegables */
+popover,
+menu {
+    background-color: rgba(18, 21, 28, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 18px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.60);
+    color: #ffffff;
+    padding: 6px;
+}
+
+popover button,
+menuitem {
+    border-radius: 10px;
+    padding: 8px 12px;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+popover button:hover,
+menuitem:hover {
+    background-color: rgba(249, 115, 22, 0.25);
     color: #F97316;
-    margin-bottom: 12px;
 }

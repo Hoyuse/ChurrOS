@@ -13,11 +13,11 @@ window.background {
 }
 
 .popup {
-    background-color: rgba(13, 16, 22, 0.82);
+    background-color: rgba(13, 16, 22, 0.65);
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55),
-                0 1px 0 rgba(255, 255, 255, 0.20) inset,
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
+                0 1px 0 rgba(255, 255, 255, 0.18) inset,
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
 }
 
@@ -31,8 +31,8 @@ window.background {
     margin-bottom: 16px;
     padding: 6px 8px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .popup-header-icon {
@@ -42,7 +42,7 @@ window.background {
     min-width: 28px;
     min-height: 28px;
     border-radius: 10px;
-    background: rgba(249, 115, 22, 0.16);
+    background: var(--accent-bg-hover, rgba(249, 115, 22, 0.16));
     box-shadow: 0 0 16px var(--accent-glow, rgba(249, 115, 22, 0.25));
     padding: 4px 6px;
 }
@@ -56,10 +56,10 @@ window.background {
 
 /* ── Tarjeta base de contenido ─────────────────────── */
 .card {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25),
                 0 1px 0 rgba(255, 255, 255, 0.14) inset;
 }

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REGREET_CONF="/etc/greetd/regreet.toml"
+[ -f "$REGREET_CONF" ] || exit 0
+
+LANG_CODE="en"
+if [ -f /etc/locale.conf ]; then
+    RAW_LANG="$(grep '^LANG=' /etc/locale.conf 2>/dev/null | cut -d= -f2 | tr -d '"'\'' ')"
+    if [ -n "$RAW_LANG" ]; then
+        LANG_CODE="$(echo "$RAW_LANG" | cut -d_ -f1 | tr '[:upper:]' '[:lower:]')"
+    fi
+fi
+
+case "$LANG_CODE" in
+    es)
+        GREET="Bienvenido a ChurrOS"
+        FMT="%A, %d de %B  -  %H:%M"
+        ;;
+    pt)
+        GREET="Bem-vindo ao ChurrOS"
+        FMT="%A, %d de %B  -  %H:%M"
+        ;;
+    fr)
+        GREET="Bienvenue sur ChurrOS"
+        FMT="%A %d %B  -  %H:%M"
+        ;;
+    de)
+        GREET="Willkommen bei ChurrOS"
+        FMT="%A, %d. %B  -  %H:%M"
+        ;;
+    it)
+        GREET="Benvenuto su ChurrOS"
+        FMT="%A %d %B  -  %H:%M"
+        ;;
+    *)
+        GREET="Welcome to ChurrOS"
+        FMT="%A, %B %d  -  %H:%M"
+        ;;
+esac
+
+sed -i "s|^greeting_msg = .*|greeting_msg = \"$GREET\"|" "$REGREET_CONF" || true
+sed -i "s|^format = .*|format = \"$FMT\"|" "$REGREET_CONF" || true

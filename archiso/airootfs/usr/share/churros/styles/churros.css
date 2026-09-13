@@ -8,24 +8,38 @@
     glassmorphism, bordes redondeados, popovers y componentes comunes.
 */
 
+/*
+    Glassmorphism fix: libadwaita pinta el fondo de la ventana con su color
+    con nombre `window_bg_color`, que es OPACO por defecto. Ese relleno sólido
+    queda por debajo del `background: rgba(...)` del CSS y le quita a la ventana
+    los píxeles transparentes, así que el compositor (niri) no tiene nada que
+    dejar ver ni blurrear -> las apps salen sólidas.
+
+    Al ponerlo transparente, libadwaita deja de tapar y vuelve a mandar el alpha
+    del CSS (--bg-window) + el blur de niri. No toca el mecanismo de cambio de
+    tema (color-scheme / prefer-dark), así que el crash de #61 no vuelve.
+*/
+@define-color window_bg_color transparent;
+@define-color view_bg_color transparent;
+
 /* ── Tokens → dark default ──────────────────────────── */
 window {
-    --bg-window:           rgba(13, 16, 22, 0.82);
-    --bg-surface:          rgba(18, 22, 30, 0.60);
-    --bg-sidebar:          rgba(18, 22, 30, 0.60);
-    --bg-group:            rgba(255, 255, 255, 0.07);
-    --bg-group-hover:      rgba(255, 255, 255, 0.11);
+    --bg-window:           rgba(13, 16, 22, 0.65);
+    --bg-surface:          rgba(18, 22, 30, 0.50);
+    --bg-sidebar:          rgba(18, 22, 30, 0.45);
+    --bg-group:            rgba(255, 255, 255, 0.05);
+    --bg-group-hover:      rgba(255, 255, 255, 0.09);
     --row-bg:              transparent;
-    --row-bg-hover:        rgba(255, 255, 255, 0.08);
-    --row-bg-active:       rgba(255, 255, 255, 0.12);
+    --row-bg-hover:        rgba(255, 255, 255, 0.06);
+    --row-bg-active:       rgba(255, 255, 255, 0.10);
     --text-primary:        rgba(255, 255, 255, 0.96);
     --text-secondary:      rgba(255, 255, 255, 0.68);
     --text-tertiary:       rgba(255, 255, 255, 0.45);
-    --border-soft:         rgba(255, 255, 255, 0.13);
-    --border-strong:       rgba(255, 255, 255, 0.22);
-    --glass-blur:          16px;
-    --glass-shadow:        0 24px 64px rgba(0, 0, 0, 0.55);
-    --glass-inset:         0 1px 0 rgba(255, 255, 255, 0.20) inset, 0 0 20px rgba(255, 255, 255, 0.02) inset;
+    --border-soft:         rgba(255, 255, 255, 0.10);
+    --border-strong:       rgba(255, 255, 255, 0.18);
+    --glass-blur:          20px;
+    --glass-shadow:        0 24px 64px rgba(0, 0, 0, 0.50);
+    --glass-inset:         0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 0 20px rgba(255, 255, 255, 0.02) inset;
     --accent:              #F97316;
     --accent-soft:         #FB923C;
     --accent-strong:       #EA580C;
@@ -33,16 +47,16 @@ window {
     --accent-bg-hover:     rgba(249, 115, 22, 0.16);
     --accent-glow:         0 0 24px rgba(249, 115, 22, 0.28);
     --scroller-thumb:      rgba(255, 255, 255, 0.14);
-    --popover-bg:          rgba(18, 22, 30, 0.90);
+    --popover-bg:          rgba(18, 22, 30, 0.85);
 }
 
 /* Light override */
 window.light {
-    --bg-window:           rgba(240, 244, 250, 0.65);
-    --bg-surface:          rgba(255, 255, 255, 0.50);
-    --bg-sidebar:          rgba(255, 255, 255, 0.40);
-    --bg-group:            rgba(255, 255, 255, 0.60);
-    --bg-group-hover:      rgba(255, 255, 255, 0.80);
+    --bg-window:           rgba(240, 244, 250, 0.60);
+    --bg-surface:          rgba(255, 255, 255, 0.45);
+    --bg-sidebar:          rgba(255, 255, 255, 0.35);
+    --bg-group:            rgba(255, 255, 255, 0.50);
+    --bg-group-hover:      rgba(255, 255, 255, 0.70);
     --row-bg:              transparent;
     --row-bg-hover:        rgba(0, 0, 0, 0.04);
     --row-bg-active:       rgba(0, 0, 0, 0.08);

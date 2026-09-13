@@ -25,7 +25,7 @@ fn defaults() -> Value {
         "accent": { "color": "Orange" },
         "wallpaper": { "path": "" },
         "icons": { "theme": "Papirus" },
-        "cursor": { "theme": "Bibata" },
+        "cursor": { "theme": "Adwaita" },
         "fonts": { "family": "Inter", "scale": 1.0 }
     })
 }

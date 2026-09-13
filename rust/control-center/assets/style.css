@@ -13,12 +13,12 @@ window.background {
 }
 
 .control-center {
-    background-color: rgba(13, 16, 22, 0.82);
+    background-color: rgba(13, 16, 22, 0.65);
     border-radius: 22px;
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55),
-                0 1px 0 rgba(255, 255, 255, 0.20) inset,
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
+                0 1px 0 rgba(255, 255, 255, 0.18) inset,
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
 }
 
@@ -38,26 +38,26 @@ window.background {
 /* ── CARDS (glass) ────────────────────────────────────── */
 
 .card {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 20px;
     padding: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.13);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.30),
-                0 1px 0 rgba(255, 255, 255, 0.16) inset;
+                0 1px 0 rgba(255, 255, 255, 0.14) inset;
     transition: 200ms cubic-bezier(.4, 0, .2, 1);
 }
 
 .card:hover {
     border: 1px solid var(--accent, rgba(249, 115, 22, 0.50));
-    background: rgba(255, 255, 255, 0.13);
+    background: rgba(255, 255, 255, 0.09);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.40),
-                0 0 24px var(--accent-bg-hover, rgba(249, 115, 22, 0.22)),
-                0 1px 0 rgba(255, 255, 255, 0.28) inset;
+                var(--accent-glow, 0 0 24px rgba(249, 115, 22, 0.22)),
+                0 1px 0 rgba(255, 255, 255, 0.25) inset;
     transform: translateY(-2px);
 }
 
 .card:active {
-    background: rgba(249, 115, 22, 0.16);
+    background: var(--accent-bg-hover, rgba(249, 115, 22, 0.16));
     transform: translateY(0);
 }
 

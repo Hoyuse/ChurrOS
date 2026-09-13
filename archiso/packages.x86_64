@@ -141,6 +141,7 @@ gvfs-mtp
 greetd
 greetd-regreet
 cage
+xorg-xwayland
 swaylock
 swayidle
 
@@ -150,6 +151,7 @@ qt5-wayland
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 python-psutil
+python-toml
 
 polkit
 polkit-gnome

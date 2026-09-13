@@ -70,7 +70,7 @@ archiso/                      ArchISO profile root
   packages/                   Local pacman repo (built pkgs + repo db live here)
   airootfs/                   Squashfs root overlay
     etc/skel/.config/          niri, waybar, foot, fuzzel — DO NOT MODIFY
-    root/scripts/             Live-ISO runtime scripts (users, services, desktop, cleanup, greetd-config)
+    root/scripts/             Live-ISO runtime scripts (users, services, desktop, cleanup)
     usr/share/churros/        Assets runtime de las apps Rust (welcome, preferences, control-center) + i18n.py + scripts
 branding/                     Visual identity
   customize_airootfs.sh       Runs at live boot: applies os-release/issue/motd, creates live user, installs Calamares via bsdtar, configures local [churros] pacman repo
@@ -110,7 +110,7 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 
 - **Live user**: `churros` (wheel, audio, video, input, storage, network), NOPASSWD sudo — created by `archiso/airootfs/root/scripts/users.sh`.
 - **Compositor**: Niri (Wayland scrollable-tiling). Requires 3D accel in QEMU (see Testing).
-- **Display Manager**: greetd with autologin to `churros` / `niri` session.
+- **Display Manager**: greetd (tuigreet, autologin en Live y sesión niri nativa).
 - **Panel/Launcher/Terminal**: Waybar / Fuzzel / foot.
 - **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`) y `churros-control-center`. Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). `usr/share/churros/i18n.py` (gettext) sigue en Python para las apps que lo usan.
 - **Installer**: Calamares with custom `churros` branding (slideshow, QSS stylesheet).

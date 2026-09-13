@@ -95,6 +95,9 @@ archiso/airootfs/
   - [x] `churros-popup` (Audio, Batería, Bluetooth, Brillo, Red, Energía)
 - [x] Sincronización de colores en Waybar (`colors-waybar.css`).
 - [x] Transición de fondo fluida sin pantalla gris (`swaybg` / `awww`).
+- [x] Glassmorphism en GTK4/Libadwaita (`@define-color window_bg_color transparent`) en todas las apps.
+- [x] Regla de opacidad `opacity 0.9` en window-rules de Niri para popup, controlcenter, preferences y welcome.
+- [x] Blur `dual_kawase` en Picom para la edición XFCE.
 - [x] Soporte en modo desarrollo (`./churros apps`) con sandboxing de daemons.
 - [x] Pasan todos los checks estáticos (`./churros check`) y compilación Rust (`cargo check`).
 

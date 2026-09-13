@@ -87,6 +87,11 @@ StartupNotify=true
 Categories=Qt;System;
 DESKTOP
 
+    # Parchear DMgreetd en Calamares para soportar regreet como default_session
+    if [ -f /usr/lib/calamares/modules/displaymanager/main.py ]; then
+        sed -i 's|elif os.path.exists(self.os_path("usr/bin/tuigreet")):|elif os.path.exists(self.os_path("usr/bin/regreet")) and os.path.exists(self.os_path("usr/bin/cage")):\n            self.config_data["default_session"]["command"] = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"\n        elif os.path.exists(self.os_path("usr/bin/tuigreet")):|' /usr/lib/calamares/modules/displaymanager/main.py 2>/dev/null || true
+    fi
+
     echo "✓ Calamares installed."
 else
     echo "  (not available — installer skipped)"

@@ -164,12 +164,14 @@ gvfs-mtp
 greetd
 greetd-regreet
 cage
+xorg-xwayland
 
 # Portals & Session
 xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-desktop-portal-xapp
 python-psutil
+python-toml
 
 # Polkit
 polkit

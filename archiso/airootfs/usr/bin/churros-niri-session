@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Wrapper to launch Niri with clean Wayland environment
+
+export XDG_CURRENT_DESKTOP=niri
+export XDG_SESSION_DESKTOP=niri
+export XDG_SESSION_TYPE=wayland
+export QT_QPA_PLATFORM=wayland
+export GDK_BACKEND=wayland,x11
+export MOZ_ENABLE_WAYLAND=1
+export _JAVA_AWT_WM_NONREPARENTING=1
+export XCURSOR_THEME=Adwaita
+export XCURSOR_SIZE=24
+
+if [ -x /usr/bin/niri-session ]; then
+    exec /usr/bin/niri-session "$@"
+else
+    exec /usr/bin/niri "$@"
+fi
+

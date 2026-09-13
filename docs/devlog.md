@@ -396,11 +396,13 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
 - **Control Center (`churros-control-center`)**:
   - Añadido botón de cierre en cabecera y contenedor con scroll para pantallas de baja resolución.
 
-### Sistema de compilación y QEMU
-- **Build System (`build.sh`)**:
-  - Corregida verificación de enlace simbólico `/root/packages` con `sudo test -L` y `sudo ln -sfn` para evitar anidación de symlinks en compilaciones repetidas.
-  - Limpieza automática y restauración de archivos `.orig` en el trap de salida.
-- **QEMU (`run.sh`)**:
-  - Añadido `show-cursor=on` en `-display gtk,gl=on` para garantizar que el puntero del ratón siempre sea visible en la VM.
-  - Configurado canal serie `spice-vdagent` para sincronización bidireccional de portapapeles y ratón entre host y guest.
+### ReGreet + Greetd: Pantalla de Login macOS, Autologin y Personalización
+- **Greeter Gráfico ReGreet + Cage**:
+  - Implementado `ReGreet` (Rust + GTK4) corriendo sobre el compositor kiosko `cage` con `WLR_NO_HARDWARE_CURSORS=1` para evitar bugs de orientación de cursor en virtual GPUs.
+  - Creado tema CSS estilo macOS Liquid Glass (`archiso/airootfs/etc/greetd/regreet.css`) con campos píldora (`border-radius: 9999px`), avatar circular, desenfoque y resplandor de foco en color acento naranja ChurrOS (`#F97316`).
+  - Terminal gráfica aislada en `VT7` para evitar la exposición de logs de arranque de la consola de systemd (`VT1`).
+- **Autenticación e Idioma**:
+  - Configurado `/etc/pam.d/greetd` con `system-local-login` para solicitar y validar la contraseña del usuario.
+  - Script post-instalación `/usr/share/churros/scripts/configure-greeter-locale` para sincronizar automáticamente el saludo (`greeting_msg`) y formato de fecha según el idioma seleccionado en Calamares.
+  - Integración completa con el checkbox de autologin de Calamares y compatibilidad con `churros-settings` (sección *Usuarios y Login*).
 

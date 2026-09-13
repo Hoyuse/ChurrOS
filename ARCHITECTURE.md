@@ -75,7 +75,7 @@ Traducciones gettext.
 | Pieza | Implementación |
 |-------|----------------|
 | Compositor | Niri |
-| Display manager | greetd (autologin en Live) |
+| Display manager | greetd (tuigreet con autologin en Live) |
 | Terminal | foot |
 | Launcher | Fuzzel |
 | Panel | Waybar |

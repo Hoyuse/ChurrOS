@@ -1,6 +1,5 @@
 // ==========================================
-// UsersService — cuenta del sistema y autologin de greetd
-// (equivalente a services/users.py)
+// UsersService — cuenta del sistema y autologin de greetd / LightDM
 // ==========================================
 
 use std::fs;
@@ -8,7 +7,10 @@ use std::process::Command;
 
 pub struct UsersService;
 
-const GREETD_PATH: &str = "/etc/greetd/config.toml";
+const GREETD_CONFIG_PATH: &str = "/etc/greetd/config.toml";
+const REGREET_CONFIG_PATH: &str = "/etc/greetd/regreet.toml";
+const LIGHTDM_AUTOLOGIN_PATH: &str = "/etc/lightdm/lightdm.conf.d/autologin.conf";
+const LIGHTDM_MAIN_PATH: &str = "/etc/lightdm/lightdm.conf";
 
 fn getuid() -> u32 {
     Command::new("id")
@@ -38,32 +40,6 @@ fn passwd_entry() -> Option<(String, String, String, String, String)> {
     None
 }
 
-/// Línea tipo `command = "/usr/bin/niri"` (regex ^\s*command\s*=\s*"[^"]+").
-fn line_is_command(line: &str) -> bool {
-    let t = line.trim();
-    if !t.starts_with("command") {
-        return false;
-    }
-    let after = t["command".len()..].trim_start();
-    let Some(after) = after.strip_prefix('=') else {
-        return false;
-    };
-    let after = after.trim_start();
-    if !after.starts_with('"') || after.len() < 2 {
-        return false;
-    }
-    after[1..].find('"').is_some() && after[1..].find('"').unwrap() >= 1
-}
-
-/// Línea tipo `command = ...` (regex ^\s*command\s*=).
-fn line_has_command_eq(line: &str) -> bool {
-    let t = line.trim();
-    if !t.starts_with("command") {
-        return false;
-    }
-    t["command".len()..].trim_start().starts_with('=')
-}
-
 /// ¿La línea inicia una sección `[nombre]`? Devuelve el nombre.
 fn section_name(line: &str) -> Option<&str> {
     let t = line.trim();
@@ -72,6 +48,56 @@ fn section_name(line: &str) -> Option<&str> {
     } else {
         None
     }
+}
+
+/// Verifica si greetd tiene `[initial_session]` configurado
+fn check_greetd_autologin() -> bool {
+    let Ok(content) = fs::read_to_string(GREETD_CONFIG_PATH) else {
+        return false;
+    };
+    let mut in_initial = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if let Some(sec) = section_name(trimmed) {
+            in_initial = sec.eq_ignore_ascii_case("initial_session");
+            continue;
+        }
+        if in_initial && trimmed.starts_with("user") {
+            if let Some((_, val)) = trimmed.split_once('=') {
+                let user_val = val.trim().trim_matches('"').trim_matches('\'');
+                if !user_val.is_empty() {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Verifica si un archivo INI tiene `autologin-user=<usuario>` no vacío
+fn check_ini_autologin(path: &str) -> bool {
+    let Ok(content) = fs::read_to_string(path) else {
+        return false;
+    };
+    let mut in_seat = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if let Some(sec) = section_name(trimmed) {
+            in_seat = sec.to_lowercase().starts_with("seat");
+            continue;
+        }
+        if (in_seat || !trimmed.starts_with('[')) && trimmed.to_lowercase().starts_with("autologin-user") {
+            if let Some((key, val)) = trimmed.split_once('=') {
+                if key.trim().eq_ignore_ascii_case("autologin-user") {
+                    let user_val = val.trim();
+                    if !user_val.is_empty() && user_val != "false" {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 impl UsersService {
@@ -123,40 +149,17 @@ impl UsersService {
             .unwrap_or_else(|_| "Desconocido".to_string())
     }
 
-    /// ¿Hay autologin configurado en greetd? Solo cuenta la sección
-    /// `[default_session]` si ejecuta la sesión de usuario (no un greeter como regreet).
+    /// ¿Hay autologin configurado en greetd o LightDM?
     pub fn auto_login() -> bool {
-        let Ok(content) = fs::read_to_string(GREETD_PATH) else {
-            return false;
-        };
-        let mut in_default = false;
-        for line in content.lines() {
-            if let Some(sec) = section_name(line) {
-                in_default = sec == "default_session";
-                continue;
-            }
-            if in_default && line_is_command(line) {
-                let lower = line.to_lowercase();
-                if lower.contains("regreet")
-                    || lower.contains("agreety")
-                    || lower.contains("tuigreet")
-                    || lower.contains("gtkgreet")
-                {
-                    return false;
-                }
-                return true;
-            }
+        if std::path::Path::new(GREETD_CONFIG_PATH).exists() {
+            check_greetd_autologin()
+        } else {
+            check_ini_autologin(LIGHTDM_AUTOLOGIN_PATH) || check_ini_autologin(LIGHTDM_MAIN_PATH)
         }
-        false
     }
 
-    /// Activa/desactiva el autologin editando /etc/greetd/config.toml
-    /// (si está desactivado, inicia ReGreet; si está activado, inicia niri o startxfce4).
+    /// Activa/desactiva el autologin editando la configuración del Display Manager activo
     pub fn set_auto_login(value: bool) -> bool {
-        let Ok(content) = fs::read_to_string(GREETD_PATH) else {
-            return false;
-        };
-
         let current = Self::auto_login();
         if value == current {
             return true;
@@ -165,39 +168,171 @@ impl UsersService {
         let user = Self::username();
         let desktop = churros_services::version::edition();
         let session_cmd = if desktop.contains("xfce") {
-            "/usr/bin/startxfce4"
+            "startxfce4"
         } else {
-            "/usr/bin/niri"
+            "niri"
         };
 
-        let new_content = if value {
-            // Autologin activado: ejecutar niri/startxfce4 directamente con el usuario actual
-            format!(
-                "[terminal]\nvt = 1\n\n[default_session]\ncommand = \"{}\"\nuser = \"{}\"\n",
-                session_cmd, user
-            )
-        } else {
-            // Autologin desactivado: ejecutar ReGreet con el usuario greeter
-            "[terminal]\nvt = 1\n\n[default_session]\ncommand = \"cage -s -- regreet\"\nuser = \"greeter\"\n".to_string()
-        };
+        // Si greetd está disponible o en uso:
+        if std::path::Path::new("/etc/greetd").exists() || std::path::Path::new(GREETD_CONFIG_PATH).exists() {
+            let new_content = if value {
+                format!(
+                    "[terminal]\nvt = 7\n\n[default_session]\ncommand = \"env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet\"\nuser = \"greeter\"\n\n[initial_session]\ncommand = \"{session_cmd}\"\nuser = \"{user}\"\n"
+                )
+            } else {
+                format!(
+                    "[terminal]\nvt = 7\n\n[default_session]\ncommand = \"env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet\"\nuser = \"greeter\"\n"
+                )
+            };
 
-        // /etc/greetd no es escribible por el usuario: escribir a un temporal
-        // propio y copiarlo con privilegios (churros-pkexec: pkexec/sudo -n).
-        // El patrón es el mismo que usa datetime.rs con timedatectl.
-        let tmp = std::env::temp_dir().join(format!("churros-greetd-{}.toml", std::process::id()));
-        if fs::write(&tmp, &new_content).is_err() {
+            return Self::write_root_file(GREETD_CONFIG_PATH, &new_content);
+        }
+
+        // Fallback para LightDM:
+        if value {
+            let session_name = if desktop.contains("xfce") {
+                "xfce"
+            } else {
+                "niri"
+            };
+
+            let new_content = format!(
+                "[Seat:*]\nautologin-user={user}\nautologin-user-timeout=0\nautologin-session={session_name}\n"
+            );
+
+            Self::write_root_file(LIGHTDM_AUTOLOGIN_PATH, &new_content)
+        } else {
+            if std::path::Path::new(LIGHTDM_AUTOLOGIN_PATH).exists() {
+                if getuid() == 0 {
+                    Command::new("rm")
+                        .args(["-f", LIGHTDM_AUTOLOGIN_PATH])
+                        .status()
+                        .map(|s| s.success())
+                        .unwrap_or(false)
+                } else {
+                    Command::new("churros-pkexec")
+                        .args(["rm", "-f", LIGHTDM_AUTOLOGIN_PATH])
+                        .status()
+                        .map(|s| s.success())
+                        .unwrap_or(false)
+                }
+            } else {
+                true
+            }
+        }
+    }
+
+    /// Obtiene el fondo de pantalla configurado en ReGreet
+    pub fn regreet_wallpaper() -> String {
+        let Ok(content) = fs::read_to_string(REGREET_CONFIG_PATH) else {
+            return "/usr/share/churros/wallpapers/default.png".to_string();
+        };
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("path") && trimmed.contains('=') {
+                if let Some((_, val)) = trimmed.split_once('=') {
+                    let p = val.trim().trim_matches('"').trim_matches('\'');
+                    if !p.is_empty() {
+                        return p.to_string();
+                    }
+                }
+            }
+        }
+        "/usr/share/churros/wallpapers/default.png".to_string()
+    }
+
+    /// Actualiza el fondo de pantalla en ReGreet
+    pub fn set_regreet_wallpaper(wallpaper_path: &str) -> bool {
+        let content = fs::read_to_string(REGREET_CONFIG_PATH).unwrap_or_else(|_| {
+            format!("[background]\npath = \"{}\"\nfit = \"Cover\"\n", wallpaper_path)
+        });
+
+        let mut new_lines = Vec::new();
+        let mut replaced = false;
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("path") && trimmed.contains('=') {
+                new_lines.push(format!("path = \"{}\"", wallpaper_path));
+                replaced = true;
+            } else {
+                new_lines.push(line.to_string());
+            }
+        }
+        if !replaced {
+            new_lines.push(format!("[background]\npath = \"{}\"\nfit = \"Cover\"", wallpaper_path));
+        }
+        let new_content = new_lines.join("\n") + "\n";
+        Self::write_root_file(REGREET_CONFIG_PATH, &new_content)
+    }
+
+    /// Obtiene el mensaje de bienvenida de ReGreet
+    pub fn regreet_greeting() -> String {
+        let Ok(content) = fs::read_to_string(REGREET_CONFIG_PATH) else {
+            return "Bienvenido a ChurrOS".to_string();
+        };
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("greeting_msg") && trimmed.contains('=') {
+                if let Some((_, val)) = trimmed.split_once('=') {
+                    let msg = val.trim().trim_matches('"').trim_matches('\'');
+                    if !msg.is_empty() {
+                        return msg.to_string();
+                    }
+                }
+            }
+        }
+        "Bienvenido a ChurrOS".to_string()
+    }
+
+    /// Actualiza el mensaje de bienvenida de ReGreet
+    pub fn set_regreet_greeting(greeting: &str) -> bool {
+        let content = fs::read_to_string(REGREET_CONFIG_PATH).unwrap_or_else(|_| {
+            format!("[appearance]\ngreeting_msg = \"{}\"\n", greeting)
+        });
+
+        let mut new_lines = Vec::new();
+        let mut replaced = false;
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("greeting_msg") && trimmed.contains('=') {
+                new_lines.push(format!("greeting_msg = \"{}\"", greeting));
+                replaced = true;
+            } else {
+                new_lines.push(line.to_string());
+            }
+        }
+        if !replaced {
+            new_lines.push(format!("[appearance]\ngreeting_msg = \"{}\"", greeting));
+        }
+        let new_content = new_lines.join("\n") + "\n";
+        Self::write_root_file(REGREET_CONFIG_PATH, &new_content)
+    }
+
+    fn write_root_file(target_path: &str, content: &str) -> bool {
+        let tmp = std::env::temp_dir().join(format!("churros-cfg-{}.tmp", std::process::id()));
+        if fs::write(&tmp, content).is_err() {
             return false;
         }
         let tmp_str = tmp.to_string_lossy().to_string();
+
+        let target_dir = std::path::Path::new(target_path).parent().unwrap_or(std::path::Path::new("/etc"));
+        let dir_str = target_dir.to_string_lossy().to_string();
+
+        let _ = if getuid() == 0 {
+            Command::new("mkdir").args(["-p", &dir_str]).status()
+        } else {
+            Command::new("churros-pkexec").args(["mkdir", "-p", &dir_str]).status()
+        };
+
         let ok = if getuid() == 0 {
             Command::new("install")
-                .args(["-m", "644", &tmp_str, GREETD_PATH])
+                .args(["-m", "644", &tmp_str, target_path])
                 .status()
                 .map(|s| s.success())
                 .unwrap_or(false)
         } else {
             Command::new("churros-pkexec")
-                .args(["install", "-m", "644", &tmp_str, GREETD_PATH])
+                .args(["install", "-m", "644", &tmp_str, target_path])
                 .status()
                 .map(|s| s.success())
                 .unwrap_or(false)
