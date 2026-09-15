@@ -10,7 +10,6 @@ mod services;
 mod widgets;
 mod window;
 
-use adw::prelude::*;
 use gtk::prelude::*;
 use gtk::gdk;
 
@@ -73,7 +72,7 @@ fn load_css() {
     AccentService::init_css_provider();
 }
 
-fn activate(app: &adw::Application) {
+fn activate(app: &gtk::Application) {
     logging::log("activate");
     // Regenerar accent.css si falta (como AccentService.ensure() en Python)
     AccentService::ensure();
@@ -95,11 +94,11 @@ fn main() -> glib::ExitCode {
     logging::init("settings");
     ThemeService::migrate_before_gtk();
 
-    let app = adw::Application::builder()
+    let app = gtk::Application::builder()
         .application_id(APP_ID)
         .build();
-    logging::log("adw app creada");
-
+    logging::log("gtk app creada");
+    
     app.connect_activate(activate);
 
     let code = app.run();

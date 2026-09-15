@@ -3,7 +3,6 @@
 // (equivalente a window.py)
 // ==========================================
 
-use adw::prelude::*;
 use gtk::prelude::*;
 
 use std::cell::RefCell;
@@ -15,7 +14,7 @@ use crate::services::theme::ThemeService;
 use crate::widgets::sidebar::Sidebar;
 
 pub struct PreferencesWindow {
-    pub window: adw::ApplicationWindow,
+    pub window: gtk::ApplicationWindow,
     sidebar: Rc<RefCell<Sidebar>>,
     navigator: gtk::Stack,
     sidebar_revealer: gtk::Revealer,
@@ -30,13 +29,18 @@ pub struct PreferencesWindow {
 }
 
 impl PreferencesWindow {
-    pub fn new(app: &adw::Application) -> Self {
-        let window = adw::ApplicationWindow::builder()
+    pub fn new(app: &gtk::Application) -> Self {
+        let window = gtk::ApplicationWindow::builder()
             .application(app)
             .title("Configuración")
             .default_width(900)
             .default_height(680)
             .build();
+
+        let _is_xfce = churros_services::version::edition().contains("xfce");
+        if _is_xfce {
+            window.set_decorated(false);
+        }
 
         window.add_css_class("preferences");
         apply_theme_class(&window);
@@ -78,13 +82,11 @@ impl PreferencesWindow {
 
         // Layout principal
         let root = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        root.set_hexpand(true);
-        root.set_vexpand(true);
 
         let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         main_box.append(&header_bar);
         main_box.append(&root);
-        window.set_content(Some(&main_box));
+        window.set_child(Some(&main_box));
 
         // Sidebar + revealer
         let sidebar = Rc::new(RefCell::new(Sidebar::new()));
@@ -140,9 +142,6 @@ impl PreferencesWindow {
         let last_page = settings::get_string("preferences.last_page", "system");
         win.navigator.set_visible_child_name(&last_page);
         win.sidebar.borrow().select(&last_page);
-
-        refresh_theme(&win.window);
-
         win
     }
 
@@ -391,7 +390,7 @@ impl PreferencesWindow {
 
 /// Aplica el estado "narrow" de la ventana (oculta/muestra sidebar).
 fn apply_narrow(
-    window: &adw::ApplicationWindow,
+    window: &gtk::ApplicationWindow,
     is_narrow: &Rc<RefCell<bool>>,
     sidebar_revealer: &gtk::Revealer,
     toggle_button: &gtk::Button,
@@ -405,7 +404,7 @@ fn apply_narrow(
     }
 }
 
-fn apply_theme_class(window: &adw::ApplicationWindow) {
+fn apply_theme_class(window: &gtk::ApplicationWindow) {
     let want_light = !ThemeService::is_dark();
     let has_light = window.has_css_class("light");
 
@@ -416,16 +415,13 @@ fn apply_theme_class(window: &adw::ApplicationWindow) {
     }
 }
 
-fn refresh_theme(window: &adw::ApplicationWindow) {
+fn refresh_theme(window: &gtk::ApplicationWindow) {
     apply_theme_class(window);
-    // Flip del tema de los widgets Libadwaita/GTK en vivo. Usar StyleManager de
-    // Libadwaita es la forma oficial y segura en GTK4 (evita conflictos y cierres
-    // inesperados por reload de stylesheets).
-    let style_manager = adw::StyleManager::default();
-    style_manager.set_color_scheme(if ThemeService::is_dark() {
-        adw::ColorScheme::ForceDark
-    } else {
-        adw::ColorScheme::ForceLight
-    });
+     // Flip del tema de los widgets GTK en vivo (Adwaita dark/light). Esto es
+    // lo que hace que botones/switch/entrys cambien al instante, además de
+    // los tokens CSS de window.light.
+    if let Some(settings) = gtk::Settings::default() {
+        settings.set_gtk_application_prefer_dark_theme(ThemeService::is_dark());
+    }
     window.queue_draw();
 }
