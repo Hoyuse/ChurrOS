@@ -95,6 +95,7 @@ window-rule {
 // [CHURROS-GLASS-START]
 window-rule {
     match app-id="org.churros.popup"
+    opacity 0.9
     background-effect {
         blur true
     }
@@ -104,6 +105,7 @@ window-rule {
 
 window-rule {
     match app-id="org.churros.controlcenter"
+    opacity 0.9
     background-effect {
         blur true
     }
@@ -113,6 +115,7 @@ window-rule {
 
 window-rule {
     match app-id="org.churros.preferences"
+    opacity 0.9
     background-effect {
         blur true
     }
@@ -122,6 +125,7 @@ window-rule {
 
 window-rule {
     match app-id="org.churros.welcome"
+    opacity 0.9
     background-effect {
         blur true
     }
