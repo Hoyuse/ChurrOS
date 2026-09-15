@@ -1,6 +1,5 @@
 // ==========================================
-// UsersPage — cuenta del sistema y autologin
-// (equivalente a pages/users.py)
+// UsersPage — cuenta del sistema y personalización de inicio de sesión
 // ==========================================
 
 use gtk::prelude::*;
@@ -9,6 +8,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use crate::services::users::UsersService;
+use crate::services::wallpaper::WallpaperService;
 use crate::widgets::group::Group;
 use crate::widgets::page::Page;
 use crate::widgets::row::Row;
@@ -17,8 +17,8 @@ use crate::widgets::switch_row::SwitchRow;
 pub fn build(navigator: gtk::Stack) -> Page {
     let page = Page::new(
         Some(navigator),
-        "Usuarios",
-        Some("Administrar cuentas del sistema"),
+        "Usuarios y Login",
+        Some("Administrar cuentas y pantalla de inicio de sesión"),
         None,
     );
 
@@ -45,15 +45,14 @@ pub fn build(navigator: gtk::Stack) -> Page {
 
     page.add(account.widget());
 
-    // Seguridad
-    let mut security = Group::new("Seguridad");
+    // Pantalla de inicio de sesión (ReGreet / greetd)
+    let mut login_screen = Group::new("Pantalla de inicio de sesión");
 
-    // Autologin: edita /etc/greetd con privilegios; si falla (pkexec
-    // cancelado, sin permisos) se revierte el switch para no mentir.
+    // Autologin switch
     let autologin_row = SwitchRow::new(
         "Inicio automático",
         Some("users.svg"),
-        Some("Iniciar sesión automáticamente"),
+        Some("Iniciar sesión automáticamente sin solicitar contraseña"),
         UsersService::auto_login(),
         None,
     );
@@ -74,9 +73,37 @@ pub fn build(navigator: gtk::Stack) -> Page {
             revert_guard.set(false);
         });
     }
-    security.add(&autologin_row);
+    login_screen.add(&autologin_row);
 
-    page.add(security.widget());
+    // Sincronizar fondo del escritorio con la pantalla de login
+    let sync_wp_row = Row::new(
+        "Sincronizar fondo",
+        Some("Aplicar el fondo del escritorio a la pantalla de login"),
+        Some("wallpaper.svg"),
+        None,
+        None,
+        Some(Box::new(|_| {
+            let wp = WallpaperService::current();
+            if !wp.is_empty() {
+                let _ = UsersService::set_regreet_wallpaper(&wp);
+            }
+        })),
+    );
+    login_screen.add(&sync_wp_row);
+
+    // Mensaje de bienvenida
+    let greeting = UsersService::regreet_greeting();
+    let greeting_row = Row::new(
+        "Mensaje de bienvenida",
+        Some("Texto mostrado en la pantalla de inicio"),
+        Some("theme.svg"),
+        Some(&greeting),
+        None,
+        None,
+    );
+    login_screen.add(&greeting_row);
+
+    page.add(login_screen.widget());
 
     page
 }

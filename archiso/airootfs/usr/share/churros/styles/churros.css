@@ -8,57 +8,67 @@
     glassmorphism, bordes redondeados, popovers y componentes comunes.
 */
 
+/*
+    Glassmorphism fix: libadwaita pinta el fondo de la ventana con su color
+    con nombre `window_bg_color`, que es OPACO por defecto. Ese relleno sólido
+    queda por debajo del `background: rgba(...)` del CSS y le quita a la ventana
+    los píxeles transparentes, así que el compositor (niri) no tiene nada que
+    dejar ver ni blurrear -> las apps salen sólidas.
+
+    Al ponerlo transparente, libadwaita deja de tapar y vuelve a mandar el alpha
+    del CSS (--bg-window) + el blur de niri. No toca el mecanismo de cambio de
+    tema (color-scheme / prefer-dark), así que el crash de #61 no vuelve.
+*/
+@define-color window_bg_color transparent;
+@define-color view_bg_color transparent;
+
 /* ── Tokens → dark default ──────────────────────────── */
 window {
-    --bg-window:           rgba(15,15,16,.62);
-    --bg-sidebar:          rgba(18,18,20,.70);
-    --bg-group:            rgba(22,22,24,.75);
-    --bg-group-hover:      rgba(30,30,34,.80);
+    --bg-window:           rgba(13, 16, 22, 0.65);
+    --bg-surface:          rgba(18, 22, 30, 0.50);
+    --bg-sidebar:          rgba(18, 22, 30, 0.45);
+    --bg-group:            rgba(255, 255, 255, 0.05);
+    --bg-group-hover:      rgba(255, 255, 255, 0.09);
     --row-bg:              transparent;
-    --row-bg-hover:        rgba(255,255,255,.04);
-    --row-bg-active:       rgba(255,255,255,.08);
-    --text-primary:        rgba(255,255,255,.96);
-    --text-secondary:      rgba(255,255,255,.65);
-    --text-tertiary:       rgba(255,255,255,.45);
-    --border-soft:         rgba(255,255,255,.06);
-    --border-strong:       rgba(255,255,255,.12);
-    --glass-blur:          16px;
-    --glass-shadow:        0 8px 32px rgba(0,0,0,.60);
-    --glass-inset:         0 1px 0 rgba(255,255,255,.03) inset;
+    --row-bg-hover:        rgba(255, 255, 255, 0.06);
+    --row-bg-active:       rgba(255, 255, 255, 0.10);
+    --text-primary:        rgba(255, 255, 255, 0.96);
+    --text-secondary:      rgba(255, 255, 255, 0.68);
+    --text-tertiary:       rgba(255, 255, 255, 0.45);
+    --border-soft:         rgba(255, 255, 255, 0.10);
+    --border-strong:       rgba(255, 255, 255, 0.18);
+    --glass-blur:          20px;
+    --glass-shadow:        0 24px 64px rgba(0, 0, 0, 0.50);
+    --glass-inset:         0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 0 20px rgba(255, 255, 255, 0.02) inset;
     --accent:              #F97316;
     --accent-soft:         #FB923C;
-    --accent-strong:       #C2410C;
+    --accent-strong:       #EA580C;
     --accent-text:         #ffffff;
-    --accent-bg-hover:     rgba(249,115,22,.14);
-    --accent-glow:         0 0 20px rgba(249,115,22,.20);
-    --scroller-thumb:      rgba(255,255,255,.10);
-    --popover-bg:          rgba(18,18,20,.96);
+    --accent-bg-hover:     rgba(249, 115, 22, 0.16);
+    --accent-glow:         0 0 24px rgba(249, 115, 22, 0.28);
+    --scroller-thumb:      rgba(255, 255, 255, 0.14);
+    --popover-bg:          rgba(18, 22, 30, 0.85);
 }
 
 /* Light override */
 window.light {
-    --bg-window:           rgba(242,242,245,.60);
-    --bg-surface:          rgba(255,255,255,.58);
-    --bg-group:           rgba(255,255,255,.62);
-    --bg-group-hover:      rgba(0,0,0,.04);
+    --bg-window:           rgba(240, 244, 250, 0.60);
+    --bg-surface:          rgba(255, 255, 255, 0.45);
+    --bg-sidebar:          rgba(255, 255, 255, 0.35);
+    --bg-group:            rgba(255, 255, 255, 0.50);
+    --bg-group-hover:      rgba(255, 255, 255, 0.70);
     --row-bg:              transparent;
-    --row-bg-hover:         rgba(0,0,0,.04);
-    --row-bg-active:       rgba(0,0,0,.08);
-    --text-primary:        rgba(28,28,30,.96);
-    --text-secondary:      rgba(28,28,30,.58);
-    --text-tertiary:       rgba(28,28,30,.40);
-    --border-soft:         rgba(0,0,0,.08);
-    --border-strong:       rgba(0,0,0,.14);
-    --glass-shadow:        0 8px 32px rgba(0,0,0,.12);
-    --glass-inset:         0 1px 0 rgba(255,255,255,.45) inset;
-    --accent:              #EA580C;
-    --accent-soft:         #F97316;
-    --accent-strong:       #9A3412;
-    --accent-text:         #ffffff;
-    --accent-bg-hover:     rgba(234,88,12,.12);
-    --accent-glow:         0 0 20px rgba(234,88,12,.18);
-    --scroller-thumb:      rgba(0,0,0,.16);
-    --popover-bg:          rgba(255,255,255,.96);
+    --row-bg-hover:        rgba(0, 0, 0, 0.04);
+    --row-bg-active:       rgba(0, 0, 0, 0.08);
+    --text-primary:        rgba(24, 28, 36, 0.96);
+    --text-secondary:      rgba(24, 28, 36, 0.60);
+    --text-tertiary:       rgba(24, 28, 36, 0.40);
+    --border-soft:         rgba(0, 0, 0, 0.08);
+    --border-strong:       rgba(0, 0, 0, 0.14);
+    --glass-shadow:        0 16px 40px rgba(0, 0, 0, 0.12);
+    --glass-inset:         0 1px 0 rgba(255, 255, 255, 0.70) inset;
+    --scroller-thumb:      rgba(0, 0, 0, 0.16);
+    --popover-bg:          rgba(255, 255, 255, 0.94);
 }
 
 /* ── Window ─────────────────────────────────────────── */
@@ -68,28 +78,49 @@ window.light {
     aplica niri con window-rule { background-effect { blur true } }
     para cada app-id de ChurrOS.
 */
-window {
-    background: var(--bg-window);
-    border-radius: 16px;
+@define-color window_bg_color transparent;
+@define-color view_bg_color transparent;
+
+window,
+window.background,
+adwapplicationwindow,
+windowhandle {
+    background-color: transparent;
+}
+
+window.preferences,
+window.welcome,
+window.controlcenter,
+window.popup,
+.preferences,
+.welcome,
+.control-center,
+.popup {
+    background-color: var(--bg-window);
+    border-radius: 18px;
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+}
+
+scrolledwindow,
+scrolledwindow viewport,
+stack {
+    background: transparent;
+    background-color: transparent;
 }
 
 /*
-    Cuando la ventana esta maximizada o fullscreen, no hay nada que
-    blurrear detras: el fondo del monitor ya es visible detras, asi que
-    mezclarlos hace la interfaz ilegible y amplifica el brillo de
-    wallpapers claros en dark mode.
+    Cuando la ventana esta maximizada o fullscreen, quitamos border-radius.
 */
 window.maximized,
-window.fullscreen {
+window.fullscreen,
+.preferences.maximized,
+.preferences.fullscreen,
+.welcome.maximized,
+.welcome.fullscreen {
     background: var(--bg-window);
+    background-color: var(--bg-window);
     border-radius: 0;
-}
-
-window.popup {
-    border-radius: 14px;
-    background: var(--popover-bg);
-    border: 1px solid var(--border-soft);
-    box-shadow: var(--glass-shadow);
 }
 
 /* ── Popover / Menu ─────────────────────────────────── */
@@ -144,7 +175,7 @@ dropdown:hover,
 button.combo:hover {
     background: var(--accent-bg-hover);
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(249,115,22,.10);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 /* ── Entry (text input) ─────────────────────────────── */
@@ -160,7 +191,7 @@ entry {
 
 entry:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(249,115,22,.12);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 /* ── Button ─────────────────────────────────────────── */
@@ -178,7 +209,7 @@ button.suggested-action {
     color: var(--accent-text);
     border-radius: 14px;
     border: 1px solid var(--accent);
-    box-shadow: var(--accent-glow), 0 4px 14px var(--accent-bg-strong);
+    box-shadow: var(--accent-glow), 0 4px 14px var(--accent-bg-hover);
 }
 
 button.suggested-action:hover {
@@ -244,7 +275,7 @@ scale slider {
 }
 
 scale slider:hover {
-    box-shadow: 0 2px 12px rgba(249,115,22,.40), 0 0 0 4px rgba(249,115,22,.15);
+    box-shadow: 0 2px 12px var(--accent), 0 0 0 4px var(--accent-bg-hover);
 }
 
 /* ── Scrollbar ──────────────────────────────────────── */
@@ -293,19 +324,18 @@ searchentry,
 searchentry:focus,
 .preferences-search:focus {
     border: 1px solid var(--accent);
-    box-shadow: 0 0 0 3px rgba(249,115,22,.12);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover);
 }
 
 /* ── Glass card ─────────────────────────────────────── */
 .card,
 .group-card,
 .group,
-.popup,
 .about-card {
     background: var(--bg-group);
-    border-radius: 18px;
+    border-radius: 16px;
     border: 1px solid var(--border-soft);
-    box-shadow: var(--glass-shadow), var(--glass-inset);
+    box-shadow: var(--glass-inset);
 }
 
 /* ── Sidebar ────────────────────────────────────────── */

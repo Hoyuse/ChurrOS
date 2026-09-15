@@ -286,19 +286,13 @@ fn apply_wallpaper(src: &str, navigator: &gtk::Stack, content: &gtk::Box) {
         return;
     };
 
-    let success = WallpaperService::set(&dest);
-
-    println!("[wallpaper] import+set retorno: {success} dest: {dest}");
-
-    if !success {
-        show_error(
-            navigator,
-            "No se pudo aplicar el fondo",
-            "Revisa /tmp/churros-settings.log y /tmp/awww-img.log",
-        );
-    }
-
     rebuild_grid(content, navigator);
+
+    let dest_clone = dest.clone();
+    std::thread::spawn(move || {
+        let success = WallpaperService::set(&dest_clone);
+        println!("[wallpaper] import+set retorno: {success} dest: {dest_clone}");
+    });
 }
 
 /// Equivalente a _show_error: Gtk::AlertDialog modal. Si no hay ventana raíz no
@@ -394,26 +388,22 @@ fn build_after_import(content: &gtk::Box, navigator: &gtk::Stack) {
     build_grid(content, &current, &wallpapers, navigator);
 }
 
-/// Equivalente a WallpaperPage.select: aplicar fondo + volver a apariencia
-/// (vía GLib.idle_add en el Python; aquí idle_add_local_once)
+/// Equivalente a WallpaperPage.select: aplicar fondo + volver a apariencia.
+/// Se ejecuta en un hilo secundario para no bloquear el loop de eventos Wayland de GTK4.
 fn select(wallpaper: &str, navigator: &gtk::Stack) {
     println!("[wallpaper-page] seleccion: {wallpaper}");
 
-    let wp = wallpaper.to_string();
     let nav = navigator.clone();
+    let wp = wallpaper.to_string();
 
-    // Cambiar de página inmediatamente sin bloquear la UI
-    nav.set_visible_child_name("appearance");
+    // Navegación inmediata a Apariencia para respuesta visual instantánea
+    glib::idle_add_local_once(move || {
+        nav.set_visible_child_name("appearance");
+    });
 
-    let wp_clone = wp.clone();
+    // Aplicar wallpaper y colores pywal en segundo plano de forma no bloqueante
     std::thread::spawn(move || {
-        let success = WallpaperService::set(&wp_clone);
+        let success = WallpaperService::set(&wp);
         println!("[wallpaper-page] set retorno: {success}");
-
-        if !success {
-            glib::idle_add_once(move || {
-                eprintln!("[wallpaper-page] fallo al aplicar fondo {wp_clone}");
-            });
-        }
     });
 }

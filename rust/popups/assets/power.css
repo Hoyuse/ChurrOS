@@ -1,6 +1,5 @@
 /*
     ChurrOS Power Popup — Liquid Glass
-    Accent: #F97316
 */
 
 .power-widget {
@@ -10,34 +9,35 @@
 .power-button {
     border-radius: 14px;
     padding: 13px 16px;
-    background: rgba(255,255,255,.05);
-    border: 1px solid rgba(255,255,255,.07);
-    transition: 200ms cubic-bezier(.4,0,.2,1);
-    box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: 200ms cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset;
 }
 
 .power-button:hover {
-    background: rgba(249,115,22,.14);
-    border-color: rgba(249,115,22,.28);
-    box-shadow: 0 4px 18px rgba(249,115,22,.20),
-                0 1px 0 rgba(255,255,255,.08) inset;
+    background: var(--accent-bg-hover, rgba(56, 189, 248, 0.14));
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.30),
+                0 0 16px var(--accent-bg-hover, rgba(56, 189, 248, 0.20)),
+                0 1px 0 rgba(255, 255, 255, 0.15) inset;
     transform: translateY(-1px);
 }
 
 .power-button:active {
     transform: translateY(0);
-    background: rgba(249,115,22,.24);
+    background: rgba(56, 189, 248, 0.24);
 }
 
 /* Acciones destructivas (restart / shutdown) */
 .power-button.danger:hover {
-    background: rgba(239,68,68,.16);
-    border-color: rgba(239,68,68,.35);
-    box-shadow: 0 4px 18px rgba(239,68,68,.22);
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.22);
 }
 
 .power-button.danger:active {
-    background: rgba(239,68,68,.26);
+    background: rgba(239, 68, 68, 0.26);
 }
 
 .power-button.danger .power-icon {
@@ -45,7 +45,7 @@
 }
 
 .power-icon {
-    color: #FB923C;
+    color: var(--accent-soft, #60A5FA);
     font-size: 20px;
 }
 

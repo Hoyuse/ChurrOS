@@ -26,6 +26,7 @@ echo "==> ChurrOS release build — v${VERSION}"
 
 # 1. Compilar las apps Rust (release)
 echo "  [1/4] compilando apps Rust..."
+export RUST_MIN_STACK="${RUST_MIN_STACK:-67108864}"
 cargo build --release --manifest-path "$RUST_DIR/Cargo.toml" --jobs "$(nproc)"
 
 # 2. Staging: binarios Rust (solo crates con deploy = true)

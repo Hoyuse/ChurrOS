@@ -34,9 +34,20 @@ fn load_css() {
     let display = gtk::gdk::Display::default().unwrap();
     logging::log("display ok");
     let shared = "/usr/share/churros/styles/churros.css";
-    if std::path::Path::new(shared).is_file() {
+    let dev_shared = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../archiso/airootfs/usr/share/churros/styles/churros.css"
+    );
+    let shared_path = if std::path::Path::new(shared).is_file() {
+        Some(std::path::Path::new(shared))
+    } else if std::path::Path::new(dev_shared).is_file() {
+        Some(std::path::Path::new(dev_shared))
+    } else {
+        None
+    };
+    if let Some(path) = shared_path {
         let provider = gtk::CssProvider::new();
-        provider.load_from_path(shared);
+        provider.load_from_path(path);
         gtk::style_context_add_provider_for_display(
             &display,
             &provider,
@@ -56,6 +67,18 @@ fn load_css() {
         &provider,
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
     );
+
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
+    if let Ok(css) = std::fs::read_to_string(&accent_path) {
+        let provider = gtk::CssProvider::new();
+        provider.load_from_data(&css);
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_USER,
+        );
+    }
 }
 
 mod assets {

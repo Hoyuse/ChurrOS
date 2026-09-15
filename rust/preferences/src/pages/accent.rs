@@ -42,7 +42,6 @@ pub fn build(navigator: gtk::Stack) -> Page {
             select_group_rc.borrow().as_ref(),
             Some(Box::new(move |name| {
                 AccentService::set(name);
-                reload_accent_css();
                 let new_current = AccentService::current();
                 for r in rows_rc.borrow().iter() {
                     r.set_active(r.title == new_current);
@@ -62,23 +61,4 @@ pub fn build(navigator: gtk::Stack) -> Page {
     page.add(group.widget());
 
     page
-}
-
-/// Recarga accent.css en runtime (equivalente a AccentPage._reload_accent_css)
-fn reload_accent_css() {
-    let accent_css = AccentService::accent_css_path();
-    if !accent_css.exists() {
-        return;
-    }
-
-    let provider = gtk::CssProvider::new();
-    provider.load_from_path(&accent_css);
-
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
-        );
-    }
 }

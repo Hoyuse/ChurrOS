@@ -256,7 +256,7 @@ impl BackupService {
             "accent": { "color": "Orange" },
             "wallpaper": { "path": "" },
             "icons": { "theme": "Papirus" },
-            "cursor": { "theme": "Bibata" },
+            "cursor": { "theme": "Adwaita" },
             "fonts": { "family": "Inter", "scale": 1.0 }
         });
         crate::services::settings::save(&defaults);
@@ -300,7 +300,7 @@ impl BackupService {
             "accent": { "color": "Orange" },
             "wallpaper": { "path": "" },
             "icons": { "theme": "Papirus" },
-            "cursor": { "theme": "Bibata" },
+            "cursor": { "theme": "Adwaita" },
             "fonts": { "family": "Inter", "scale": 1.0 }
         })
     }

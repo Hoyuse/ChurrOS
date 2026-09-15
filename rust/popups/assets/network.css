@@ -1,6 +1,5 @@
 /*
     ChurrOS Network Popup — Liquid Glass
-    Accent: #F97316
 */
 
 .network-widget {
@@ -8,10 +7,10 @@
 }
 
 .network-toggle {
-    background: rgba(255,255,255,.04);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 14px 16px;
-    border: 1px solid rgba(255,255,255,.07);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     margin-bottom: 14px;
 }
 
@@ -38,22 +37,22 @@ switch {
 switch > slider {
     background: white;
     border-radius: 999px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.40);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.40);
 }
 
 switch:checked {
-    background: linear-gradient(135deg, #F97316, #C2410C);
-    box-shadow: 0 0 14px rgba(249,115,22,.30);
+    background: linear-gradient(135deg, var(--accent, #38BDF8), var(--accent-strong, #0284C7));
+    box-shadow: 0 0 14px var(--accent-bg-hover, rgba(56, 189, 248, 0.30));
 }
 
 switch:not(:checked) {
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* ── Secciones ─────────────────────────────────────── */
 .section-title {
-    color: #FB923C;
+    color: var(--accent-soft, #60A5FA);
     font-size: 13px;
     font-weight: 700;
     letter-spacing: .6px;
@@ -62,14 +61,14 @@ switch:not(:checked) {
 }
 
 .network-info {
-    color: rgba(255,255,255,.60);
+    color: rgba(255, 255, 255, 0.60);
     font-size: 13px;
     line-height: 1.4;
 }
 
 separator {
     margin: 14px 0;
-    background: rgba(255,255,255,.08);
+    background: rgba(255, 255, 255, 0.08);
     min-height: 1px;
 }
 
@@ -79,23 +78,23 @@ separator {
 }
 
 .network-item {
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.06);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 14px;
     padding: 6px;
     margin-bottom: 6px;
-    transition: 160ms cubic-bezier(.4,0,.2,1);
-    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+    transition: 160ms cubic-bezier(.4, 0, .2, 1);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .network-item:hover {
-    background: rgba(249,115,22,.10);
-    border-color: rgba(249,115,22,.22);
-    box-shadow: 0 4px 16px rgba(249,115,22,.12);
+    background: var(--accent-bg-hover, rgba(56, 189, 248, 0.10));
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
 }
 
 .network-item:active {
-    background: rgba(249,115,22,.20);
+    background: rgba(56, 189, 248, 0.20);
 }
 
 .network-main {
@@ -111,7 +110,7 @@ separator {
 }
 
 .network-icon {
-    color: #FB923C;
+    color: var(--accent-soft, #60A5FA);
     font-size: 18px;
 }
 
@@ -122,7 +121,7 @@ separator {
 }
 
 .network-status {
-    color: rgba(255,255,255,.50);
+    color: rgba(255, 255, 255, 0.50);
     font-size: 12px;
 }
 
@@ -132,14 +131,14 @@ separator {
 }
 
 .network-lock {
-    color: rgba(255,255,255,.55);
+    color: rgba(255, 255, 255, 0.55);
     font-size: 13px;
 }
 
 .network-forget {
     background: transparent;
     border: 1px solid transparent;
-    color: rgba(255,255,255,.45);
+    color: rgba(255, 255, 255, 0.45);
     border-radius: 10px;
     min-height: 30px;
     min-width: 30px;
@@ -148,27 +147,27 @@ separator {
 }
 
 .network-forget:hover {
-    background: rgba(239,68,68,.14);
-    border-color: rgba(239,68,68,.30);
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.30);
     color: #f87171;
 }
 
 /* ── Acciones (refresh, hidden) ────────────────────── */
 .network-button {
-    background: linear-gradient(135deg, #F97316, #C2410C);
+    background: linear-gradient(135deg, var(--accent, #38BDF8), var(--accent-strong, #0284C7));
     color: white;
     border-radius: 12px;
     padding: 8px 14px;
     font-weight: 600;
     font-size: 13px;
-    border: none;
-    box-shadow: 0 4px 14px rgba(249,115,22,.25);
+    border: 1px solid var(--accent, rgba(56, 189, 248, 0.30));
+    box-shadow: 0 4px 14px var(--accent-bg-hover, rgba(56, 189, 248, 0.25));
     transition: 160ms ease;
 }
 
 .network-button:hover {
-    background: linear-gradient(135deg, #FB923C, #F97316);
-    box-shadow: 0 6px 18px rgba(249,115,22,.35);
+    background: linear-gradient(135deg, var(--accent-soft, #60A5FA), var(--accent, #38BDF8));
+    box-shadow: 0 6px 18px var(--accent-bg-hover, rgba(56, 189, 248, 0.35));
     transform: translateY(-1px);
 }
 
@@ -179,15 +178,15 @@ separator {
 /* ── Páginas de contraseña / oculta ────────────────── */
 .hidden-dialog,
 .password-page {
-    background: rgba(255,255,255,.04);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(255,255,255,.07);
+    border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .hidden-dialog entry,
 .password-page entry {
-    background: rgba(255,255,255,.06);
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     min-height: 38px;
     padding: 4px 14px;
@@ -196,8 +195,8 @@ separator {
 
 .hidden-dialog entry:focus,
 .password-page entry:focus {
-    border-color: rgba(249,115,22,.5);
-    box-shadow: 0 0 0 3px rgba(249,115,22,.12);
+    border-color: var(--accent, #38BDF8);
+    box-shadow: 0 0 0 3px var(--accent-bg-hover, rgba(56, 189, 248, 0.12));
 }
 
 .network-error {
@@ -207,10 +206,10 @@ separator {
 
 /* ── Ethernet ──────────────────────────────────────── */
 .ethernet-widget {
-    background: rgba(255,255,255,.04);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(255,255,255,.07);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     margin-top: 18px;
 }
 

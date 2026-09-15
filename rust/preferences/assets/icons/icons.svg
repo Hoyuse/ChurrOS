@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
   <!-- Módulo de paquete de iconos -->
-  <rect x="3" y="3" width="7" height="7" fill="#F97316"/>
+  <rect x="3" y="3" width="7" height="7" fill="currentColor"/>
   <circle cx="17.5" cy="6.5" r="3.5" stroke="#94A3B8" stroke-width="2"/>
   <path d="M3 18 L7 12 L11 18 Z" stroke="#94A3B8" stroke-width="2" stroke-linejoin="miter"/>
-  <rect x="14" y="14" width="7" height="7" stroke="#F97316" stroke-width="2"/>
+  <rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="2"/>
 </svg>

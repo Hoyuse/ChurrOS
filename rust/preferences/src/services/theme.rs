@@ -36,25 +36,39 @@ fn gtk_ini(dir: &str) -> PathBuf {
 
 fn build_env() -> Vec<(String, String)> {
     let mut env: Vec<(String, String)> = std::env::vars().collect();
+    let uid = libc_getuid();
+    let xrd = format!("/run/user/{uid}");
+
+    if env.iter().all(|(k, _)| k != "XDG_RUNTIME_DIR") {
+        env.push(("XDG_RUNTIME_DIR".to_string(), xrd.clone()));
+    }
+
     if env.iter().all(|(k, _)| k != "WAYLAND_DISPLAY") {
-        let uid = libc_getuid();
-        let xrd = format!("/run/user/{uid}");
         if std::path::Path::new(&xrd).is_dir() {
             if let Ok(entries) = fs::read_dir(&xrd) {
-                for entry in entries.flatten() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if name.starts_with("wayland-") {
-                        env.push(("WAYLAND_DISPLAY".to_string(), name));
-                        break;
-                    }
+                let mut valid_socks: Vec<(std::time::SystemTime, String)> = entries
+                    .flatten()
+                    .filter_map(|e| {
+                        let name = e.file_name().to_string_lossy().to_string();
+                        if name.starts_with("wayland-") && !name.ends_with(".lock") {
+                            let mtime = e
+                                .metadata()
+                                .and_then(|m| m.modified())
+                                .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                            Some((mtime, name))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                valid_socks.sort_by(|a, b| b.0.cmp(&a.0));
+                if let Some((_, name)) = valid_socks.first() {
+                    env.push(("WAYLAND_DISPLAY".to_string(), name.clone()));
                 }
             }
         }
     }
-    if env.iter().all(|(k, _)| k != "XDG_RUNTIME_DIR") {
-        let uid = libc_getuid();
-        env.push(("XDG_RUNTIME_DIR".to_string(), format!("/run/user/{uid}")));
-    }
+
     env
 }
 
@@ -122,6 +136,24 @@ fn write_dark_flag(dark: bool) {
     let _ = fs::write(dark_flag(), if dark { "1" } else { "0" });
 }
 
+/// Limpia claves obsoletas de GTK3 de settings.ini de GTK4
+fn clean_gtk4_ini(ini: &Path) {
+    let Ok(content) = fs::read_to_string(ini) else {
+        return;
+    };
+    if !content
+        .lines()
+        .any(|l| l.trim_start().starts_with("gtk-application-prefer-dark-theme"))
+    {
+        return;
+    }
+    let lines: Vec<&str> = content
+        .lines()
+        .filter(|l| !l.trim_start().starts_with("gtk-application-prefer-dark-theme"))
+        .collect();
+    let _ = fs::write(ini, lines.join("\n") + "\n");
+}
+
 /// Persistencia para otras apps. No toca gtk-theme-name en GTK4: Adwaita-dark
 /// no existe como tema GTK4 (Adwaita va integrado) y cambiar gtk-theme en
 /// caliente recarga el CSS de esta misma app y la termina cerrando.
@@ -132,11 +164,9 @@ fn persist_desktop(dark: bool) {
         if dark { "1" } else { "0" },
     );
     update_ini_key(&gtk_ini("gtk-3.0"), "gtk-theme-name", "Adwaita");
-    update_ini_key(
-        &gtk_ini("gtk-4.0"),
-        "gtk-application-prefer-dark-theme",
-        if dark { "1" } else { "0" },
-    );
+    // NO tocar archivos de gtk-4.0 en caliente: cualquier modificación de settings.ini
+    // a runtime dispara recarga inotify de hojas de estilo y cierra las ventanas.
+    // La migración de claves obsoletas se realiza antes de gtk_init en migrate_before_gtk.
 
     let _ = Command::new("gsettings")
         .args([
@@ -147,17 +177,21 @@ fn persist_desktop(dark: bool) {
         ])
         .output();
 
-    // Sincronizar tema con XFCE (xsettings)
-    let _ = Command::new("xfconf-query")
-        .args([
-            "-c",
-            "xsettings",
-            "-p",
-            "/Net/ThemeName",
-            "-s",
-            if dark { "Adwaita-dark" } else { "Adwaita" },
-        ])
-        .output();
+    // Sincronizar tema con XFCE (xsettings) solo en sesión XFCE
+    if churros_services::version::edition().contains("xfce")
+        || churros_services::which("xfce4-session")
+    {
+        let _ = Command::new("xfconf-query")
+            .args([
+                "-c",
+                "xsettings",
+                "-p",
+                "/Net/ThemeName",
+                "-s",
+                if dark { "Adwaita-dark" } else { "Adwaita" },
+            ])
+            .output();
+    }
 
     let env = build_env();
     let env_refs: Vec<(&str, &str)> = env
@@ -166,11 +200,14 @@ fn persist_desktop(dark: bool) {
         .collect();
     // Waybar no usa el tema GTK: recargarla aquí solo resetea la barra.
     // foot: SIGUSR1 = colors-dark, SIGUSR2 = colors-light (foot(1)).
-    // No regenerar pywal: la paleta sale del wallpaper, no del modo
-    // claro/oscuro. wal + accent.css en medio del cambio de color-scheme
-    // recarga CSS en caliente y GTK4 cierra las apps (#61).
+    // Se usa --signal y -x para concordancia exacta y segura.
     let _ = Command::new("pkill")
-        .args([if dark { "-SIGUSR1" } else { "-SIGUSR2" }, "foot"])
+        .args([
+            "--signal",
+            if dark { "USR1" } else { "USR2" },
+            "-x",
+            "foot",
+        ])
         .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
         .output();
 }
@@ -178,11 +215,11 @@ fn persist_desktop(dark: bool) {
 pub struct ThemeService;
 
 impl ThemeService {
-    /// Corregir leftovers de Adwaita-dark *antes* de gtk_init. En runtime
-    /// cambiar gtk-theme-name recarga el stylesheet y GTK4 se cae.
+    /// Corregir leftovers de Adwaita-dark y claves obsoletas *antes* de gtk_init.
     pub fn migrate_before_gtk() {
         migrate_adwaita_dark_ini(&gtk_ini("gtk-3.0"));
         migrate_adwaita_dark_ini(&gtk_ini("gtk-4.0"));
+        clean_gtk4_ini(&gtk_ini("gtk-4.0"));
 
         let output = Command::new("gsettings")
             .args(["get", "org.gnome.desktop.interface", "gtk-theme"])

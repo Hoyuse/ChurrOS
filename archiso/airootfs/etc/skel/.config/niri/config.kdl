@@ -94,7 +94,9 @@ window-rule {
 // activar/desactivar el blur sin tocar el resto del config.
 // [CHURROS-GLASS-START]
 window-rule {
-    match app-id="org.churros.popup"
+    match app-id=r#"^org\.churros\.popup"#
+    open-floating true
+    opacity 0.9
     background-effect {
         blur true
     }
@@ -104,6 +106,8 @@ window-rule {
 
 window-rule {
     match app-id="org.churros.controlcenter"
+    open-floating true
+    opacity 0.9
     background-effect {
         blur true
     }
@@ -113,6 +117,7 @@ window-rule {
 
 window-rule {
     match app-id="org.churros.preferences"
+    opacity 0.9
     background-effect {
         blur true
     }
@@ -122,6 +127,7 @@ window-rule {
 
 window-rule {
     match app-id="org.churros.welcome"
+    opacity 0.9
     background-effect {
         blur true
     }

@@ -28,34 +28,44 @@ _detect_session_env() {
     local uid
     uid=$(id -u)
 
-    if [ -z "${WAYLAND_DISPLAY:-}" ]; then
-
-        for d in "/run/user/${uid}" "/tmp" "/var/run/user/${uid}"; do
-
-            [ -d "$d" ] || continue
-
-            local sock
-            for sock in "$d"/wayland-*; do
-
-                [ -S "$sock" ] || continue
-
-                export WAYLAND_DISPLAY="${sock##*/}"
-                export XDG_RUNTIME_DIR="$d"
-                echo "$LOG_PREFIX detecto WAYLAND_DISPLAY=$WAYLAND_DISPLAY en $d" >&2
-                return 0
-
-            done
-        done
-
-        echo "$LOG_PREFIX NO se detecto socket Wayland" >&2
-        return 1
-    fi
-
     if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
         export XDG_RUNTIME_DIR="/run/user/${uid}"
     fi
 
-    return 0
+    # 1. Si WAYLAND_DISPLAY ya está definido y el socket existe, usarlo directamente
+    if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -S "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}" ]; then
+        return 0
+    fi
+
+    # 2. Intentar extraer WAYLAND_DISPLAY del compositor activo (niri / hyprland / sway)
+    local comp
+    for comp in niri hyprland sway; do
+        local pid
+        pid=$(pgrep -u "$uid" -x "$comp" 2>/dev/null | head -n 1 || true)
+        if [ -n "$pid" ] && [ -r "/proc/$pid/environ" ]; then
+            local comp_wd
+            comp_wd=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -E '^WAYLAND_DISPLAY=' | head -n 1 | cut -d= -f2- || true)
+            if [ -n "$comp_wd" ] && [ -S "${XDG_RUNTIME_DIR}/${comp_wd}" ]; then
+                export WAYLAND_DISPLAY="$comp_wd"
+                echo "$LOG_PREFIX detecto WAYLAND_DISPLAY=$WAYLAND_DISPLAY desde $comp (PID $pid)" >&2
+                return 0
+            fi
+        fi
+    done
+
+    # 3. Fallback: buscar el socket wayland más reciente por fecha de modificación en XDG_RUNTIME_DIR
+    if [ -d "$XDG_RUNTIME_DIR" ]; then
+        local newest_sock
+        newest_sock=$(ls -t "${XDG_RUNTIME_DIR}"/wayland-* 2>/dev/null | grep -v '\.lock$' | head -n 1 || true)
+        if [ -n "$newest_sock" ] && [ -S "$newest_sock" ]; then
+            export WAYLAND_DISPLAY="${newest_sock##*/}"
+            echo "$LOG_PREFIX detecto WAYLAND_DISPLAY=$WAYLAND_DISPLAY (socket mas reciente en $XDG_RUNTIME_DIR)" >&2
+            return 0
+        fi
+    fi
+
+    echo "$LOG_PREFIX NO se detecto socket Wayland activo" >&2
+    return 1
 }
 
 _awww_running() {
@@ -63,7 +73,7 @@ _awww_running() {
 }
 
 _awww_kill() {
-    pkill -x awww-daemon 2>/dev/null || true
+    pkill -TERM -x awww-daemon 2>/dev/null || true
 }
 
 _swaybg_running() {
@@ -71,7 +81,7 @@ _swaybg_running() {
 }
 
 _swaybg_kill() {
-    pkill -x swaybg 2>/dev/null || true
+    pkill -TERM -x swaybg 2>/dev/null || true
 }
 
 apply_awww() {
@@ -92,11 +102,12 @@ apply_awww() {
         echo "$LOG_PREFIX lanzando awww-daemon (WAYLAND=$WAYLAND_DISPLAY)..." >&2
 
         WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-            nohup awww-daemon >> /tmp/awww-daemon.log 2>&1 &
-        disown 2>/dev/null || true
+            awww-daemon </dev/null >> /tmp/awww-daemon.log 2>&1 &
+        local awww_pid=$!
+        disown "$awww_pid" 2>/dev/null || true
 
-        for _ in 1 2 3 4 5 6 7 8 9 10; do
-            sleep 0.2
+        for _ in 1 2 3 4; do
+            sleep 0.15
             if _awww_running; then
                 echo "$LOG_PREFIX awww-daemon listo (PID $(pgrep -x awww-daemon))" >&2
                 break
@@ -112,30 +123,22 @@ apply_awww() {
     echo "$LOG_PREFIX awww img $path (WAYLAND=$WAYLAND_DISPLAY XDG=$XDG_RUNTIME_DIR)" >&2
 
     local attempt
-    for attempt in 1 2 3 4 5; do
+    for attempt in 1 2; do
         WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
             awww img "$path" >/tmp/awww-img.log 2>&1
         local rc=$?
 
         if [ "$rc" -eq 0 ]; then
             echo "$LOG_PREFIX awww OK intento $attempt: $path" >&2
+            _swaybg_kill
             return 0
         fi
 
         echo "$LOG_PREFIX awww intento $attempt fallo rc=$rc: $(head -3 /tmp/awww-img.log 2>/dev/null)" >&2
-
-        if ! _awww_running; then
-            echo "$LOG_PREFIX awww-daemon murio, relanzando..." >&2
-            WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-                nohup awww-daemon >> /tmp/awww-daemon.log 2>&1 &
-            disown 2>/dev/null || true
-            sleep 0.5
-        fi
-
-        sleep 0.3
+        sleep 0.2
     done
 
-    echo "$LOG_PREFIX awww fallo tras 5 intentos" >&2
+    echo "$LOG_PREFIX awww fallo tras $attempt intentos" >&2
     return 1
 }
 
@@ -147,23 +150,49 @@ apply_swaybg() {
         return 1
     fi
 
-    _swaybg_kill
-    sleep 0.2
+    # Si awww-daemon estaba activo, detenerlo para no solapar layer surfaces
+    if _awww_running; then
+        _awww_kill
+        sleep 0.1
+    fi
 
-    echo "$LOG_PREFIX swaybg -i $path -m fill" >&2
+    echo "$LOG_PREFIX swaybg -i $path -m fill (WAYLAND=$WAYLAND_DISPLAY XDG=$XDG_RUNTIME_DIR)" >&2
 
+    local uid
+    uid=$(id -u)
+    local old_pids
+    old_pids=$(pgrep -u "$uid" -x swaybg 2>/dev/null || true)
+
+    # Lanzar swaybg desacoplado en segundo plano
     WAYLAND_DISPLAY="$WAYLAND_DISPLAY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-        nohup swaybg -i "$path" -m fill >> /tmp/swaybg.log 2>&1 &
-    disown 2>/dev/null || true
+        swaybg -i "$path" -m fill </dev/null >> /tmp/swaybg.log 2>&1 &
+    local new_pid=$!
+    disown "$new_pid" 2>/dev/null || true
 
-    sleep 0.5
+    # Verificar que el nuevo swaybg arrancó y sigue vivo
+    local started=0
+    for _ in 1 2 3 4 5; do
+        sleep 0.1
+        if kill -0 "$new_pid" 2>/dev/null; then
+            started=1
+            break
+        fi
+    done
 
-    if _swaybg_running; then
-        echo "$LOG_PREFIX swaybg OK: $path" >&2
+    if [ "$started" -eq 1 ]; then
+        # Terminar las instancias viejas SOLO tras confirmar que la nueva arrancó
+        if [ -n "$old_pids" ]; then
+            for opid in $old_pids; do
+                if [ "$opid" != "$new_pid" ] && kill -0 "$opid" 2>/dev/null; then
+                    kill -TERM "$opid" 2>/dev/null || true
+                fi
+            done
+        fi
+        echo "$LOG_PREFIX swaybg OK: $path (PID $new_pid)" >&2
         return 0
     fi
 
-    echo "$LOG_PREFIX swaybg fallo al arrancar" >&2
+    echo "$LOG_PREFIX swaybg fallo al arrancar, ver /tmp/swaybg.log" >&2
     return 1
 }
 

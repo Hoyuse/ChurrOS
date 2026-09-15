@@ -1,17 +1,13 @@
-# ==========================================
-# ChurrOS ReGreet Configuration
-# ==========================================
+# ChurrOS ReGreet Configuration (GTK4 Graphical Login)
 
 [background]
 path = "/usr/share/churros/wallpapers/default.png"
 fit = "Cover"
 
-[env]
-
 [GTK]
 application_prefer_dark_theme = true
 cursor_theme_name = "Adwaita"
-font_name = "DejaVu Sans 11"
+font_name = "Inter 11"
 icon_theme_name = "Papirus-Dark"
 theme_name = "Adwaita-dark"
 
@@ -20,4 +16,8 @@ reboot = ["systemctl", "reboot"]
 poweroff = ["systemctl", "poweroff"]
 
 [appearance]
-greeting = "Bienvenido a ChurrOS"
+greeting_msg = "Bienvenido a ChurrOS"
+
+[widget.clock]
+format = "%A, %d de %B  -  %H:%M"
+resolution = "1s"

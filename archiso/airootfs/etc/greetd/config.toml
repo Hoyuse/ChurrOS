@@ -1,6 +1,10 @@
 [terminal]
-vt = 1
+vt = 7
 
 [default_session]
-command = "/usr/bin/niri"
+command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
+user = "greeter"
+
+[initial_session]
+command = "niri"
 user = "churros"

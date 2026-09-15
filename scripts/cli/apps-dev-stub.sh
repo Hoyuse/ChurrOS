@@ -103,7 +103,7 @@ is_mutation() {
             done
             return 1
             ;;
-        pkill|kill|killall|pkexec|sudo|churros-pkexec|calamares|wal|makoctl|swaymsg|swaybg|swaylock|swayidle|wlsunset|waybar|install|setxkbmap|loadkeys)
+        pkill|kill|killall|pkexec|sudo|churros-pkexec|calamares|wal|makoctl|swaymsg|swaybg|swaylock|swayidle|wlsunset|waybar|install|setxkbmap|loadkeys|awww|awww-daemon|churros-apply-wallpaper|waypaper)
             return 0
             ;;
         niri)

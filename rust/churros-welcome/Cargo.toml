@@ -13,3 +13,4 @@ churros-services = { path = "../services" }
 gio = "0.22.8"
 glib = "0.22.8"
 gtk = { version = "0.11.4", package = "gtk4", features = ["v4_22"] }
+libc = "0.2"

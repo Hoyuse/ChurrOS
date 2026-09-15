@@ -23,6 +23,7 @@ Esta documentación está dirigida tanto a desarrolladores como a futuros colabo
 - [Popups](popups.md)
 - [Preferences](preferences.md)
 - [Services](services.md)
+- [Login Greeter](login-greeter.md)
 - [Desktop Config](desktop-config.md)
 - [Live Services](live-services.md)
 - [Boot](boot.md)
@@ -70,6 +71,7 @@ Cada documento aborda un aspecto específico del proyecto.
 | Popups | Sistema de popups (audio, battery, bluetooth, brightness, network, power). |
 | Preferences | App `churros-settings` — tema, accent, fuentes, cursor, wallpaper, power, etc. |
 | Services | Wrappers de servicios del sistema (wpctl, upower, nmcli, brightnessctl, etc). |
+| Login Greeter | Pantalla de inicio de sesión ReGreet (macOS style), greetd, cage y autologin. |
 | Desktop Config | Configuración del escritorio live (Niri, Waybar, greetd, usuario). |
 | Live Services | Servicios systemd y hooks del Live ISO. |
 | Boot | Sistema de arranque (GRUB UEFI + Syslinux BIOS). |

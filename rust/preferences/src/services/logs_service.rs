@@ -80,23 +80,28 @@ impl LogsService {
             }
         }
 
-        // 2) -u greetd
-        if let Some(out) = run_with_timeout(
-            &[
-                "journalctl",
-                "-b0",
-                "--no-pager",
-                "--no-hostname",
-                "-o",
-                "short-iso",
-                "-n",
-                &limit.to_string(),
-                "-u",
-                "greetd",
-            ],
-            8,
-        ) {
-            return decode(out.stdout);
+        // 2) -u greetd / -u lightdm
+        for dm in &["greetd", "lightdm"] {
+            if let Some(out) = run_with_timeout(
+                &[
+                    "journalctl",
+                    "-b0",
+                    "--no-pager",
+                    "--no-hostname",
+                    "-o",
+                    "short-iso",
+                    "-n",
+                    &limit.to_string(),
+                    "-u",
+                    dm,
+                ],
+                8,
+            ) {
+                let output = decode(out.stdout);
+                if !output.trim().is_empty() {
+                    return output;
+                }
+            }
         }
 
         // 3) --grep=niri

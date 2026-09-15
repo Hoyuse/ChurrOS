@@ -29,9 +29,20 @@ fn load_css() {
 
     // CSS compartido de ChurrOS
     let shared = "/usr/share/churros/styles/churros.css";
-    if std::path::Path::new(shared).exists() {
+    let dev_shared = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../archiso/airootfs/usr/share/churros/styles/churros.css"
+    );
+    let shared_path = if std::path::Path::new(shared).exists() {
+        Some(std::path::Path::new(shared))
+    } else if std::path::Path::new(dev_shared).exists() {
+        Some(std::path::Path::new(dev_shared))
+    } else {
+        None
+    };
+    if let Some(path) = shared_path {
         let provider = gtk::CssProvider::new();
-        provider.load_from_path(shared);
+        provider.load_from_path(path);
         if let Some(display) = gdk::Display::default() {
             gtk::style_context_add_provider_for_display(
                 &display,
@@ -57,19 +68,8 @@ fn load_css() {
         );
     }
 
-    // accent.css del usuario (si existe) — prioridad USER como en el Python
-    let accent = AccentService::accent_css_path();
-    if accent.exists() {
-        let provider = gtk::CssProvider::new();
-        provider.load_from_path(&accent);
-        if let Some(display) = gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_USER,
-            );
-        }
-    }
+    // accent.css gestionado como singleton en AccentService (prioridad USER)
+    AccentService::init_css_provider();
 }
 
 fn activate(app: &gtk::Application) {
@@ -98,7 +98,7 @@ fn main() -> glib::ExitCode {
         .application_id(APP_ID)
         .build();
     logging::log("gtk app creada");
-
+    
     app.connect_activate(activate);
 
     let code = app.run();

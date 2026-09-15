@@ -14,29 +14,37 @@ pub struct WallpaperService;
 fn build_env() -> Vec<(String, String)> {
     let mut env: Vec<(String, String)> = std::env::vars().collect();
 
+    let uid = current_uid();
+    let xrd = format!("/run/user/{uid}");
+
+    if !env.iter().any(|(k, _)| k == "XDG_RUNTIME_DIR") {
+        env.push(("XDG_RUNTIME_DIR".to_string(), xrd.clone()));
+    }
+
     if !env.iter().any(|(k, _)| k == "WAYLAND_DISPLAY") {
-        let uid = current_uid();
-        let xrd = format!("/run/user/{uid}");
         if Path::new(&xrd).is_dir() {
             if let Ok(entries) = fs::read_dir(&xrd) {
-                let mut socks: Vec<String> = entries
+                let mut valid_socks: Vec<(std::time::SystemTime, String)> = entries
                     .flatten()
                     .filter_map(|e| {
                         let name = e.file_name().to_string_lossy().to_string();
-                        name.starts_with("wayland-").then_some(name)
+                        if name.starts_with("wayland-") && !name.ends_with(".lock") {
+                            let mtime = e
+                                .metadata()
+                                .and_then(|m| m.modified())
+                                .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                            Some((mtime, name))
+                        } else {
+                            None
+                        }
                     })
                     .collect();
-                socks.sort();
-                if let Some(sock) = socks.first() {
+                valid_socks.sort_by(|a, b| b.0.cmp(&a.0));
+                if let Some((_, sock)) = valid_socks.first() {
                     env.push(("WAYLAND_DISPLAY".to_string(), sock.clone()));
-                    env.push(("XDG_RUNTIME_DIR".to_string(), xrd.clone()));
                 }
             }
         }
-    }
-
-    if !env.iter().any(|(k, _)| k == "XDG_RUNTIME_DIR") {
-        env.push(("XDG_RUNTIME_DIR".to_string(), format!("/run/user/{}", current_uid())));
     }
 
     env
@@ -72,6 +80,7 @@ fn run_with_timeout(
     let mut child = Command::new(args[0])
         .args(&args[1..])
         .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
+        .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -158,10 +167,13 @@ impl WallpaperService {
     /// Guarda el wallpaper en settings.json y lo aplica en vivo.
     /// Devuelve si se aplicó correctamente (equivalente a WallpaperService.set).
     pub fn set(path: &str) -> bool {
+        crate::logging::log(&format!("[wallpaper] set inicio: {path}"));
         settings::set("wallpaper.path", serde_json::json!(path));
         let applied = Self::apply(path);
+        crate::logging::log(&format!("[wallpaper] apply retorno: {applied}"));
         // Colores dinámicos: regenerar paleta pywal si está activo.
-        crate::services::pywal::PywalService::regenerate_if_enabled();
+        let dyn_ok = crate::services::pywal::PywalService::regenerate_for_wallpaper(path);
+        crate::logging::log(&format!("[wallpaper] pywal retorno: {dyn_ok}"));
         applied
     }
 
@@ -213,21 +225,21 @@ impl WallpaperService {
             let _ = Command::new("pkill")
                 .args(["-x", "swaybg"])
                 .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
-                .output();
-            let _ = Command::new("swaybg")
-                .args(["-i", path, "-m", "fill"])
+                .status();
+
+            std::thread::sleep(Duration::from_millis(100));
+
+            use std::os::unix::process::CommandExt;
+            let mut cmd = Command::new("swaybg");
+            cmd.args(["-i", path, "-m", "fill"])
                 .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
+                .stdin(Stdio::null())
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
-                .spawn();
-            std::thread::sleep(Duration::from_millis(500));
-            let ok = Command::new("pgrep")
-                .args(["-x", "swaybg"])
-                .envs(env_refs.iter().map(|(k, v)| (*k, *v)))
-                .output()
-                .map(|o| o.status.success())
-                .unwrap_or(false);
-            if ok {
+                .process_group(0);
+
+            if cmd.spawn().is_ok() {
+                std::thread::sleep(Duration::from_millis(200));
                 println!("[wallpaper] swaybg OK: {path}");
                 return true;
             }

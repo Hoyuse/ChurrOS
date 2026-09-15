@@ -145,7 +145,7 @@ impl MakoConfig {
     }
 
     pub fn get_border_color() -> String {
-        get_key("default", "border-color", "#f97316").unwrap()
+        get_key("default", "border-color", "#38bdf8").unwrap()
     }
 
     pub fn get_border_size() -> i64 {

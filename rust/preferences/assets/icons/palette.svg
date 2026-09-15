@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
   <!-- Paleta octogonal HUD (Gris técnico) -->
   <path d="M12 3 L21 7 V17 L12 21 L3 17 V7 Z" stroke="#94A3B8" stroke-width="2" stroke-linejoin="miter"/>
-  <!-- Muestra activa primaria (Naranja ChurrOS) -->
-  <circle cx="9" cy="9" r="2" fill="#F97316"/>
+  <!-- Muestra activa primaria -->
+  <circle cx="9" cy="9" r="2" fill="currentColor"/>
   <!-- Muestras secundarias -->
   <circle cx="15" cy="9" r="1.5" fill="#94A3B8"/>
   <circle cx="9" cy="15" r="1.5" fill="#94A3B8"/>

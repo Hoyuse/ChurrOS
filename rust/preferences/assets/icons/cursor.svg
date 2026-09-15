@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
-  <!-- Puntero angular HUD principal (Naranja ChurrOS) -->
-  <path d="M4 3 L12 21 L15 14 L21 11 Z" stroke="#F97316" stroke-width="2" stroke-linejoin="miter" fill="none"/>
+  <!-- Puntero angular HUD principal (Liquid Glass Accent) -->
+  <path d="M4 3 L12 21 L15 14 L21 11 Z" stroke="currentColor" stroke-width="2" stroke-linejoin="miter" fill="none"/>
   <!-- Núcleo de selección -->
-  <polygon points="7,7 11,16 13,12 16,10" fill="#F97316"/>
+  <polygon points="7,7 11,16 13,12 16,10" fill="currentColor"/>
   <!-- Estela/Eje del cursor (Gris técnico) -->
   <path d="M14 14 L19 19" stroke="#94A3B8" stroke-width="2" stroke-linecap="square"/>
 </svg>

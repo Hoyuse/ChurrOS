@@ -101,6 +101,7 @@ dependencies = [
  "glib",
  "gtk4",
  "libadwaita",
+ "libc",
  "serde_json",
  "tar",
  "zstd",
@@ -115,6 +116,7 @@ dependencies = [
  "glib",
  "gtk4",
  "libadwaita",
+ "libc",
 ]
 
 [[package]]

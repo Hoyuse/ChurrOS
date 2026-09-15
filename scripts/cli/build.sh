@@ -26,7 +26,6 @@ if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
 fi
 
 PACKAGES_BACKED_UP=0
-GREETD_BACKED_UP=0
 cleanup_temp() {
     echo "[cleanup] Removing temporary build files..."
     if [ "$HOST_REPO_SYMLINK" -eq 1 ]; then
@@ -35,9 +34,6 @@ cleanup_temp() {
     fi
     if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f archiso/packages.x86_64.orig ]; then
         mv archiso/packages.x86_64.orig archiso/packages.x86_64
-    fi
-    if [ "$GREETD_BACKED_UP" -eq 1 ] && [ -f archiso/airootfs/etc/greetd/config.toml.orig ]; then
-        mv archiso/airootfs/etc/greetd/config.toml.orig archiso/airootfs/etc/greetd/config.toml
     fi
     rm -f archiso/airootfs/etc/churros-edition 2>/dev/null || true
     rm -f archiso/airootfs/root/customize_airootfs.sh 2>/dev/null || true
@@ -79,29 +75,32 @@ fi
 mkdir -p archiso/airootfs/etc
 echo "$EDITION" > archiso/airootfs/etc/churros-edition
 
-# Configurar greetd para la sesión correspondiente
+# Configurar greetd autologin para la sesión Live
 mkdir -p archiso/airootfs/etc/greetd
-if [ -f archiso/airootfs/etc/greetd/config.toml ]; then
-    cp archiso/airootfs/etc/greetd/config.toml archiso/airootfs/etc/greetd/config.toml.orig
-    GREETD_BACKED_UP=1
-fi
-
 if [ "$EDITION" = "xfce" ]; then
     cat > archiso/airootfs/etc/greetd/config.toml << 'EOF'
 [terminal]
-vt = 1
+vt = 7
 
 [default_session]
-command = "/usr/bin/startxfce4"
+command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
+user = "greeter"
+
+[initial_session]
+command = "startxfce4"
 user = "churros"
 EOF
 else
     cat > archiso/airootfs/etc/greetd/config.toml << 'EOF'
 [terminal]
-vt = 1
+vt = 7
 
 [default_session]
-command = "/usr/bin/niri"
+command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
+user = "greeter"
+
+[initial_session]
+command = "niri"
 user = "churros"
 EOF
 fi

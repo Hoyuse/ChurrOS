@@ -1,18 +1,24 @@
 /*
     ChurrOS Popups — Liquid Glass base
-    Accent: #F97316
-
     Transparencia: el alpha del fondo de .popup; el blur lo aplica niri
     (window-rule background-effect blur true para org.churros.popup).
 */
 
+@define-color window_bg_color transparent;
+@define-color view_bg_color transparent;
+
+window,
+window.background {
+    background-color: transparent;
+}
+
 .popup {
-    background: rgba(15,15,16,.55);
+    background-color: rgba(13, 16, 22, 0.65);
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,.09);
-    box-shadow: 0 12px 48px rgba(0,0,0,.55),
-                0 2px 0 rgba(255,255,255,.06) inset,
-                0 0 0 1px rgba(0,0,0,.40) inset;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
+                0 1px 0 rgba(255, 255, 255, 0.18) inset,
+                0 0 20px rgba(255, 255, 255, 0.02) inset;
 }
 
 .popup-content {
@@ -25,19 +31,19 @@
     margin-bottom: 16px;
     padding: 6px 8px;
     border-radius: 14px;
-    background: rgba(255,255,255,.03);
-    border: 1px solid rgba(255,255,255,.05);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .popup-header-icon {
-    color: #F97316;
+    color: var(--accent, #F97316);
     font-size: 20px;
     margin-right: 12px;
     min-width: 28px;
     min-height: 28px;
     border-radius: 10px;
-    background: rgba(249,115,22,.14);
-    box-shadow: 0 0 14px rgba(249,115,22,.18);
+    background: var(--accent-bg-hover, rgba(249, 115, 22, 0.16));
+    box-shadow: 0 0 16px var(--accent-glow, rgba(249, 115, 22, 0.25));
     padding: 4px 6px;
 }
 
@@ -50,16 +56,17 @@
 
 /* ── Tarjeta base de contenido ─────────────────────── */
 .card {
-    background: rgba(255,255,255,.04);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(255,255,255,.07);
-    box-shadow: 0 1px 0 rgba(255,255,255,.05) inset;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25),
+                0 1px 0 rgba(255, 255, 255, 0.14) inset;
 }
 
 /* ── Título de sección ─────────────────────────────── */
 .section-title {
-    color: #FB923C;
+    color: var(--accent-soft, #FB923C);
     font-size: 13px;
     font-weight: 700;
     letter-spacing: .6px;
@@ -69,7 +76,7 @@
 
 /* ── Estados vacíos / info ─────────────────────────── */
 .empty-label {
-    color: rgba(255,255,255,.55);
+    color: rgba(255, 255, 255, 0.60);
     font-size: 13px;
     padding: 18px 0;
 }
@@ -78,21 +85,21 @@
 button {
     border-radius: 12px;
     padding: 8px 14px;
-    transition: 160ms cubic-bezier(.4,0,.2,1);
+    transition: 160ms cubic-bezier(.4, 0, .2, 1);
 }
 
 button.flat {
-    background: rgba(255,255,255,.05);
-    border: 1px solid rgba(255,255,255,.06);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 button.flat:hover {
-    background: rgba(255,255,255,.10);
-    border-color: rgba(255,255,255,.12);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.16);
 }
 
 /* ── Separador ─────────────────────────────────────── */
 separator {
-    background: rgba(255,255,255,.08);
+    background: rgba(255, 255, 255, 0.10);
     min-height: 1px;
 }

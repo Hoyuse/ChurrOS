@@ -37,6 +37,11 @@ impl PreferencesWindow {
             .default_height(680)
             .build();
 
+        let _is_xfce = churros_services::version::edition().contains("xfce");
+        if _is_xfce {
+            window.set_decorated(false);
+        }
+
         window.add_css_class("preferences");
         apply_theme_class(&window);
 
@@ -75,11 +80,13 @@ impl PreferencesWindow {
         toggle_button.set_visible(false);
         header_bar.pack_start(&toggle_button);
 
-        window.set_titlebar(Some(&header_bar));
-
         // Layout principal
         let root = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        window.set_child(Some(&root));
+
+        let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        main_box.append(&header_bar);
+        main_box.append(&root);
+        window.set_child(Some(&main_box));
 
         // Sidebar + revealer
         let sidebar = Rc::new(RefCell::new(Sidebar::new()));
@@ -135,7 +142,6 @@ impl PreferencesWindow {
         let last_page = settings::get_string("preferences.last_page", "system");
         win.navigator.set_visible_child_name(&last_page);
         win.sidebar.borrow().select(&last_page);
-
         win
     }
 
@@ -411,7 +417,7 @@ fn apply_theme_class(window: &gtk::ApplicationWindow) {
 
 fn refresh_theme(window: &gtk::ApplicationWindow) {
     apply_theme_class(window);
-    // Flip del tema de los widgets GTK en vivo (Adwaita dark/light). Esto es
+     // Flip del tema de los widgets GTK en vivo (Adwaita dark/light). Esto es
     // lo que hace que botones/switch/entrys cambien al instante, además de
     // los tokens CSS de window.light.
     if let Some(settings) = gtk::Settings::default() {

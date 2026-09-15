@@ -274,7 +274,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
     );
     let border_color = ColorPickerRow::new(
         "Borde",
-        values["border_color"].as_str().unwrap_or("#f97316"),
+        values["border_color"].as_str().unwrap_or("#38bdf8"),
         Some(cb_str(&holder, &scheduler)),
         None,
     );
