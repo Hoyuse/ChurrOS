@@ -14,6 +14,13 @@ El comando principal es:
 ./churros run
 ```
 
+Para validar la ISO ARM64 en QEMU usa `--arch arm64`. Esta ruta emplea TCG,
+porque un host x86_64 no puede usar KVM para un guest aarch64:
+
+```bash
+./churros run --arch arm64 --fresh
+```
+
 Este script vive en `scripts/cli/run.sh` y se encarga de:
 
 1. Buscar la última ISO en `out/`.
@@ -28,6 +35,7 @@ Flags opcionales:
 | `--nokvm` | Desactiva KVM y emula por software (CPU de 2 hilos, q35 sin `accel`). |
 | `--fresh` | Borra `vm/OVMF_VARS.fd` antes de arrancar para que OVMF parta limpio y arranque desde el CD-ROM en vez del disco. Útil tras instalar ChurrOS en la VM y necesitar probar de nuevo la ISO live. |
 | `--clean` | Borra `vm/ChurrOS.qcow2` y `vm/OVMF_VARS.fd` antes de arrancar (disco + variables EFI). |
+| `--arch arm64` | Ejecuta la ISO aarch64 con `qemu-system-aarch64`, máquina `virt` y CPU `cortex-a72`. Usa `vm/ChurrOS-arm64.qcow2` y variables EFI ARM independientes. |
 
 > **Consejo:** Si acabas de instalar ChurrOS en la VM, OVMF guarda la entrada `Boot0009 "ChurrOS"` en `OVMF_VARS.fd`, así que el siguiente arranque dirá `BdsDxe: starting Boot0009 "ChurrOS"` y entrará al sistema instalado. Ejecuta `./churros run --fresh` para arrancar limpio del CD-ROM, o simplemente `rm vm/OVMF_VARS.fd`.
 
@@ -178,4 +186,17 @@ Para una alternativa con interfaz gráfica, puedes usar **virt-manager** con la 
 - Snapshot automático antes de cada cambio importante.
 - Red NAT para que la VM tenga acceso a internet en configuraciones aisladas.
 - Carpetas compartidas vía virtio-9p o virtiofs.
+
+# ARM64 QEMU Checklist
+
+Ejecuta la validación en este orden después de construir la ISO aarch64:
+
+- [ ] El menú GRUB aparece con el tema y la entrada Live.
+- [ ] El sistema Live termina el arranque sin errores críticos en `vm_serial.log`.
+- [ ] `niri` inicia; `llvmpipe` es aceptable si virgl no está disponible.
+- [ ] `waybar`, `fuzzel`, `foot`, Welcome y los popups abren correctamente.
+- [ ] `lscpu | grep Architecture` muestra `aarch64`.
+- [ ] Calamares completa una instalación GPT/btrfs.
+- [ ] El log de instalación contiene `grub-install --target=arm64-efi` y `grub-mkconfig`.
+- [ ] `./churros run --arch arm64 --fresh` arranca el sistema instalado desde el disco.
 - Script `./churros vm reset` para borrar solo la VM sin tocar `out/`.

@@ -10,6 +10,27 @@ cd "$(dirname "$0")/../.." || exit 1
 
 FAILURES=0
 NOTICES=0
+TARGET_ARCH="aarch64"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --arch=*) TARGET_ARCH="${1#*=}"; shift ;;
+        --arch)
+            TARGET_ARCH="${2-}"
+            shift 2
+            ;;
+        *) shift ;;
+    esac
+done
+
+case "$TARGET_ARCH" in
+    arm64) TARGET_ARCH="aarch64" ;;
+    x86_64|aarch64) ;;
+    *)
+        echo "Error: unsupported architecture '$TARGET_ARCH' (use arm64 or x86_64)." >&2
+        exit 1
+        ;;
+esac
 
 section() { printf '\n== %s\n' "$1"; }
 pass()    { printf '  ✓ %s\n' "$1"; }
@@ -89,11 +110,11 @@ fi
 if [ -f "archiso/packages.xfce.${TARGET_ARCH}" ]; then
     duplicates_xfce=$(grep -v '^#' "archiso/packages.xfce.${TARGET_ARCH}" | grep -v '^$' | sort | uniq -d)
     if [ -n "$duplicates_xfce" ]; then
-        fail "duplicate entries in archiso/packages.xfce.x86_64:"
+        fail "duplicate entries in archiso/packages.xfce.${TARGET_ARCH}:"
         # shellcheck disable=SC2086
         printf '      %s\n' $duplicates_xfce
     else
-        pass "no duplicates (packages.xfce.x86_64)"
+        pass "no duplicates (packages.xfce.${TARGET_ARCH})"
     fi
 fi
 
@@ -805,14 +826,21 @@ fi
 
 section "Live overlay size"
 
-BOOT_CMDLINE_FILES=(
-    archiso/grub/grub.cfg
-    archiso/grub/loopback.cfg
-    archiso/syslinux/archiso_sys-linux.cfg
-    archiso/syslinux/archiso_pxe-linux.cfg
-    archiso/efiboot/loader/entries/01-archiso-linux.conf
-    archiso/efiboot/loader/entries/02-archiso-speech-linux.conf
-)
+if [ "$TARGET_ARCH" = "aarch64" ]; then
+    BOOT_CMDLINE_FILES=(
+        archiso/grub/grub.cfg
+        archiso/grub/loopback.cfg
+    )
+else
+    BOOT_CMDLINE_FILES=(
+        archiso/grub/grub.cfg
+        archiso/grub/loopback.cfg
+        archiso/syslinux/archiso_sys-linux.cfg
+        archiso/syslinux/archiso_pxe-linux.cfg
+        archiso/efiboot/loader/entries/01-archiso-linux.conf
+        archiso/efiboot/loader/entries/02-archiso-speech-linux.conf
+    )
+fi
 
 cow_ok=1
 for boot_file in "${BOOT_CMDLINE_FILES[@]}"; do

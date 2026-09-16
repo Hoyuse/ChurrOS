@@ -3,42 +3,88 @@
 set -e
 
 VM_DIR="vm"
-DISK="$VM_DIR/ChurrOS.qcow2"
-VARS="$VM_DIR/OVMF_VARS.fd"
+TARGET_ARCH="aarch64"
+QEMU_BIN="qemu-system-aarch64"
+DISK="$VM_DIR/ChurrOS-arm64.qcow2"
+VARS="$VM_DIR/OVMF_VARS_arm64.fd"
+
+for ((arg_index = 1; arg_index <= $#; arg_index++)); do
+    arg="${!arg_index}"
+    case "$arg" in
+        --arch=*) TARGET_ARCH="${arg#*=}" ;;
+        --arch)
+            arg_index=$((arg_index + 1))
+            TARGET_ARCH="${!arg_index}"
+            ;;
+    esac
+done
+case "$TARGET_ARCH" in
+    arm64|aarch64)
+        TARGET_ARCH="aarch64"
+        ;;
+    x86_64|amd64)
+        TARGET_ARCH="x86_64"
+        QEMU_BIN="qemu-system-x86_64"
+        DISK="$VM_DIR/ChurrOS.qcow2"
+        VARS="$VM_DIR/OVMF_VARS.fd"
+        ;;
+    *)
+        echo "Error: unsupported architecture '$TARGET_ARCH' (use arm64 or x86_64)." >&2
+        exit 1
+        ;;
+esac
+
+if [ "$TARGET_ARCH" = "aarch64" ]; then
+    OVMF_CODE_CANDIDATES=(
+        /usr/share/edk2/aarch64/QEMU_EFI.fd
+        /usr/share/edk2/aarch64/QEMU_EFI-pflash.raw
+        /usr/share/qemu-efi-aarch64/QEMU_EFI.fd
+        /usr/share/AAVMF/AAVMF_CODE.fd
+    )
+    OVMF_VARS_CANDIDATES=(
+        /usr/share/edk2/aarch64/QEMU_VARS.fd
+        /usr/share/AAVMF/AAVMF_VARS.fd
+    )
+else
+    OVMF_CODE_CANDIDATES=(
+        /usr/share/edk2/x64/OVMF_CODE.4m.fd
+        /usr/share/edk2-ovmf/x64/OVMF_CODE.4m.fd
+        /usr/share/edk2/x64/OVMF_CODE.fd
+        /usr/share/OVMF/OVMF_CODE.fd
+        /usr/share/ovmf/x64/OVMF_CODE.4m.fd
+        /usr/share/ovmf/OVMF_CODE.fd
+    )
+    OVMF_VARS_CANDIDATES=(
+        /usr/share/edk2/x64/OVMF_VARS.4m.fd
+        /usr/share/edk2-ovmf/x64/OVMF_VARS.4m.fd
+        /usr/share/edk2/x64/OVMF_VARS.fd
+        /usr/share/OVMF/OVMF_VARS.fd
+        /usr/share/ovmf/x64/OVMF_VARS.4m.fd
+        /usr/share/ovmf/OVMF_VARS.fd
+    )
+fi
 
 # Search OVMF firmware files in standard locations
 OVMF_CODE=""
-for path in \
-    /usr/share/edk2/x64/OVMF_CODE.4m.fd \
-    /usr/share/edk2-ovmf/x64/OVMF_CODE.4m.fd \
-    /usr/share/edk2/x64/OVMF_CODE.fd \
-    /usr/share/OVMF/OVMF_CODE.fd \
-    /usr/share/ovmf/x64/OVMF_CODE.4m.fd \
-    /usr/share/ovmf/OVMF_CODE.fd; do
+for path in "${OVMF_CODE_CANDIDATES[@]}"; do
     if [ -f "$path" ]; then
         OVMF_CODE="$path"
         break
     fi
 done
 if [ -z "$OVMF_CODE" ]; then
-    OVMF_CODE=$(find /usr/share/edk2 /usr/share/ovmf /usr/share/OVMF /usr/share/qemu -type f \( -iname 'OVMF_CODE*.4m.fd' -o -iname 'OVMF_CODE*.fd' \) ! -name '*secboot*' -print -quit 2>/dev/null || true)
+    OVMF_CODE=$(find /usr/share/edk2 /usr/share/ovmf /usr/share/OVMF /usr/share/AAVMF /usr/share/qemu /usr/share/qemu-efi-aarch64 -type f \( -iname 'OVMF_CODE*.4m.fd' -o -iname 'OVMF_CODE*.fd' -o -iname 'QEMU_EFI*.fd' -o -iname 'AAVMF_CODE*.fd' \) ! -name '*secboot*' -print -quit 2>/dev/null || true)
 fi
 
 OVMF_VARS=""
-for path in \
-    /usr/share/edk2/x64/OVMF_VARS.4m.fd \
-    /usr/share/edk2-ovmf/x64/OVMF_VARS.4m.fd \
-    /usr/share/edk2/x64/OVMF_VARS.fd \
-    /usr/share/OVMF/OVMF_VARS.fd \
-    /usr/share/ovmf/x64/OVMF_VARS.4m.fd \
-    /usr/share/ovmf/OVMF_VARS.fd; do
+for path in "${OVMF_VARS_CANDIDATES[@]}"; do
     if [ -f "$path" ]; then
         OVMF_VARS="$path"
         break
     fi
 done
 if [ -z "$OVMF_VARS" ]; then
-    OVMF_VARS=$(find /usr/share/edk2 /usr/share/ovmf /usr/share/OVMF /usr/share/qemu -type f \( -iname 'OVMF_VARS*.4m.fd' -o -iname 'OVMF_VARS*.fd' \) -print -quit 2>/dev/null || true)
+    OVMF_VARS=$(find /usr/share/edk2 /usr/share/ovmf /usr/share/OVMF /usr/share/AAVMF /usr/share/qemu -type f \( -iname 'OVMF_VARS*.4m.fd' -o -iname 'OVMF_VARS*.fd' -o -iname 'QEMU_VARS*.fd' -o -iname 'AAVMF_VARS*.fd' \) -print -quit 2>/dev/null || true)
 fi
 
 ISO=$(find out -name "*.iso" 2>/dev/null | head -n1)
@@ -123,8 +169,16 @@ echo
 KVM_ARGS=""
 GPU_ARGS=""
 CPU_ARGS=""
+MACHINE_ARGS=""
+AUDIO_ARGS=""
 
-if [ "$FORCE_NOKVM" = false ] && [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+if [ "$TARGET_ARCH" = "aarch64" ]; then
+    echo "  ARM64 QEMU: TCG software emulation"
+    KVM_ARGS="-cpu cortex-a72"
+    CPU_ARGS="-smp 4"
+    MACHINE_ARGS="-machine virt"
+    GPU_ARGS="-device virtio-gpu-gl-pci -display gtk,gl=on,show-cursor=on"
+elif [ "$FORCE_NOKVM" = false ] && [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
     echo "  KVM acceleration: enabled"
     KVM_ARGS="-cpu host"
     CPU_ARGS="-smp 4"
@@ -140,14 +194,18 @@ fi
 # Always attempt virtio-gpu-gl with GL; fall back to virtio-gpu (no GL) only if
 # the host lacks /dev/dri entirely — in that case niri will try llvmpipe.
 if [ -e /dev/dri ]; then
-    GPU_ARGS="-device virtio-vga-gl -display gtk,gl=on,show-cursor=on"
+    [ "$TARGET_ARCH" = "x86_64" ] && GPU_ARGS="-device virtio-vga-gl -display gtk,gl=on,show-cursor=on"
     echo "  GPU: virtio-vga-gl + virgl (3D)"
 else
-    GPU_ARGS="-device virtio-gpu -display gtk,gl=off,show-cursor=on"
+    [ "$TARGET_ARCH" = "x86_64" ] && GPU_ARGS="-device virtio-gpu -display gtk,gl=off,show-cursor=on"
     echo "  GPU: virtio-gpu (no 3D — niri may fall back to software rendering)"
 fi
 
-qemu-system-x86_64 \
+if [ "$TARGET_ARCH" = "x86_64" ]; then
+    AUDIO_ARGS="-device intel-hda -device hda-duplex"
+fi
+
+"$QEMU_BIN" \
     $MACHINE_ARGS \
     $KVM_ARGS \
     $CPU_ARGS \
@@ -155,8 +213,7 @@ qemu-system-x86_64 \
     $GPU_ARGS \
     -device qemu-xhci \
     -device usb-tablet \
-    -device intel-hda \
-    -device hda-duplex \
+    $AUDIO_ARGS \
     -device virtio-serial-pci \
     -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on \
     -device virtserialport,chardev=vdagent,name=com.redhat.spice.0 \

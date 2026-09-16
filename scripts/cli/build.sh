@@ -4,9 +4,16 @@ set -e
 HOST_REPO_SYMLINK=0
 EDITION="niri"
 TARGET_ARCH="aarch64"
-PACKAGE_LIST="archiso/packages.${TARGET_ARCH}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --arch|-a)
+            TARGET_ARCH="$2"
+            shift 2
+            ;;
+        --arch=*)
+            TARGET_ARCH="${1#*=}"
+            shift
+            ;;
         --edition|-e)
             EDITION="$2"
             shift 2
@@ -20,6 +27,17 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+case "$TARGET_ARCH" in
+    arm64) TARGET_ARCH="aarch64" ;;
+    x86_64|aarch64) ;;
+    *)
+        echo "Error: unsupported architecture '$TARGET_ARCH' (use arm64 or x86_64)." >&2
+        exit 1
+        ;;
+esac
+
+PACKAGE_LIST="archiso/packages.${TARGET_ARCH}"
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
 if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
