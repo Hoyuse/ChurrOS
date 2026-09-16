@@ -10,15 +10,20 @@ use std::fs;
 
 pub fn get_cpu() -> String {
     if let Ok(content) = fs::read_to_string("/proc/cpuinfo") {
-        for line in content.lines() {
-            if let Some(rest) = line.strip_prefix("model name") {
-                if let Some((_, value)) = rest.split_once(':') {
-                    return value.trim().to_string();
-                }
-            }
+        if let Some(model) = cpu_model(&content) {
+            return model;
         }
     }
     "Desconocido".to_string()
+}
+
+fn cpu_model(content: &str) -> Option<String> {
+    const MODEL_KEYS: [&str; 4] = ["model name", "Model", "Hardware", "Processor"];
+
+    content.lines().find_map(|line| {
+        let (key, value) = line.split_once(':')?;
+        MODEL_KEYS.contains(&key.trim()).then(|| value.trim().to_string())
+    })
 }
 
 // ==========================================
@@ -81,4 +86,30 @@ pub fn get_os() -> String {
 
 pub fn get_architecture() -> String {
     std::env::consts::ARCH.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::cpu_model;
+
+    #[test]
+    fn reads_x86_model_name() {
+        assert_eq!(
+            cpu_model("processor\t: 0\nmodel name\t: Test CPU\n"),
+            Some("Test CPU".to_string())
+        );
+    }
+
+    #[test]
+    fn reads_arm_hardware_field() {
+        assert_eq!(
+            cpu_model("processor\t: 0\nHardware\t: Test ARM board\n"),
+            Some("Test ARM board".to_string())
+        );
+    }
+
+    #[test]
+    fn ignores_unrelated_cpuinfo_fields() {
+        assert_eq!(cpu_model("processor\t: 0\nCPU architecture\t: 8\n"), None);
+    }
 }
