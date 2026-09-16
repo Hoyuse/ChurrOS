@@ -54,7 +54,7 @@ bash /root/scripts/services.sh
 
 echo "Initializing pacman keyring..."
 pacman-key --init
-pacman-key --populate archlinux
+pacman-key --populate archlinuxarm
 
 echo "Populating package databases (incl. multilib para Steam)..."
 pacman -Sy --noconfirm
