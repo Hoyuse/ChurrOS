@@ -75,17 +75,19 @@ fi
 
 section "ISO package list"
 
-duplicates=$(grep -v '^#' archiso/packages.x86_64 | grep -v '^$' | sort | uniq -d)
+TARGET_ARCH="aarch64"
+PACKAGE_LIST="archiso/packages.${TARGET_ARCH}"
+duplicates=$(grep -v '^#' "$PACKAGE_LIST" | grep -v '^$' | sort | uniq -d)
 if [ -n "$duplicates" ]; then
-    fail "duplicate entries in archiso/packages.x86_64:"
+    fail "duplicate entries in $PACKAGE_LIST:"
     # shellcheck disable=SC2086
     printf '      %s\n' $duplicates
 else
-    pass "no duplicates (packages.x86_64)"
+    pass "no duplicates ($PACKAGE_LIST)"
 fi
 
-if [ -f archiso/packages.xfce.x86_64 ]; then
-    duplicates_xfce=$(grep -v '^#' archiso/packages.xfce.x86_64 | grep -v '^$' | sort | uniq -d)
+if [ -f "archiso/packages.xfce.${TARGET_ARCH}" ]; then
+    duplicates_xfce=$(grep -v '^#' "archiso/packages.xfce.${TARGET_ARCH}" | grep -v '^$' | sort | uniq -d)
     if [ -n "$duplicates_xfce" ]; then
         fail "duplicate entries in archiso/packages.xfce.x86_64:"
         # shellcheck disable=SC2086
@@ -97,7 +99,7 @@ fi
 
 # ------------------------------------------------------- Shared resolvers
 
-mapfile -t PACKAGES < <(grep -v '^#' archiso/packages.x86_64 | grep -v '^$')
+mapfile -t PACKAGES < <(grep -v '^#' "$PACKAGE_LIST" | grep -v '^$')
 
 # AUR extras built into archiso/packages/ by scripts/build-aur.sh
 mapfile -t LOCAL_AUR < <(
@@ -152,7 +154,7 @@ mapfile -t COMMANDS < <(
 missing=0
 for command in "${COMMANDS[@]}"; do
     if ! command_exists "$command"; then
-        fail "'$command' is spawned by Niri but is neither in usr/bin nor in packages.x86_64"
+        fail "'$command' is spawned by Niri but is neither in usr/bin nor in $PACKAGE_LIST"
         missing=$((missing + 1))
     fi
 done
@@ -193,7 +195,7 @@ for desktop in "$DESKTOP_DIR"/*.desktop; do
         continue
     fi
     if ! command_exists "$cmd"; then
-        fail "$base: '$cmd' does not resolve (usr/bin, deployable crate, packages.x86_64, or local build)"
+        fail "$base: '$cmd' does not resolve (usr/bin, deployable crate, $PACKAGE_LIST, or local build)"
         desktop_missing=$((desktop_missing + 1))
     fi
 
@@ -743,7 +745,7 @@ else
     aur_ok=1
     aur_checked=0
     for pkg in "${LOCAL_AUR[@]}"; do
-        # Si ya está en la lista base (packages.x86_64) se instala por defecto,
+        # Si ya está en la lista base ($PACKAGE_LIST) se instala por defecto,
         # así que no necesita aparecer en netinstall.
         if printf '%s\n' "${PACKAGES[@]}" | grep -qx "$pkg"; then
             continue

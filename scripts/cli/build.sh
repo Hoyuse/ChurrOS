@@ -3,6 +3,8 @@
 set -e
 HOST_REPO_SYMLINK=0
 EDITION="niri"
+TARGET_ARCH="aarch64"
+PACKAGE_LIST="archiso/packages.${TARGET_ARCH}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --edition|-e)
@@ -25,6 +27,11 @@ if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
     exit 1
 fi
 
+if [ ! -f "$PACKAGE_LIST" ]; then
+    echo "Error: package list not found: $PACKAGE_LIST" >&2
+    exit 1
+fi
+
 PACKAGES_BACKED_UP=0
 GREETD_BACKED_UP=0
 cleanup_temp() {
@@ -33,8 +40,8 @@ cleanup_temp() {
         echo "[cleanup] Removing host /root/packages symlink..."
         sudo rm -f /root/packages 2>/dev/null || true
     fi
-    if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f archiso/packages.x86_64.orig ]; then
-        mv archiso/packages.x86_64.orig archiso/packages.x86_64
+    if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f "$PACKAGE_LIST.orig" ]; then
+        mv "$PACKAGE_LIST.orig" "$PACKAGE_LIST"
     fi
     if [ "$GREETD_BACKED_UP" -eq 1 ] && [ -f archiso/airootfs/etc/greetd/config.toml.orig ]; then
         mv archiso/airootfs/etc/greetd/config.toml.orig archiso/airootfs/etc/greetd/config.toml
@@ -65,12 +72,13 @@ echo
 # 0. Configurar paquetes según la edición
 if [ "$EDITION" = "xfce" ]; then
     echo "[0/5] Selecting XFCE packages..."
-    if [ -f archiso/packages.xfce.x86_64 ]; then
-        cp archiso/packages.x86_64 archiso/packages.x86_64.orig
+    EDITION_PACKAGE_LIST="archiso/packages.xfce.${TARGET_ARCH}"
+    if [ -f "$EDITION_PACKAGE_LIST" ]; then
+        cp "$PACKAGE_LIST" "$PACKAGE_LIST.orig"
         PACKAGES_BACKED_UP=1
-        cp archiso/packages.xfce.x86_64 archiso/packages.x86_64
+        cp "$EDITION_PACKAGE_LIST" "$PACKAGE_LIST"
     else
-        echo "Error: archiso/packages.xfce.x86_64 not found!" >&2
+        echo "Error: $EDITION_PACKAGE_LIST not found!" >&2
         exit 1
     fi
 fi
