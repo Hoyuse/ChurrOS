@@ -14,6 +14,15 @@ set -e
 
 BASE="${1:-https://download.churroslinux.org/churros/}"
 BASE="${BASE%/}/"
+ARCH="$(uname -m)"
+
+case "$ARCH" in
+    x86_64|aarch64) ;;
+    *)
+        echo "ERROR: arquitectura no soportada: $ARCH"
+        exit 1
+        ;;
+esac
 
 VERSION_FILE=/etc/churros-version
 EDITION_FILE=/etc/churros-edition
@@ -25,9 +34,10 @@ elif [ -f /etc/os-release ]; then
     [ -n "$var_id" ] && EDITION="$var_id"
 fi
 
-echo "Comprobando utilidades de ChurrOS ($BASE) [edición: $EDITION]..."
+MANIFEST_URL="${BASE}${ARCH}/updates.json"
+echo "Comprobando utilidades de ChurrOS ($MANIFEST_URL) [edición: $EDITION]..."
 
-MANIFEST="$(curl -fsSL --connect-timeout 10 "$BASE/updates.json" 2>/dev/null)" || {
+MANIFEST="$(curl -fsSL --connect-timeout 10 "$MANIFEST_URL" 2>/dev/null)" || {
     echo "ERROR: no se pudo obtener updates.json"
     exit 1
 }
@@ -38,6 +48,9 @@ try:
     manifest_raw = sys.stdin.read()
     data = json.loads(manifest_raw)
     version = data.get('version', '')
+    expected_arch = '$ARCH'
+    if data.get('arch') != expected_arch:
+        sys.exit(2)
     edition = '$EDITION'
     editions = data.get('editions', {})
     if isinstance(editions, dict) and edition in editions:

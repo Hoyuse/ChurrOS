@@ -19,6 +19,7 @@ pub struct UpdateService;
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChurrosUpdate {
     pub version: String,
+    pub arch: String,
     pub file: String,
     pub sha256: String,
 }
@@ -46,6 +47,7 @@ fn parse_updates_json(raw: &str) -> Option<ChurrosUpdate> {
             ) {
                 return Some(ChurrosUpdate {
                     version,
+                    arch: v.get("arch")?.as_str()?.to_string(),
                     file: file.to_string(),
                     sha256: sha256.to_string(),
                 });
@@ -55,6 +57,7 @@ fn parse_updates_json(raw: &str) -> Option<ChurrosUpdate> {
 
     Some(ChurrosUpdate {
         version,
+        arch: v.get("arch")?.as_str()?.to_string(),
         file: v.get("file")?.as_str()?.to_string(),
         sha256: v.get("sha256")?.as_str()?.to_string(),
     })
@@ -222,12 +225,16 @@ impl UpdateService {
     /// `Some` = hay actualización disponible (versión != instalada).
     pub fn check_churros() -> Option<ChurrosUpdate> {
         let base = Self::churros_url();
-        let url = format!("{base}updates.json");
+        let arch = std::env::consts::ARCH;
+        let url = format!("{base}{arch}/updates.json");
         let out = run_capture(
             &["curl", "-fsSL", "--connect-timeout", "10", url.as_str()],
             15,
         )?;
         let update = parse_updates_json(&out)?;
+        if update.arch != arch {
+            return None;
+        }
         if update.version == Self::installed_churros_version() {
             None
         } else {
@@ -353,13 +360,15 @@ mod tests {
     fn parse_updates_json_valid() {
         let raw = r#"{
             "version": "1.0",
+            "arch": "x86_64",
             "date": "2026-08-20",
-            "file": "churros-utils-1.0.tar.zst",
+            "file": "churros-utils-1.0-x86_64.tar.zst",
             "sha256": "abc123"
         }"#;
         let u = parse_updates_json(raw).unwrap();
         assert_eq!(u.version, "1.0");
-        assert_eq!(u.file, "churros-utils-1.0.tar.zst");
+        assert_eq!(u.arch, "x86_64");
+        assert_eq!(u.file, "churros-utils-1.0-x86_64.tar.zst");
         assert_eq!(u.sha256, "abc123");
     }
 
