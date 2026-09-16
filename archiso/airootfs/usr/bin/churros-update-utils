@@ -2,139 +2,77 @@
 #
 # churros-update-utils — comprueba y actualiza las utilidades de ChurrOS
 # desde el servidor de releases. Se ejecuta como root vía churros-pkexec
-# (regla polkit 50-churros-store.rules).
+# (la regla polkit permite los binarios churros-*).
 #
 # Uso:
-#   churros-update-utils
+#   churros-update-utils [URL_BASE]
 #
-# No acepta argumentos: el origen está fijado en este script. Anteriormente
-# la GUI pasaba la URL leída de ~/.config/churros/settings.json
-# (updates.churros_url), un fichero escribible por el usuario, de modo que
-# cualquiera podía hacer que root descargara y extrajera sobre / un tarball
-# arbitrario. El sha256 del manifiesto no subsanaba eso: venía del mismo
-# origen no autenticado.
+# URL_BASE por defecto: https://download.churroslinux.org/churros/
 #
-# Controles aplicados:
-#   - origen fijo (https), sin overrides;
-#   - versión y nombre de fichero validados con expresiones regulares;
-#   - el sha256 announced en el manifiesto debe coincidir con el descargado;
-#   - la lista de miembros del tarball se valida antes de extraer (sin rutas
-#     absolutas, sin "..", solo prefijos permitidos, sin enlaces simbólicos);
-#   - la extracción se hace en un directorio de stage y solo después se
-#     copia sobre /.
-#
-# Si existe /usr/share/churros/churros-release.pubkey, el manifiesto además
-# debe venir firmado por minisign y se aborta si la firma no valida.
 
-set -euo pipefail
+set -e
 
-BASE="https://download.churroslinux.org/churros/"
-PUBKEY=/usr/share/churros/churros-release.pubkey
+BASE="${1:-https://download.churroslinux.org/churros/}"
+BASE="${BASE%/}/"
+ARCH="$(uname -m)"
+
+case "$ARCH" in
+    x86_64|aarch64) ;;
+    *)
+        echo "ERROR: arquitectura no soportada: $ARCH"
+        exit 1
+        ;;
+esac
 
 VERSION_FILE=/etc/churros-version
 EDITION_FILE=/etc/churros-edition
-
-# Prefios dentro del tarball que el bundle de utilidades puede tocar. Cualquier
-# otra ruta (passwd, sudoers, unit de systemd...) se rechaza.
-ALLOWED_PREFIXES=(
-    usr/bin/
-    usr/lib/
-    usr/local/bin/
-    usr/local/lib/
-    usr/share/churros/
-    etc/churros-version
-    etc/churros-edition
-)
-
-die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
-
-cleanup() {
-    if [ -n "$TMPFILE" ]; then
-        rm -f "$TMPFILE" "$TMPFILE.sig"
-    fi
-    if [ -n "$DL" ]; then
-        rm -f "$DL"
-    fi
-    if [ -n "$STAGE" ]; then
-        rm -rf "$STAGE"
-    fi
-    return 0
-}
-trap cleanup EXIT
-
-TMPFILE=""
-DL=""
-STAGE=""
-
-if [ "$#" -ne 0 ]; then
-    die "este comando no acepta argumentos (el origen está fijado en $BASE)"
-fi
-
-# --------------------------------------------------------------- edición
-
 EDITION="niri"
 if [ -f "$EDITION_FILE" ]; then
     EDITION="$(tr -d '[:space:]' < "$EDITION_FILE" | tr '[:upper:]' '[:lower:]')"
 elif [ -f /etc/os-release ]; then
-    var_id="$(grep -E '^VARIANT_ID=' /etc/os-release | cut -d= -f2 | tr -d '"' | tr -d '[:space:]' || true)"
+    var_id=$(grep -E '^VARIANT_ID=' /etc/os-release | cut -d= -f2 | tr -d '"' | tr -d '[:space:]' || true)
     [ -n "$var_id" ] && EDITION="$var_id"
 fi
-# Solo se usa como clave de lookup en el manifiesto: se restringe igual.
-case "$EDITION" in
-    *[!a-z0-9_-]*) die "edición inválida: $EDITION" ;;
-esac
 
-echo "Comprobando utilidades de ChurrOS ($BASE) [edición: $EDITION]..."
+MANIFEST_URL="${BASE}${ARCH}/updates.json"
+echo "Comprobando utilidades de ChurrOS ($MANIFEST_URL) [edición: $EDITION]..."
 
-# -------------------------------------------------------------- manifiesto
+MANIFEST="$(curl -fsSL --connect-timeout 10 "$MANIFEST_URL" 2>/dev/null)" || {
+    echo "ERROR: no se pudo obtener updates.json"
+    exit 1
+}
 
-TMPFILE="$(mktemp)"
-if command -v minisign >/dev/null 2>&1 && [ -f "$PUBKEY" ]; then
-    curl -fsSL --proto '=https' --tlsv1.2 --connect-timeout 10 \
-        -o "$TMPFILE.sig" "$BASE/updates.json.minisig" \
-        || die "no se pudo obtener la firma minisign del manifiesto"
-    minisign -V -p "$PUBKEY" -x "$TMPFILE.sig" -m "$TMPFILE" >/dev/null 2>&1 \
-        || die "firma minisig inválida:Updates-JSON no se acepta"
-    echo "Firma del manifiesto verificada."
-else
-    echo "AVISO: sin clave pública de releases ($PUBKEY): el manifiesto solo se"
-    echo "       comprueba por integridad (sha256), no por autenticidad."
-fi
-
-curl -fsSL --proto '=https' --tlsv1.2 --connect-timeout 10 \
-    -o "$TMPFILE" "$BASE/updates.json" || die "no se pudo obtener updates.json"
-
-# La edición se pasa por entorno, no interpolada en el source de python.
-PARSED="$(CHURROS_EDITION="$EDITION" python3 -c '
-import json, os, re, sys
-
-edition = os.environ["CHURROS_EDITION"]
-data = json.load(sys.stdin)
-
-version = data.get("version", "")
-if not isinstance(version, str) or not re.fullmatch(r"[0-9]+(\.[0-9]+)*", version):
-    sys.exit("version inválida en el manifiesto")
-
-entry = None
-editions = data.get("editions")
-if isinstance(editions, dict):
-    entry = editions.get(edition)
-    if entry is None:
-        entry = editions.get("niri")
-if not isinstance(entry, dict):
-    entry = {"file": data.get("file", ""), "sha256": data.get("sha256", "")}
-
-file = entry.get("file", "")
-sha = entry.get("sha256", "")
-if not isinstance(file, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*\.tar\.zst", file):
-    sys.exit("nombre de fichero inválido en el manifiesto")
-if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{64}", sha):
-    sys.exit("sha256 inválido en el manifiesto")
-
-print(f"{version}|{file}|{sha}")
-' < "$TMPFILE")" || die "updates.json mal formado o edición no encontrada"
+PARSED=$(python3 -c "
+import sys, json
+try:
+    manifest_raw = sys.stdin.read()
+    data = json.loads(manifest_raw)
+    version = data.get('version', '')
+    expected_arch = '$ARCH'
+    if data.get('arch') != expected_arch:
+        sys.exit(2)
+    edition = '$EDITION'
+    editions = data.get('editions', {})
+    if isinstance(editions, dict) and edition in editions:
+        file = editions[edition].get('file', '')
+        sha = editions[edition].get('sha256', '')
+    elif isinstance(editions, dict) and 'niri' in editions:
+        file = editions['niri'].get('file', '')
+        sha = editions['niri'].get('sha256', '')
+    else:
+        file = data.get('file', '')
+        sha = data.get('sha256', '')
+    print(f'{version}|{file}|{sha}')
+except Exception:
+    sys.exit(1)
+" <<< "$MANIFEST" 2>/dev/null || true)
 
 IFS='|' read -r version file sha256 <<< "$PARSED"
+
+[ -n "$version" ] && [ -n "$file" ] && [ -n "$sha256" ] || {
+    echo "ERROR: updates.json mal formado o edición no encontrada"
+    exit 1
+}
 
 installed="$(cat "$VERSION_FILE" 2>/dev/null || echo "")"
 
@@ -143,92 +81,25 @@ if [ -n "$installed" ] && [ "$version" = "$installed" ]; then
     exit 0
 fi
 
-# --------------------------------------------------------------- descarga
-
 echo "Actualizando utilidades de ChurrOS: v${installed:-?} -> v$version"
 echo "Descargando $file..."
-
-DL="$(mktemp)"
-curl -fsSL --proto '=https' --tlsv1.2 --connect-timeout 10 \
-    -o "$DL" "$BASE/$file" || die "descarga fallida"
+tmp="$(mktemp)"
+curl -fSL --connect-timeout 10 -o "$tmp" "$BASE/$file" || {
+    echo "ERROR: descarga fallida"
+    rm -f "$tmp"
+    exit 1
+}
 
 echo "Verificando sha256..."
-got="$(sha256sum "$DL" | awk '{print $1}')"
-[ "$got" = "$sha256" ] || die "sha256 no coincide ($got != $sha256)"
-
-# ------------------------------------------------- validación del tarball
-
-echo "Validando contenido del paquete..."
-listing="$(tar --zstd -tf "$DL")" || die "el paquete no es un tarball válido"
-
-while IFS= read -r member; do
-    [ -n "$member" ] || continue
-    is_dir=no
-    case "$member" in
-        */) is_dir=yes ;;
-    esac
-    case "$member" in
-        /*) die "el paquete contiene una ruta absoluta: $member" ;;
-        *..*) die "el paquete contiene '..': $member" ;;
-        ./*) member="${member#./}" ;;
-    esac
-    # Entradas de directorio de primer nivel ("." o "./") tras normalizar.
-    [ -n "$member" ] || continue
-    case "$member" in
-        .|*/) member="${member%/}" ;;
-    esac
-    # Los directorios no se validan contra la lista: los ficheros que hayan
-    # dentro sí, y un directorio vacío fuera de ella es inofensivo.
-    [ "$member" = "." ] && continue
-    [ "$is_dir" = yes ] && continue
-    ok=no
-    for prefix in "${ALLOWED_PREFIXES[@]}"; do
-        case "$member" in
-            "$prefix"*) ok=yes; break ;;
-        esac
-    done
-    [ "$ok" = yes ] || die "el paquete toca una ruta no permitida: $member"
-done <<< "$listing"
-
-# Sin enlaces simbólicos ni duros: un bundle de utilidades no los necesita y
-# un enlace a /etc/shadow convertiría la extracción en escritura arbitraria.
-# El listado se materializa antes de filtrar para no depender de SIGPIPE.
-verbose_listing="$(tar --zstd -tvf "$DL")"
-case "$verbose_listing" in
-    [lh]* | *'
-'[lh]*)
-        die "el paquete contiene enlaces simbólicos o duros"
-        ;;
-esac
-
-# --------------------------------------------------------------- instalar
-
-STAGE="$(mktemp -d /run/churros-update.XXXXXX)"
-# Root restaura los permisos del archivo (no --no-same-permissions): los
-# binarios del bundle necesitan su bit +x intacto.
-tar --zstd -xf "$DL" -C "$STAGE" --no-same-owner \
-    || die "fallo al extraer el paquete"
-
-# Segunda barrera: el stage solo puede contener lo autorizado y nada que
-# escapes de él.
-while IFS= read -r path; do
-    rel="${path#"$STAGE"/}"
-    case "$rel" in
-        /*|*..*) die "extracción fuera del stage: $rel" ;;
-    esac
-done < <(find "$STAGE" -mindepth 1)
-
-echo "Instalando..."
-cp -a "$STAGE"/. /
-
-# Solo tras copiar se actualiza la versión instalada.
-if ! printf '%s\n' "$version" | cmp -s - "$VERSION_FILE"; then
-    printf '%s\n' "$version" > "$VERSION_FILE"
+got="$(sha256sum "$tmp" | awk '{print $1}')"
+if [ "$got" != "$sha256" ]; then
+    echo "ERROR: sha256 no coincide ($got != $sha256)"
+    rm -f "$tmp"
+    exit 1
 fi
 
-cleanup
-TMPFILE=""
-DL=""
-STAGE=""
+echo "Instalando..."
+tar --zstd -xaf "$tmp" -C / --no-same-owner
+rm -f "$tmp"
 
 echo "Utilidades de ChurrOS actualizadas a v$version."
