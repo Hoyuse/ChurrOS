@@ -33,6 +33,8 @@ input {
 // Layout
 layout {
     gaps 8
+    // Noctalia pinta el fondo; el color del workspace debe ser transparente.
+    background-color "transparent"
     focus-ring {
         off
     }
@@ -136,12 +138,28 @@ window-rule {
 }
 // [CHURROS-GLASS-END]
 
+window-rule {
+    match app-id="dev.noctalia.Noctalia"
+    open-floating true
+    default-column-width { fixed 1080; }
+    default-window-height { fixed 920; }
+}
+
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
 // Layer rules
 layer-rule {
     match namespace="^launcher$"
     background-effect {
         blur true
     }
+}
+
+layer-rule {
+    match namespace="^noctalia-wallpaper"
+    place-within-backdrop true
 }
 
 // Keybindings
@@ -227,9 +245,7 @@ binds {
 }
 
 // Autostart
-spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.png" "-m" "fill"
+spawn-at-startup "noctalia"
 spawn-at-startup "churros-portal-start"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-spawn-at-startup "waybar"
-spawn-at-startup "mako"
 spawn-at-startup "churros-welcome"

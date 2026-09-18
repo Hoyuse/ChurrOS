@@ -107,6 +107,9 @@ vulkan-virtio
 
 niri
 
+# Desktop shell on niri (Arch extra v5). Not a compositor; not AUR noctalia-shell (v4).
+noctalia
+
 foot
 flatpak
 waybar

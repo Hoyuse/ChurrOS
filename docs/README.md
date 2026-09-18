@@ -72,7 +72,7 @@ Cada documento aborda un aspecto específico del proyecto.
 | Preferences | App `churros-settings` — tema, accent, fuentes, cursor, wallpaper, power, etc. |
 | Services | Wrappers de servicios del sistema (wpctl, upower, nmcli, brightnessctl, etc). |
 | Login Greeter | Pantalla de inicio de sesión ReGreet (macOS style), greetd, cage y autologin. |
-| Desktop Config | Configuración del escritorio live (Niri, Waybar, greetd, usuario). |
+| Desktop Config | Configuración del escritorio live (Niri, Noctalia, greetd, usuario). |
 | Live Services | Servicios systemd y hooks del Live ISO. |
 | Boot | Sistema de arranque (GRUB UEFI + Syslinux BIOS). |
 | VM | Máquina virtual de desarrollo con QEMU/KVM. |

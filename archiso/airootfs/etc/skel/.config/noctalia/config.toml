@@ -1,0 +1,8 @@
+# Shell de escritorio sobre Niri. El compositor no cambia.
+[wallpaper]
+enabled = true
+fill_mode = "crop"
+directory = "/usr/share/churros/wallpapers"
+
+[wallpaper.default]
+path = "/usr/share/churros/wallpapers/default.png"
