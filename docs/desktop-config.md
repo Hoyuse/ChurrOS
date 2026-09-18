@@ -79,8 +79,10 @@ layout {
 | `SUPER + M` | Sale de Niri |
 | `SUPER + F` | Maximiza columna |
 | `SUPER + SHIFT + F` | Pantalla completa |
-| `SUPER + SPACE` | Abre el launcher (fuzzel) |
-| `SUPER + C` | Abre el centro de control |
+| `SUPER + SPACE` | Launcher de Noctalia |
+| `SUPER + SHIFT + SPACE` | Launcher de respaldo (fuzzel) |
+| `SUPER + C` | Centro de control de Noctalia |
+| `SUPER + SHIFT + C` | Centro de control de ChurrOS (respaldo) |
 | `SUPER + P` | Abre preferencias (churros-settings) |
 | `SUPER + W` | Abre churros-welcome |
 | `SUPER + S` | Abre Bazaar (tienda Flatpak) |
@@ -103,9 +105,9 @@ layout {
 | `SUPER + ↑/↓` | Mueve el foco entre ventanas |
 | `SUPER + SHIFT + ←/→` | Mueve la columna |
 | `SUPER + SHIFT + ↑/↓` | Mueve la ventana |
-| `XF86AudioRaise/Lower/Mute` | Volumen (con `allow-when-locked`) |
+| `XF86AudioRaise/Lower/Mute` | Volumen vía Noctalia (con `allow-when-locked`) |
 | `XF86AudioPlay/Next/Prev` | Control multimedia (con `allow-when-locked`) |
-| `XF86MonBrightnessUp/Down` | Brillo (con `allow-when-locked`) |
+| `XF86MonBrightnessUp/Down` | Brillo vía Noctalia (con `allow-when-locked`) |
 
 ## Autostart
 
@@ -138,7 +140,7 @@ directory = "/usr/share/churros/wallpapers"
 path = "/usr/share/churros/wallpapers/default.png"
 ```
 
-Los atajos de Niri todavía abren Fuzzel y los popups de ChurrOS; el IPC `noctalia msg` queda para un corte posterior.
+Super+Espacio abre el launcher de Noctalia (`noctalia msg panel-toggle launcher`) y Super+C el centro de control. Las teclas de volumen y brillo van al mismo IPC. Fuzzel queda en Super+Shift+Espacio, `churros-control-center` en Super+Shift+C, y los popups de ChurrOS en Super+Shift.
 
 ---
 

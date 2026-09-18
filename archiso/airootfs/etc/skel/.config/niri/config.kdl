@@ -171,10 +171,12 @@ binds {
     Mod+M { quit; }
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
-    Mod+Space { spawn "fuzzel"; }
+    Mod+Space { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Shift+Space { spawn "fuzzel"; }
 
     // ChurrOS apps
-    Mod+C { spawn "churros-control-center"; }
+    Mod+C { spawn "noctalia" "msg" "panel-toggle" "control-center"; }
+    Mod+Shift+C { spawn "churros-control-center"; }
     Mod+P { spawn "churros-settings"; }
     Mod+W { spawn "churros-welcome"; }
     Mod+S { spawn "bazaar"; }
@@ -234,14 +236,14 @@ binds {
     Mod+Shift+Down { move-window-down; }
 
     // Media keys
-    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0"; }
-    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
-    XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-up"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "noctalia" "msg" "volume-down"; }
+    XF86AudioMute        allow-when-locked=true { spawn "noctalia" "msg" "volume-mute"; }
     XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
     XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
     XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
-    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "noctalia" "msg" "brightness-up"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "noctalia" "msg" "brightness-down"; }
 }
 
 // Autostart
