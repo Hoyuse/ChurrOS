@@ -42,7 +42,7 @@ const BUILTIN_ACTIONS: [&str; 19] = [
 
 fn categorize(cmd: &str, bind_type: &str) -> &'static str {
     let c = cmd.to_lowercase();
-    let c = c.as_str();
+    let _c = c.as_str();
 
     if bind_type == "spawn" || bind_type == "spawn-sh" {
         return "Aplicaciones";

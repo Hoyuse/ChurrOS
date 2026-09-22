@@ -28,7 +28,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
     // ===== Vista previa =====
     let current = FontService::current();
 
-    let mut preview_group = Group::new("Vista previa");
+    let preview_group = Group::new("Vista previa");
 
     let preview_label = gtk::Label::new(Some("La zorra marrona salta sobre el perro perezoso"));
     preview_label.add_css_class("fonts-preview");

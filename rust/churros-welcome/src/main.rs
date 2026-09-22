@@ -45,7 +45,7 @@ fn load_css() {
     if local.is_file() {
         provider.load_from_path(&local);
     } else {
-        provider.load_from_data(include_str!("../assets/style.css"));
+        provider.load_from_string(include_str!("../assets/style.css"));
     }
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -60,7 +60,7 @@ fn load_css() {
     let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
-        provider.load_from_data(&css);
+        provider.load_from_string(&css);
         if let Some(display) = gtk::gdk::Display::default() {
             gtk::style_context_add_provider_for_display(
                 &display,

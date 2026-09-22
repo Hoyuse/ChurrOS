@@ -3,9 +3,8 @@
 // (equivalente a pages/display.py)
 // ==========================================
 
-use gtk::prelude::*;
 
-use crate::services::display::{DisplayMode, DisplayService, Monitor};
+use crate::services::display::DisplayService;
 use crate::widgets::combo_row::ComboRow;
 use crate::widgets::group::Group;
 use crate::widgets::page::Page;

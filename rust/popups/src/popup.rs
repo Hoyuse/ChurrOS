@@ -68,7 +68,7 @@ pub fn load_css(own: &str) {
     let accent_path = PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
-        provider.load_from_data(&css);
+        provider.load_from_string(&css);
         gtk::style_context_add_provider_for_display(
             &display,
             &provider,

@@ -96,7 +96,7 @@ fn build_actions(page: &Page, navigator: &gtk::Stack, content: &gtk::Box) {
 
     let mut thunar_group = Group::new("Abrir carpeta");
 
-    let nav = navigator.clone();
+    let _nav = navigator.clone();
     thunar_group.add(&Row::new(
         "Abrir carpeta de fondos",
         Some("Arrastra fondos a ~/.local/share/churros/wallpapers"),
@@ -114,7 +114,7 @@ fn build_actions(page: &Page, navigator: &gtk::Stack, content: &gtk::Box) {
 /// Grid de fondos con FlowBox (equivalente a la parte final de __init__
 /// y de _build_after_import)
 fn build_grid(content: &gtk::Box, current: &str, wallpapers: &[std::path::PathBuf], navigator: &gtk::Stack) {
-    let mut grid_group = Group::new("Fondos disponibles");
+    let grid_group = Group::new("Fondos disponibles");
 
     let flow = gtk::FlowBox::new();
     flow.set_selection_mode(gtk::SelectionMode::None);

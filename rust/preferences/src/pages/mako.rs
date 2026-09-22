@@ -3,7 +3,6 @@
 // (equivalente a pages/mako.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;

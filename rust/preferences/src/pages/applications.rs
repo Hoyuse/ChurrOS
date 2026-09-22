@@ -3,7 +3,6 @@
 // (equivalente a pages/applications.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use crate::services::applications::ApplicationsService;
 use crate::widgets::group::Group;

@@ -195,7 +195,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
         state_group.add(&st.timeout);
     }
 
-    let st = Rc::clone(&state);
+    let _st = Rc::clone(&state);
     state_group.add(&Row::new(
         "Bloquear ahora",
         Some("Lanza swaylock al instante"),

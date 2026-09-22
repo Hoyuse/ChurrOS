@@ -7,26 +7,31 @@ echo
 missing=0
 
 check() {
-    if command -v "$1" >/dev/null 2>&1; then
-        echo "✓ $1"
+    local cmd="$1"
+    local pkg="${2:-$1}"
+    if command -v "$cmd" >/dev/null 2>&1; then
+        echo "✓ $cmd"
     else
-        echo "✗ $1 — missing"
+        echo "✗ $cmd — missing (install package '$pkg')"
         missing=$((missing + 1))
     fi
 }
 
-check mkarchiso
+check mkarchiso archiso
 check git
-check qemu-system-x86_64
-check xorriso
-check mksquashfs
-check mcopy
+check qemu-system-x86_64 qemu-desktop
+check xorriso libisoburn
+check mksquashfs squashfs-tools
+check mcopy mtools
+check mmd mtools
+check mkfs.fat dosfstools
+check grub-mkstandalone grub
 check mkinitcpio
 check sudo
-check rustc
+check rustc rust
 check cargo
 check shellcheck
-check msgfmt
+check msgfmt gettext
 check pkg-config
 
 echo

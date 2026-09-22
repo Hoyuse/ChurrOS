@@ -58,6 +58,37 @@ echo "      Edition: ${EDITION^^}"
 echo "======================================"
 echo
 
+# Pre-flight: validar dependencias esenciales del host antes de compilar
+missing_deps=()
+for tool in mkarchiso mksquashfs xorriso; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        missing_deps+=("$tool")
+    fi
+done
+
+if ! command -v grub-mkstandalone >/dev/null 2>&1; then
+    missing_deps+=("grub (comando grub-mkstandalone requerido para uefi.grub)")
+fi
+
+if ! command -v mkfs.fat >/dev/null 2>&1; then
+    missing_deps+=("dosfstools (comando mkfs.fat)")
+fi
+
+if ! command -v mcopy >/dev/null 2>&1 || ! command -v mmd >/dev/null 2>&1; then
+    missing_deps+=("mtools (comandos mcopy y mmd)")
+fi
+
+if [ "${#missing_deps[@]}" -gt 0 ]; then
+    echo "Error: Faltan dependencias en el host para compilar la ISO con mkarchiso:" >&2
+    for dep in "${missing_deps[@]}"; do
+        echo "  - $dep" >&2
+    done
+    echo >&2
+    echo "Instálalas con:" >&2
+    echo "  sudo pacman -S --needed archiso grub dosfstools mtools squashfs-tools libisoburn" >&2
+    exit 1
+fi
+
 # 0. Configurar paquetes según la edición
 if [ "$EDITION" = "xfce" ]; then
     echo "[0/5] Selecting XFCE packages..."

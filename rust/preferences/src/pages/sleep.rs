@@ -3,7 +3,6 @@
 // (equivalente a pages/sleep.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use crate::services::power::PowerService;
 use crate::widgets::combo_row::ComboRow;

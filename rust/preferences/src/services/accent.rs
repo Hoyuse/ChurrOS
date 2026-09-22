@@ -7,7 +7,6 @@ use std::cell::RefCell;
 use std::fs;
 use std::path::PathBuf;
 
-use gtk::prelude::*;
 use gtk::gdk;
 
 use crate::services::settings;
