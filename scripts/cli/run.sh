@@ -131,7 +131,20 @@ if [ "$FORCE_NOKVM" = false ] && [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev
     MACHINE_ARGS="-machine q35,accel=kvm"
 else
     echo "  KVM acceleration: not available (using software emulation)"
-    KVM_ARGS=""
+    if [ "$FORCE_NOKVM" = false ]; then
+        if [ ! -e /dev/kvm ]; then
+            if [ -n "$(journalctl -k -b 0 -g "disabled by BIOS" --no-pager 2>/dev/null || true)" ]; then
+                echo "  WARNING: Virtualization (VT-x / AMD-V) is DISABLED in your computer's BIOS/UEFI."
+                echo "           Niri requires hardware acceleration. Please enable Intel VT-x or AMD-V in BIOS."
+            else
+                echo "  WARNING: /dev/kvm does not exist. Hardware acceleration is not available."
+            fi
+        elif [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
+            echo "  WARNING: Permission denied accessing /dev/kvm."
+            echo "           Fix: sudo usermod -aG kvm $USER (then log out and log back in)"
+        fi
+    fi
+    KVM_ARGS="-cpu max"
     CPU_ARGS="-smp 2"
     MACHINE_ARGS="-machine q35"
 fi
