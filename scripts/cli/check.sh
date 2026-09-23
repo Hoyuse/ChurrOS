@@ -786,7 +786,7 @@ else
     fi
     want_stamp=$(
         (
-            cd installer/patches
+            cd installer/patches || exit 1
             ls calamares-*.patch | sort | xargs sha256sum
             echo "python=$host_python"
         ) | sha256sum | awk '{print $1}'

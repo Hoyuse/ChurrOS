@@ -50,3 +50,12 @@ archiso/airootfs/usr/share/churros/churros-control-center/
 
 # Release bundles produced by scripts/build-churros-release.sh
 release/
+
+# Temporary airootfs build artifacts (copied during build, removed by cleanup trap)
+archiso/airootfs/etc/calamares/
+archiso/airootfs/etc/churros-edition
+archiso/airootfs/etc/polkit-1/rules.d/49-calamares.rules
+archiso/airootfs/root/branding/
+archiso/airootfs/root/customize_airootfs.sh
+archiso/airootfs/root/packages/
+archiso/airootfs/usr/share/churros/grub-theme/

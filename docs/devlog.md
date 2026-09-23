@@ -406,3 +406,29 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
   - Script post-instalación `/usr/share/churros/scripts/configure-greeter-locale` para sincronizar automáticamente el saludo (`greeting_msg`) y formato de fecha según el idioma seleccionado en Calamares.
   - Integración completa con el checkbox de autologin de Calamares y compatibilidad con `churros-settings` (sección *Usuarios y Login*).
 
+---
+
+## 2026-09-22 — Pre-flight Checks de Build, Saneamiento de Rust Workspace y Diagnósticos KVM en CLI
+
+### Pre-flight Checks Tempranos en Build y Doctor
+- **`scripts/cli/build.sh`**:
+  - Implementada comprobación pre-flight antes del paso 0 que valida la presencia de dependencias críticas en el host (`mkarchiso`, `mksquashfs`, `xorriso`, `grub-mkstandalone`, `mkfs.fat`, `mcopy`, `mmd`). Si falta alguna herramienta requerida para generar la imagen UEFI, el script aborta en menos de 1 segundo indicando el paquete faltante exacto y el comando de instalación, en lugar de pasar minutos compilando Rust para fallar al final.
+- **`scripts/cli/doctor.sh`**:
+  - Añadida verificación de herramientas de arranque UEFI (`grub`, `dosfstools`, `mtools`).
+  - Mapeo de cada comando al nombre del paquete Arch correspondiente (`pkgconf`, `gettext`, `libisoburn`, `squashfs-tools`, etc.).
+  - **Instalación automática/interactiva**: Cuando detecta herramientas faltantes, propone su instalación con `sudo pacman -S --needed ...` y permite confirmar interactivamente con `[S/n]` o automáticamente mediante la bandera `--install` / `-y`.
+
+### Diagnósticos de Virtualización Hardware KVM
+- **`scripts/cli/doctor.sh` y `scripts/cli/run.sh`**:
+  - Comprobación del dispositivo `/dev/kvm`, permisos del usuario actual y detección de virtualización deshabilitada en la BIOS/UEFI (`Intel Virtualization Technology` / `SVM`).
+  - `run.sh` emite advertencias claras si KVM no está habilitado y configura un fallback seguro por emulación de software (`-cpu max`, 2 hilos) para evitar que QEMU falle silenciosamente.
+
+### Saneamiento del Workspace de Rust (0 warnings)
+- Limpieza integral de 56 advertencias de compilación en `preferences`, `churros-welcome`, `control-center` y `popups`:
+  - Eliminación de imports redundantes (`gtk::prelude::*`) en 17 archivos.
+  - Corrección de variables mutables innecesarias y código muerto.
+  - Reemplazo de métodos deprecados de GTK4 (`load_from_data` → `load_from_string`).
+
+### Higiene del Repositorio y Limpieza
+- Actualizado `.gitignore` y `scripts/cli/clean.sh` para gestionar y limpiar los archivos temporales de `archiso/airootfs/` en caso de compilaciones interrumpidas.
+- Corregido aviso de ShellCheck en `scripts/cli/check.sh`.
