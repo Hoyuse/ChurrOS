@@ -120,6 +120,27 @@ pub fn list_devices() -> Vec<BtDevice> {
     devices
 }
 
+pub fn connected_device() -> Option<String> {
+    if !which("bluetoothctl") {
+        return None;
+    }
+    let (_, out, _) = run(&["bluetoothctl", "devices", "Connected"], 1500)?;
+    for line in out.lines() {
+        let line = line.trim();
+        if let Some(rest) = line.strip_prefix("Device ") {
+            let mut parts = rest.splitn(2, ' ');
+            let (_addr, name) = (parts.next(), parts.next());
+            if let Some(name) = name {
+                let name = name.trim();
+                if !name.is_empty() {
+                    return Some(name.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
 pub fn connect(address: &str) -> bool {
     if !which("bluetoothctl") {
         return false;

@@ -12,7 +12,7 @@ cd "$REPO_ROOT"
 CARGO_MANIFEST="$REPO_ROOT/rust/Cargo.toml"
 CALAMARES_SRC="$REPO_ROOT/installer/calamares"
 PREVIEW_DIR="$CALAMARES_SRC/preview"
-POPUPS=(network audio bluetooth power brightness battery)
+POPUPS=(network audio volume bluetooth power brightness battery)
 
 LIVE_HOST=0
 TMP_DIRS=()
@@ -65,7 +65,7 @@ Usage:
   ./churros apps
   ./churros apps doctor
   ./churros apps welcome|settings|control-center|calamares
-  ./churros apps popup <audio|network|bluetooth|brightness|battery|power>
+  ./churros apps popup <audio|volume|network|bluetooth|brightness|battery|power>
 
 Open ChurrOS apps on this machine without building the ISO.
 
