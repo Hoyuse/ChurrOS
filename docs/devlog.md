@@ -1,5 +1,18 @@
 # Devlog
 
+## 2026-09-23 — ChurrOS 1.2
+
+Release pública **v1.2**. Optimizaciones de rendimiento, rediseño de UI y mejoras de conectividad y audio:
+
+- **Control Center ultrarrápido**: Carga instantánea de estado de red, bluetooth y audio mediante lecturas paralelas en hilos en segundo plano (<20ms).
+- **Wi-Fi en tiempo real**: Monitoreo dinámico de tasa de transferencia (tasa de enlace actual y velocidad de tráfico en Mbps / KB/s en vivo vía `/proc/net/dev`).
+- **Control de volumen con respuesta inmediata**: Feedback visual a 0ms en sliders de volumen y supresión de sincronización retrasada de WirePlumber/PipeWire.
+- **Popup de audio dedicado y módulo Waybar**: Nuevo popup de barra deslizante de volumen tipo Liquid Glass con iconos dinámicos y soporte para rueda de ratón en Waybar.
+- **Estilo de tarjetas en panel de control**: Fondo sólido opaco (`#161a22`) en tarjetas y selectores para máxima legibilidad, manteniendo transparencia glassmorphism en los bordes y entre opciones.
+- **Actualización de versión 1.2**: Alineadas versiones internas en Calamares (`branding.desc`), crates de Rust (`Cargo.toml` a 1.2.0) y `/etc/churros-version`.
+
+---
+
 ## 2026-08-17 — ChurrOS 0.7
 
 Release pública **v0.7**. ISO `ChurrOS-2026.08.17-x86_64-v0.7.iso` y torrent en download.churroslinux.org.
