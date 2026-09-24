@@ -32,7 +32,7 @@ Aunque actualmente utiliza Arch Linux como base, el objetivo a largo plazo es qu
 
 # Estado del proyecto
 
-Actualmente ChurrOS se encuentra en una etapa temprana de desarrollo. La versión actual es **v1.0**.
+Actualmente ChurrOS se encuentra en una etapa temprana de desarrollo. La versión actual es **v1.2**.
 
 Características implementadas:
 
@@ -158,7 +158,7 @@ El roadmap detallado con el progreso de cada fase está en `docs/roadmap.md`.
 - **Fase 3 — Escritorio**: en curso (Niri, Waybar, foot, Fuzzel, Mako, centro de control; falta Wlogout).
 - **Fase 4 — Instalador**: completada (Calamares con branding ChurrOS; GRUB UEFI + Syslinux BIOS).
 - **Fase 5 — Ecosistema**: en curso (apps oficiales en Rust y actualizador; falta repositorio oficial).
-- **Fase 6 — Publicación**: en curso (release **v1.0**; falta wiki).
+- **Fase 6 — Publicación**: en curso (release **v1.2**; falta wiki).
 
 ---
 

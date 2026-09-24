@@ -198,4 +198,4 @@ Mejoras previstas:
 - Generación de checksums desde la CLI.
 - Comando `./churros release`.
 
-`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v1.0 se publica a mano en download.churroslinux.org (ISO + torrent).
+`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v1.2 se publica a mano en download.churroslinux.org (ISO + torrent).

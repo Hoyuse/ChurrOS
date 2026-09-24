@@ -113,16 +113,16 @@ Verifica:
 
 El número de versión vive en `VERSION`. Lo muestran `./churros version`, `./churros info`, el footer de welcome, Ajustes y el `os-release` de la ISO. Debe coincidir con el tag de GitHub cuando exista.
 
-La versión actual es **1.0**. El esquema previsto es Semantic Versioning (`MAJOR.MINOR.PATCH`); algunas ISO y tags omiten el parche (`v0.6`, `v0.7`).
+La versión actual es **1.2**. El esquema previsto es Semantic Versioning (`MAJOR.MINOR.PATCH`); algunas ISO y tags omiten el parche (`v0.6`, `v0.7`).
 
 Ejemplo:
 
 ```
-0.7
+1.0
 
 ↓
 
-1.0
+1.2
 ```
 
 ---
@@ -133,7 +133,7 @@ Registrar todos los cambios.
 
 ```bash
 git add .
-git commit -m "release: preparar versión 0.8"
+git commit -m "release: preparar versión 1.2"
 ```
 
 ---
@@ -143,13 +143,13 @@ git commit -m "release: preparar versión 0.8"
 Marcar la versión publicada.
 
 ```bash
-git tag v0.8
+git tag v1.2
 ```
 
 Enviar el tag.
 
 ```bash
-git push origin v0.8
+git push origin v1.2
 ```
 
 ---
@@ -183,9 +183,9 @@ Cada versión oficial de ChurrOS se compone de:
    - Manifiesto `updates.json` que contiene:
      ```json
      {
-       "version": "1.0",
-       "date": "2026-08-25",
-       "file": "churros-utils-1.0.tar.zst",
+       "version": "1.2",
+       "date": "2026-09-23",
+       "file": "churros-utils-1.2.tar.zst",
        "sha256": "<hash_sha256>"
      }
      ```
