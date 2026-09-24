@@ -150,7 +150,7 @@ binds {
     // Launch
     Mod+Return { spawn "foot"; }
     Mod+Q { close-window; }
-    Mod+M { quit; }
+    Mod+Shift+M { quit; }
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
     Mod+Space { spawn "fuzzel"; }
@@ -167,6 +167,9 @@ binds {
     Mod+Shift+B { spawn "churros-popup" "bluetooth"; }
     Mod+Shift+L { spawn "churros-popup" "brightness"; }
     Mod+Shift+T { spawn "churros-popup" "battery"; }
+
+    // Escape hatch
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
 
     // Overlay & overview
     Mod+Shift+Slash { show-hotkey-overlay; }
