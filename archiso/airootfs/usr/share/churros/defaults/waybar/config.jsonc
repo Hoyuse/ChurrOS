@@ -142,15 +142,17 @@
     "on-scroll-down": "brightnessctl --class=backlight set 10%-"
   },
   "pulseaudio": {
-    "format": "{icon} ",
-    "on-click": "churros-popup audio",
-    "on-click-right": "pamixer -t",
-    "tooltip-format": "Playing at {volume}%",
-    "scroll-step": 5,
-    "format-muted": "",
+    "format": "{icon}",
+    "format-muted": "󰝟",
     "format-icons": {
-      "default": ["", "", ""]
-    }
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "on-click": "churros-popup audio",
+    "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
+    "tooltip-format": "Audio: {volume}%",
+    "scroll-step": 5
   },
   "group/tray-expander": {
     "orientation": "inherit",

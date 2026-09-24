@@ -37,9 +37,13 @@ pub struct SystemInfo {
     // Network
     pub ethernet_connected: bool,
     pub ethernet_name: String,
+    pub ethernet_speed: Option<u32>,
     pub wifi_connected: bool,
     pub wifi_name: String,
     pub wifi_strength: u8,
+    pub wifi_speed: String,
+    pub network_rate_down: String,
+    pub network_rate_up: String,
     // Bluetooth
     pub bluetooth_enabled: bool,
     pub bluetooth_connected: bool,
@@ -71,6 +75,25 @@ impl ControlCenterWindow {
         let brightness = BrightnessCard::new(&window);
         let battery = BatteryCard::new(&window);
         let audio = AudioCard::new();
+
+        // Estado inicial inmediato (< 2ms) para que no haya parpadeo ni "Loading..."
+        let initial_bat = battery::get();
+        let initial_bright = brightness::get();
+        let (initial_vol, initial_muted) = audio::get_volume_status();
+        let initial_info = SystemInfo {
+            brightness_percent: initial_bright.brightness,
+            battery_percent: initial_bat.percentage,
+            battery_charging: matches!(
+                initial_bat.state.as_str(),
+                "charging" | "fully-charged" | "pending-charge"
+            ),
+            volume: initial_vol,
+            muted: initial_muted,
+            ..Default::default()
+        };
+        brightness.apply_info(&initial_info);
+        battery.apply_info(&initial_info);
+        audio.apply_info(&initial_info);
 
         let root = gtk::Box::new(gtk::Orientation::Vertical, 20);
         root.set_margin_top(20);
@@ -179,7 +202,7 @@ impl ControlCenterWindow {
         });
         self.window.add_controller(controller);
 
-        glib::timeout_add_seconds_local(2, glib::clone!(#[strong(rename_to = this)] self, move || {
+        glib::timeout_add_seconds_local(1, glib::clone!(#[strong(rename_to = this)] self, move || {
             this.refresh_async();
             glib::ControlFlow::Continue
         }));
@@ -192,7 +215,7 @@ impl ControlCenterWindow {
             let info = collect_system_info();
             tx.send(info).ok();
         });
-        glib::timeout_add_local(std::time::Duration::from_millis(50), glib::clone!(#[strong] this, move || {
+        glib::timeout_add_local(std::time::Duration::from_millis(25), glib::clone!(#[strong] this, move || {
             if let Ok(info) = rx.try_recv() {
                 this.apply_system_info(&info);
                 glib::ControlFlow::Break
@@ -211,43 +234,100 @@ impl ControlCenterWindow {
     }
 }
 
+static PREV_NET: std::sync::Mutex<Option<(std::time::Instant, String, wifi::NetThroughput)>> =
+    std::sync::Mutex::new(None);
+
 fn collect_system_info() -> SystemInfo {
+    let (vol, muted) = audio::get_volume_status();
+    let bright = brightness::get();
+    let bat = battery::get();
+
+    let (net_tx, net_rx) = std::sync::mpsc::channel();
+    let (bt_tx, bt_rx) = std::sync::mpsc::channel();
+
+    thread::spawn(move || {
+        let eth = ethernet::get();
+        let active_wifi = wifi::get_active();
+
+        let active_dev = if eth.connected {
+            eth.device.clone()
+        } else if active_wifi.connected {
+            Some(active_wifi.device.clone())
+        } else {
+            None
+        };
+
+        let mut down_rate = String::new();
+        let mut up_rate = String::new();
+
+        if let Some(dev) = active_dev {
+            if let Some(curr) = wifi::read_interface_bytes(&dev) {
+                if let Ok(mut prev_guard) = PREV_NET.lock() {
+                    if let Some((prev_time, prev_dev, prev_bytes)) = prev_guard.as_ref() {
+                        if prev_dev == &dev {
+                            let dt = prev_time.elapsed().as_secs_f64();
+                            if dt >= 0.4 {
+                                let rx_rate = ((curr.rx_bytes.saturating_sub(prev_bytes.rx_bytes)) as f64 / dt) as u64;
+                                let tx_rate = ((curr.tx_bytes.saturating_sub(prev_bytes.tx_bytes)) as f64 / dt) as u64;
+                                if rx_rate > 500 {
+                                    down_rate = wifi::format_bytes_rate(rx_rate);
+                                }
+                                if tx_rate > 500 {
+                                    up_rate = wifi::format_bytes_rate(tx_rate);
+                                }
+                                *prev_guard = Some((std::time::Instant::now(), dev, curr));
+                            }
+                        } else {
+                            *prev_guard = Some((std::time::Instant::now(), dev, curr));
+                        }
+                    } else {
+                        *prev_guard = Some((std::time::Instant::now(), dev, curr));
+                    }
+                }
+            }
+        }
+
+        net_tx.send((eth, active_wifi, down_rate, up_rate)).ok();
+    });
+
+    thread::spawn(move || {
+        let bt_avail = bluetooth::available();
+        let bt_connected_dev = if bt_avail {
+            bluetooth::connected_device()
+        } else {
+            None
+        };
+        bt_tx.send((bt_avail, bt_connected_dev)).ok();
+    });
+
+    let (eth, active_wifi, down_rate, up_rate) = net_rx.recv().unwrap_or_default();
+    let (bt_avail, bt_connected_dev) = bt_rx.recv().unwrap_or((false, None));
+
     let mut info = SystemInfo::default();
 
     // Network
-    let eth = ethernet::get();
     info.ethernet_connected = eth.connected;
     info.ethernet_name = eth.connection;
+    info.ethernet_speed = eth.speed;
 
-    let wifi = wifi::get();
-    info.wifi_connected = wifi.connected.is_some();
-    if let Some(ssid) = &wifi.connected {
-        info.wifi_name = ssid.clone();
-        // Get signal strength for connected network
-        if let Some(net) = wifi.networks.iter().find(|n| n.connected) {
-            info.wifi_strength = net.signal;
-        }
-    }
+    info.wifi_connected = active_wifi.connected;
+    info.wifi_name = active_wifi.ssid;
+    info.wifi_strength = active_wifi.signal;
+    info.wifi_speed = active_wifi.speed;
+    info.network_rate_down = down_rate;
+    info.network_rate_up = up_rate;
 
     // Bluetooth
-    info.bluetooth_enabled = bluetooth::available();
-    if info.bluetooth_enabled {
-        let devices = bluetooth::list_devices();
-        for device in &devices {
-            if device.connected {
-                info.bluetooth_connected = true;
-                info.bluetooth_device = device.name.clone();
-                break;
-            }
-        }
+    info.bluetooth_enabled = bt_avail;
+    if let Some(dev) = bt_connected_dev {
+        info.bluetooth_connected = true;
+        info.bluetooth_device = dev;
     }
 
     // Brightness
-    let bright = brightness::get();
     info.brightness_percent = bright.brightness;
 
     // Battery
-    let bat = battery::get();
     info.battery_percent = bat.percentage;
     info.battery_charging = matches!(
         bat.state.as_str(),
@@ -255,8 +335,8 @@ fn collect_system_info() -> SystemInfo {
     );
 
     // Audio
-    info.volume = audio::get_volume();
-    info.muted = audio::is_muted();
+    info.volume = vol;
+    info.muted = muted;
 
     info
 }

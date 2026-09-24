@@ -13,7 +13,7 @@ window.background {
 }
 
 .control-center {
-    background-color: rgba(13, 16, 22, 0.65);
+    background-color: rgba(13, 16, 22, 0.35);
     border-radius: 22px;
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -22,42 +22,55 @@ window.background {
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
 }
 
+scrolledwindow,
+scrolledwindow viewport {
+    background-color: transparent;
+    background: transparent;
+}
+
 /* ── HEADER ───────────────────────────────────────────── */
 
 .title {
     font-size: 25px;
     font-weight: 700;
     color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.40);
 }
 
 .subtitle {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.70);
 }
 
-/* ── CARDS (glass) ────────────────────────────────────── */
+/* ── CARDS (Fondo sólido para máxima legibilidad de las opciones) ── */
 
-.card {
-    background: rgba(255, 255, 255, 0.05);
+.card,
+button.card {
+    background-color: #161a22;
+    background-image: none;
     border-radius: 20px;
     padding: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.30),
-                0 1px 0 rgba(255, 255, 255, 0.14) inset;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45),
+                0 1px 0 rgba(255, 255, 255, 0.08) inset;
     transition: 200ms cubic-bezier(.4, 0, .2, 1);
 }
 
-.card:hover {
-    border: 1px solid var(--accent, rgba(249, 115, 22, 0.50));
-    background: rgba(255, 255, 255, 0.09);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.40),
+.card:hover,
+button.card:hover {
+    border: 1px solid var(--accent, rgba(249, 115, 22, 0.60));
+    background-color: #1e232e;
+    background-image: none;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.50),
                 var(--accent-glow, 0 0 24px rgba(249, 115, 22, 0.22)),
-                0 1px 0 rgba(255, 255, 255, 0.25) inset;
+                0 1px 0 rgba(255, 255, 255, 0.15) inset;
     transform: translateY(-2px);
 }
 
-.card:active {
-    background: var(--accent-bg-hover, rgba(249, 115, 22, 0.16));
+.card:active,
+button.card:active {
+    background-color: #12151c;
+    background-image: none;
     transform: translateY(0);
 }
 
@@ -72,6 +85,12 @@ window.background {
 .card-subtitle {
     font-size: 14px;
     color: rgba(255, 255, 255, 0.75);
+}
+
+.card-detail {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-soft, #60A5FA);
 }
 
 /* ── POWER & CONTROLS ─────────────────────────────────── */
