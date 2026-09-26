@@ -155,7 +155,7 @@ El roadmap detallado con el progreso de cada fase está en `docs/roadmap.md`.
 
 - **Fase 1 — Fundación**: completada (CI integrada).
 - **Fase 2 — Identidad**: en curso (logo, mascota, wallpapers, fastfetch, iconos, cursor y tema GRUB; faltan Plymouth y branding de greetd).
-- **Fase 3 — Escritorio**: en curso (Niri, Waybar, foot, Fuzzel, Mako, centro de control; falta Wlogout).
+- **Fase 3 — Escritorio**: completado (Niri, Waybar, foot, Fuzzel, Mako, centro de control, Wlogout).
 - **Fase 4 — Instalador**: completada (Calamares con branding ChurrOS; GRUB UEFI + Syslinux BIOS).
 - **Fase 5 — Ecosistema**: en curso (apps oficiales en Rust y actualizador; falta repositorio oficial).
 - **Fase 6 — Publicación**: en curso (release **v1.2**; falta wiki).

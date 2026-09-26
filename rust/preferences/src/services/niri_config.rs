@@ -793,10 +793,19 @@ impl NiriConfig {
 
     pub fn get_animation_duration(name: &str, default: i64) -> i64 {
         let content = read();
-        match extract_value(&content, &["animations", name], "duration") {
+        match extract_value(&content, &["animations", name], "duration-ms") {
             Some(v) => v.parse().unwrap_or(default),
             None => default,
         }
+    }
+
+    pub fn set_animation_duration(name: &str, duration: i64) {
+        let content = read();
+        let result = match update_value_in_block(&content, &["animations", name], "duration-ms", &duration.to_string()) {
+            Some(updated) => updated,
+            None => create_block(&content, &["animations", name], &[&format!("duration-ms {}", duration)]),
+        };
+        write_atomic(&result);
     }
 }
 

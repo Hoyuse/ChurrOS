@@ -62,7 +62,7 @@ Construir una experiencia de escritorio moderna.
 - [x] Waybar.
 - [x] foot.
 - [x] Fuzzel.
-- [ ] Wlogout.
+- [x] Wlogout.
 - [x] Notificaciones (mako).
 - [x] Centro de control (churros-control-center).
 - [x] Tema oficial.
