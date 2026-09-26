@@ -4,6 +4,25 @@ set -e
 
 echo "Cleaning build directories..."
 
+if [ -d work ]; then
+    abs_work=$(cd work 2>/dev/null && pwd)
+    if [ -n "$abs_work" ]; then
+        if command -v findmnt >/dev/null 2>&1; then
+            residual_mounts=$(findmnt -lno TARGET 2>/dev/null | grep "^$abs_work/" | sort -r || true)
+        else
+            residual_mounts=$(awk -v p="$abs_work" '$2 ~ "^"p"/" {print $2}' /proc/mounts 2>/dev/null | sort -r || true)
+        fi
+        if [ -n "$residual_mounts" ]; then
+            echo "  Desmontando sistemas de archivos residuales en work/..."
+            while IFS= read -r mnt; do
+                if [ -n "$mnt" ]; then
+                    sudo umount -l "$mnt" 2>/dev/null || true
+                fi
+            done <<< "$residual_mounts"
+        fi
+    fi
+fi
+
 if mountpoint -q work 2>/dev/null; then
     echo "  work is mounted (tmpfs) — cleaning contents..."
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
