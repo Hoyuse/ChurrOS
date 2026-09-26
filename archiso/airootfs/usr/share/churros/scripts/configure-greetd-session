@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Configure greetd session for the installed system.
+# Called from Calamares shellprocess-cleanup after user creation.
+#
+# - Detects whether autologin was requested by checking if any non-system
+#   user belongs to the 'autologin' group (Calamares adds this when the
+#   user checks "Log in automatically").
+# - If autologin: writes greetd config WITH [initial_session] for that user.
+# - If not: writes greetd config WITHOUT [initial_session] (regreet greeter).
+
+set -euo pipefail
+
+GREETD_CONF="/etc/greetd/config.toml"
+SESSION_CMD="churros-niri-session"
+
+# Detect edition and adjust session command
+if [ -f /etc/churros-edition ]; then
+    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]')"
+    if [ "$EDITION" = "xfce" ]; then
+        SESSION_CMD="startxfce4"
+    fi
+fi
+
+# Find the autologin user: a real (UID >= 1000) user in the 'autologin' group
+AUTOLOGIN_USER=""
+if getent group autologin >/dev/null 2>&1; then
+    MEMBERS="$(getent group autologin | cut -d: -f4)"
+    IFS=',' read -ra MEMBER_LIST <<< "$MEMBERS"
+    for user in "${MEMBER_LIST[@]}"; do
+        [ -z "$user" ] && continue
+        uid="$(id -u "$user" 2>/dev/null || echo 0)"
+        if [ "$uid" -ge 1000 ]; then
+            AUTOLOGIN_USER="$user"
+            break
+        fi
+    done
+fi
+
+# Write greetd config
+mkdir -p "$(dirname "$GREETD_CONF")"
+
+if [ -n "$AUTOLOGIN_USER" ]; then
+    cat > "$GREETD_CONF" <<EOF
+[terminal]
+vt = 7
+
+[default_session]
+command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
+user = "greeter"
+
+[initial_session]
+command = "$SESSION_CMD"
+user = "$AUTOLOGIN_USER"
+EOF
+    echo "[greetd] Autologin enabled for user '$AUTOLOGIN_USER' with session '$SESSION_CMD'"
+else
+    cat > "$GREETD_CONF" <<EOF
+[terminal]
+vt = 7
+
+[default_session]
+command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
+user = "greeter"
+EOF
+    echo "[greetd] No autologin — regreet greeter will prompt for credentials"
+fi
+
+# Write environments file so regreet knows which sessions are available
+echo "$SESSION_CMD" > /etc/greetd/environments
