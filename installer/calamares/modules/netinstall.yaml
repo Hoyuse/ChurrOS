@@ -1,16 +1,31 @@
 groups:
   - name: "NVIDIA"
-    description: "Controladores privativos NVIDIA y utilidades (requiere internet)"
+    description: "Soporte completo para NVIDIA (requiere internet)"
     selected: false
     expanded: true
-    packages:
-      - nvidia
-      - nvidia-utils
-      - nvidia-settings
-      - nvidia-prime
-  - name: "LibreOffice"
-    description: "Suite ofimática completa de código abierto (Writer, Calc...)"
+    subgroups:
+      - name: "Driver"
+        description: "Controladores privativos, aceleración 3D y panel (nvidia, utils, settings, prime)"
+        subgroups:
+          - name: hidden
+            hidden: true
+            selected: true
+            packages:
+              - nvidia
+              - nvidia-utils
+              - nvidia-settings
+              - nvidia-prime
+
+  - name: "Oficina"
+    description: "Suite ofimática (procesador de texto, hojas de cálculo)"
     selected: false
     expanded: true
-    packages:
-      - libreoffice-fresh
+    subgroups:
+      - name: "Libre"
+        description: "LibreOffice Fresh"
+        subgroups:
+          - name: hidden
+            hidden: true
+            selected: true
+            packages:
+              - libreoffice-fresh
