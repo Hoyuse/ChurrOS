@@ -170,6 +170,8 @@ qemu-system-x86_64 \
     -device usb-tablet \
     -device intel-hda \
     -device hda-duplex \
+    -netdev user,id=net0 \
+    -device virtio-net-pci,netdev=net0 \
     -device virtio-serial-pci \
     -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on \
     -device virtserialport,chardev=vdagent,name=com.redhat.spice.0 \
