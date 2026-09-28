@@ -3,7 +3,7 @@ use gtk::prelude::*;
 use std::env;
 
 pub fn build() -> gtk::Box {
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 16);
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 10);
     container.set_valign(gtk::Align::Center);
     container.set_halign(gtk::Align::Center);
 

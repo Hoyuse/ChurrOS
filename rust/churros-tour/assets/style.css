@@ -76,7 +76,7 @@ listbox row {
 }
 
 .title {
-    font-size: 52px;
+    font-size: 38px;
     font-weight: 800;
     letter-spacing: -0.04em;
     color: #ffffff;
@@ -84,7 +84,7 @@ listbox row {
 }
 
 .page-title {
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
@@ -100,9 +100,20 @@ listbox row {
 
 .page-subtitle {
     color: rgba(255, 255, 255, 0.70);
-    font-size: 14px;
-    margin-bottom: 24px;
+    font-size: 13px;
+    margin-bottom: 20px;
     line-height: 1.5;
+}
+
+/* ── Listbox adjustments ──────────────────────────────── */
+listbox.boxed-list {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+listbox row {
+    min-height: 38px;
+    padding: 2px 8px;
 }
 
 /* ── Cards (liquid glass) ─────────────────────────────── */

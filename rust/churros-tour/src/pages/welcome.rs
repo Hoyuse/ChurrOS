@@ -2,7 +2,7 @@ use adw::prelude::*;
 use gtk::prelude::*;
 
 pub fn build() -> gtk::Box {
-    let container = gtk::Box::new(gtk::Orientation::Vertical, 18);
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 10);
     container.set_valign(gtk::Align::Center);
     container.set_halign(gtk::Align::Center);
     
@@ -11,7 +11,7 @@ pub fn build() -> gtk::Box {
     // =====================================
 
     let logo = gtk::Picture::for_filename(crate::assets::icons_path("logo.svg"));
-    logo.set_size_request(140, 140);
+    logo.set_size_request(90, 90);
     logo.set_halign(gtk::Align::Center);
     logo.add_css_class("logo");
 
