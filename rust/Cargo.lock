@@ -108,6 +108,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "churros-tour"
+version = "1.2.0"
+dependencies = [
+ "churros-services",
+ "gio",
+ "glib",
+ "gtk4",
+ "libadwaita",
+ "libc",
+]
+
+[[package]]
 name = "churros-welcome"
 version = "1.2.0"
 dependencies = [
