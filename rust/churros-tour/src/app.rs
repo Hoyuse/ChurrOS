@@ -3,7 +3,64 @@ use gtk::prelude::*;
 
 use crate::pages;
 
+fn load_css() {
+    let shared = "/usr/share/churros/styles/churros.css";
+    let dev_shared = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../archiso/airootfs/usr/share/churros/styles/churros.css"
+    );
+    let shared_path = if std::path::Path::new(shared).exists() {
+        Some(std::path::Path::new(shared))
+    } else if std::path::Path::new(dev_shared).exists() {
+        Some(std::path::Path::new(dev_shared))
+    } else {
+        None
+    };
+    if let Some(path) = shared_path {
+        let provider = gtk::CssProvider::new();
+        provider.load_from_path(path);
+        if let Some(display) = gtk::gdk::Display::default() {
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+        }
+    }
+
+    let local = crate::assets::css_path();
+    let provider = gtk::CssProvider::new();
+    if local.is_file() {
+        provider.load_from_path(&local);
+    } else {
+        provider.load_from_string(include_str!("../assets/style.css"));
+    }
+    if let Some(display) = gtk::gdk::Display::default() {
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+        );
+    }
+
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
+    if let Ok(css) = std::fs::read_to_string(&accent_path) {
+        let provider = gtk::CssProvider::new();
+        provider.load_from_string(&css);
+        if let Some(display) = gtk::gdk::Display::default() {
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_USER,
+            );
+        }
+    }
+}
+
 pub fn activate(app: &adw::Application) {
+    load_css();
+
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("ChurrOS Tour")
@@ -11,6 +68,8 @@ pub fn activate(app: &adw::Application) {
         .default_height(680)
         .resizable(false)
         .build();
+
+    window.add_css_class("welcome");
 
     let stack = adw::ViewStack::new();
     stack.set_vexpand(true);

@@ -1,5 +1,6 @@
 mod app;
 mod pages;
+mod assets;
 
 use adw::prelude::*;
 use std::path::Path;
