@@ -22,10 +22,15 @@ pub fn build() -> gtk::Box {
         "Conoce los atajos más importantes para moverte rápido por ChurrOS:"
     };
 
-    let status_page = adw::StatusPage::builder()
-        .title(title)
-        .description(description)
-        .build();
+    let title_label = gtk::Label::new(Some(title));
+    title_label.add_css_class("page-title");
+    title_label.set_halign(gtk::Align::Center);
+
+    let subtitle = gtk::Label::new(Some(description));
+    subtitle.add_css_class("page-subtitle");
+    subtitle.set_halign(gtk::Align::Center);
+    subtitle.set_wrap(true);
+    subtitle.set_justify(gtk::Justification::Center);
 
     let listbox = gtk::ListBox::new();
     listbox.add_css_class("boxed-list");
@@ -58,7 +63,8 @@ pub fn build() -> gtk::Box {
         listbox.append(&row);
     }
 
-    container.append(&status_page);
+    container.append(&title_label);
+    container.append(&subtitle);
     container.append(&listbox);
 
     container

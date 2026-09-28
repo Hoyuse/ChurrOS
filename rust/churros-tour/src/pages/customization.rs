@@ -10,10 +10,13 @@ pub fn build() -> gtk::Box {
     container.set_valign(gtk::Align::Center);
     container.set_halign(gtk::Align::Center);
 
-    let status_page = adw::StatusPage::builder()
-        .title("¿Para qué usarás tu sistema?")
-        .description("Selecciona los paquetes que deseas instalar para preparar tu ChurrOS.")
-        .build();
+    let title = gtk::Label::new(Some("¿Para qué usarás tu sistema?"));
+    title.add_css_class("page-title");
+    title.set_halign(gtk::Align::Center);
+
+    let subtitle = gtk::Label::new(Some("Selecciona los paquetes que deseas instalar para preparar tu ChurrOS."));
+    subtitle.add_css_class("page-subtitle");
+    subtitle.set_halign(gtk::Align::Center);
 
     let listbox = gtk::ListBox::new();
     listbox.add_css_class("boxed-list");
@@ -51,7 +54,8 @@ pub fn build() -> gtk::Box {
         listbox.append(&row);
     }
 
-    container.append(&status_page);
+    container.append(&title);
+    container.append(&subtitle);
     container.append(&listbox);
 
     container

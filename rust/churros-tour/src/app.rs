@@ -59,6 +59,7 @@ fn load_css() {
 }
 
 pub fn activate(app: &adw::Application) {
+    adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
     load_css();
 
     let window = adw::ApplicationWindow::builder()

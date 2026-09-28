@@ -34,10 +34,15 @@ pub fn build() -> gtk::Box {
     container.set_valign(gtk::Align::Center);
     container.set_halign(gtk::Align::Center);
 
-    let status_page = adw::StatusPage::builder()
-        .title("Instalando y Configurando")
-        .description("Estamos preparando tu sistema con los paquetes y controladores que elegiste.")
-        .build();
+    let title_label = gtk::Label::new(Some("Instalando y Configurando"));
+    title_label.add_css_class("page-title");
+    title_label.set_halign(gtk::Align::Center);
+
+    let subtitle = gtk::Label::new(Some("Estamos preparando tu sistema con los paquetes y controladores que elegiste."));
+    subtitle.add_css_class("page-subtitle");
+    subtitle.set_halign(gtk::Align::Center);
+    subtitle.set_wrap(true);
+    subtitle.set_justify(gtk::Justification::Center);
 
     let progress_bar = gtk::ProgressBar::new();
     progress_bar.set_margin_start(32);
@@ -48,7 +53,8 @@ pub fn build() -> gtk::Box {
     PROGRESS_BAR.with(|p| *p.borrow_mut() = Some(progress_bar.clone()));
     STATUS_LABEL.with(|l| *l.borrow_mut() = Some(label.clone()));
 
-    container.append(&status_page);
+    container.append(&title_label);
+    container.append(&subtitle);
     container.append(&progress_bar);
     container.append(&label);
 
