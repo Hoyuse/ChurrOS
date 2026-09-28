@@ -170,7 +170,7 @@ qemu-system-x86_64 \
     -device usb-tablet \
     -device intel-hda \
     -device hda-duplex \
-    -netdev user,id=net0 \
+    -netdev user,id=net0,dns=8.8.8.8 \
     -device virtio-net-pci,netdev=net0 \
     -device virtio-serial-pci \
     -chardev qemu-vdagent,id=vdagent,name=vdagent,clipboard=on \
