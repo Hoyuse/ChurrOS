@@ -250,7 +250,6 @@ else
 
     pacman_i=$(step_index 'shellprocess@pacman-init' || true)
     fixboot_i=$(step_index 'shellprocess@fix-boot' || true)
-    repo_i=$(step_index 'shellprocess@churros-repo' || true)
     post_i=$(step_index 'shellprocess@post-install' || true)
     umount_i=$(step_index 'umount' || true)
     mount_i=$(step_index 'mount' || true)
@@ -261,7 +260,6 @@ else
     for pair in \
         "shellprocess@pacman-init:$pacman_i" \
         "shellprocess@fix-boot:$fixboot_i" \
-        "shellprocess@churros-repo:$repo_i" \
         "shellprocess@post-install:$post_i" \
         "umount:$umount_i" \
         "mount:$mount_i" \
@@ -281,10 +279,6 @@ else
             fail "shellprocess@pacman-init must run before shellprocess@fix-boot"
             order_ok=0
         fi
-        if [ "$fixboot_i" -ge "$repo_i" ]; then
-            fail "shellprocess@fix-boot must run before shellprocess@churros-repo"
-            order_ok=0
-        fi
         if [ "$((post_i + 1))" -ne "$umount_i" ]; then
             fail "shellprocess@post-install must be the last step before umount"
             order_ok=0
@@ -299,7 +293,7 @@ else
         fi
     fi
 
-    [ "$order_ok" -eq 1 ] && pass "boot-nocow after mount; pacman-init → fix-boot → churros-repo; post-install before umount"
+    [ "$order_ok" -eq 1 ] && pass "boot-nocow after mount; pacman-init → fix-boot; post-install before umount"
 fi
 
 # --------------------------------------------- Calamares shellprocess confs
