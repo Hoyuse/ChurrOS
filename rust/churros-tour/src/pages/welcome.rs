@@ -10,8 +10,8 @@ pub fn build() -> gtk::Box {
     // Logo
     // =====================================
 
-    let logo = gtk::Picture::for_filename(crate::assets::icons_path("logo.svg"));
-    logo.set_size_request(90, 90);
+    let logo = gtk::Picture::for_filename(crate::assets::image_path("churr.png"));
+    logo.set_size_request(250, 250);
     logo.set_halign(gtk::Align::Center);
     logo.add_css_class("logo");
 

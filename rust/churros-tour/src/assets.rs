@@ -21,3 +21,7 @@ pub fn css_path() -> PathBuf {
 pub fn icons_path(name: &str) -> PathBuf {
     assets_root().join("icons").join(name)
 }
+
+pub fn image_path(name: &str) -> PathBuf {
+    assets_root().join(name)
+}
