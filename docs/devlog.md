@@ -470,4 +470,8 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
 - **El problema:** Al acceder a XFCE desde una instalación física, el ratón no aparecía ni respondía. Esto se debe a que `xorg-server` requiere un módulo adaptador (`xf86-input-libinput`) para interpretar eventos de hardware de entrada provenientes de `libinput`, lo cual es vital al iniciar fuera de un gestor de pantalla compuesto como GDM.
 - **La solución:** Se ha añadido el paquete `xf86-input-libinput` a la lista de paquetes requeridos (`packages.xfce.x86_64`), permitiendo que Xorg detecte correctamente los periféricos en hardware físico.
 
+### Falsa detección de Wayland en XFCE (Error de labwc)
+- **El problema:** En las últimas versiones, el script `startxfce4` comprueba la existencia de la variable `WAYLAND_DISPLAY`. Greetd/Regreet dejaban un residuo de esta variable en la sesión tras cerrar `cage` (su propio entorno Wayland). Como resultado, XFCE creía que debía arrancar una sesión nativa en Wayland y pedía a gritos el compositor `labwc`, abortando el arranque de Xorg.
+- **La solución:** Se ha inyectado un `unset WAYLAND_DISPLAY` en `churros-xfce-session` para limpiar el entorno residual heredado del greeter y forzar siempre un entorno X11 robusto para XFCE. (Nota: los errores de `libseat` mostrados en log son inofensivos; simplemente indican el *fallback* seguro a `systemd-logind`).
+
 

@@ -7,16 +7,16 @@ if [ "$1" = "--xinit" ]; then
     exec /usr/bin/startxfce4
 fi
 
+# Limpiar variables residuales del greeter (Wayland) que confunden a startxfce4
+unset WAYLAND_DISPLAY
+unset DISPLAY
+
 export XDG_CURRENT_DESKTOP=XFCE
 export XDG_SESSION_DESKTOP=xfce
 export XDG_SESSION_TYPE=x11
 
-if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
-    if command -v startx >/dev/null 2>&1; then
-        exec startx "$0" --xinit
-    else
-        exec /usr/bin/startxfce4
-    fi
+if command -v startx >/dev/null 2>&1; then
+    exec startx "$0" --xinit
 else
     exec /usr/bin/startxfce4
 fi
