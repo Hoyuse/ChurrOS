@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Wrapper to launch XFCE correctly from Greetd
 
+# Limpiar variables residuales del greeter (Wayland) que confunden a startxfce4
+unset WAYLAND_DISPLAY
+unset DISPLAY
+
 if [ "$1" = "--xinit" ]; then
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
     exec /usr/bin/startxfce4
 fi
-
-# Limpiar variables residuales del greeter (Wayland) que confunden a startxfce4
-unset WAYLAND_DISPLAY
-unset DISPLAY
 
 export XDG_CURRENT_DESKTOP=XFCE
 export XDG_SESSION_DESKTOP=xfce
