@@ -30,6 +30,13 @@ EOF
     if [ -f /usr/share/xsessions/xfce.desktop ]; then
         sed -i 's|^Exec=.*|Exec=churros-xfce-session|' /usr/share/xsessions/xfce.desktop
     fi
+
+    # Asegurar que el fondo de ChurrOS se aplique incluso en monitores no preconfigurados por XFCE
+    mkdir -p /usr/share/backgrounds/xfce
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-shapes.svg
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-verticals.png
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-teal.jpg
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-stripes.png
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri
