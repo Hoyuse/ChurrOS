@@ -110,6 +110,9 @@ xorg-xrandr
 xorg-xset
 xorg-xsetroot
 xf86-input-libinput
+xf86-video-vmware
+xf86-video-qxl
+xf86-video-vesa
 xclip
 picom
 

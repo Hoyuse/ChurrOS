@@ -16,6 +16,8 @@ export XDG_SESSION_DESKTOP=xfce
 export XDG_SESSION_TYPE=x11
 
 if command -v startx >/dev/null 2>&1; then
+    # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame
+    sleep 1
     exec startx "$0" --xinit
 else
     exec /usr/bin/startxfce4
