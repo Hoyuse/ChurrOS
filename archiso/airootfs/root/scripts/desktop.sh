@@ -25,6 +25,11 @@ XDG_SESSION_DESKTOP=xfce
 XDG_SESSION_TYPE=x11
 DESKTOP_SESSION=xfce
 EOF
+
+    # Asegurar que la sesión X11 ejecute el wrapper para iniciar Xorg desde greetd
+    if [ -f /usr/share/xsessions/xfce.desktop ]; then
+        sed -i 's|^Exec=.*|Exec=churros-xfce-session|' /usr/share/xsessions/xfce.desktop
+    fi
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri

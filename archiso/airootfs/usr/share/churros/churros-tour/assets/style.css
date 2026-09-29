@@ -58,16 +58,37 @@ scrolledwindow > viewport,
     background-color: transparent;
 }
 
+actionbar,
+actionbar > revealer > box {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+statuspage,
+listbox,
+listbox row {
+    background-color: transparent;
+}
+
 .logo {
     margin-bottom: 18px;
 }
 
 .title {
-    font-size: 52px;
+    font-size: 38px;
     font-weight: 800;
     letter-spacing: -0.04em;
     color: #ffffff;
     text-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+    margin-bottom: 8px;
 }
 
 .subtitle {
@@ -75,6 +96,24 @@ scrolledwindow > viewport,
     font-size: 15px;
     margin-bottom: 16px;
     line-height: 1.6;
+}
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.70);
+    font-size: 13px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* ── Listbox adjustments ──────────────────────────────── */
+listbox.boxed-list {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+listbox row {
+    min-height: 38px;
+    padding: 2px 8px;
 }
 
 /* ── Cards (liquid glass) ─────────────────────────────── */

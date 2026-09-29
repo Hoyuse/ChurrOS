@@ -46,6 +46,7 @@ cleanup_temp() {
     rm -f archiso/airootfs/usr/bin/churros-settings 2>/dev/null || true
     rm -f archiso/airootfs/usr/bin/churros-popup 2>/dev/null || true
     rm -f archiso/airootfs/usr/bin/churros-control-center 2>/dev/null || true
+    rm -f archiso/airootfs/usr/bin/churros-tour 2>/dev/null || true
     # GRUB theme copiado al airootfs para que esté disponible en el sistema instalado
     rm -rf archiso/airootfs/usr/share/churros/grub-theme 2>/dev/null || true
 }

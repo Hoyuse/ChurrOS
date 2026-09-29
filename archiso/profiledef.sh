@@ -22,6 +22,8 @@ file_permissions=(
 
   ["/usr/bin/churros-welcome"]="0:0:755"
   ["/usr/bin/churros-niri-session"]="0:0:755"
+  ["/usr/bin/churros-xfce-session"]="0:0:755"
+  ["/usr/bin/churros-tour"]="0:0:755"
 
   ["/usr/bin/churros-popup"]="0:0:755"
 

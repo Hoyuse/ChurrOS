@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Wrapper to launch XFCE correctly from Greetd
+
+export XDG_CURRENT_DESKTOP=XFCE
+export XDG_SESSION_DESKTOP=xfce
+export XDG_SESSION_TYPE=x11
+
+if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+    if command -v startx >/dev/null 2>&1; then
+        exec startx /usr/bin/startxfce4
+    else
+        exec /usr/bin/startxfce4
+    fi
+else
+    exec /usr/bin/startxfce4
+fi

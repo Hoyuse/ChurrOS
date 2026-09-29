@@ -457,3 +457,13 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
   - `theme.rs`: Evitada la ejecución repetitiva de `gsettings` y migración de temas en cada arranque mediante un flag en caché.
   - `style.css`: Corregida la sintaxis duplicada de offsets en `box-shadow` (`0 0 20px var(--accent-glow)`) que provocaba avisos de parseo CSS en GTK4.
 
+### Solución a Crash de Sesión X11 (XFCE) en Greetd
+- **`churros-xfce-session`**: Se ha creado un script contenedor en `/usr/bin/churros-xfce-session` que se encarga de lanzar de manera correcta el entorno XFCE desde el Display Manager (Regreet/Greetd). Este contenedor ejecuta `startx /usr/bin/startxfce4` de forma condicional si no se detecta el entorno de visualización, logrando que el servidor Xorg asigne apropiadamente el TTY mediante `systemd-logind` y se resuelva el crasheo que devolvía al usuario a la pantalla de login.
+- Integración en `desktop.sh`: Se ha automatizado la inyección en `/usr/share/xsessions/xfce.desktop` para usar este wrapper en entornos X11.
+
+### Autostart Condicional de ChurrOS Tour
+- Para el entorno **Niri**, se ha incluido un `spawn-sh-at-startup` en `config.kdl` que invoca `churros-tour` condicionalmente solo si existe el archivo `~/.config/autostart/churros-tour.desktop`.
+- Para el entorno **XFCE**, este mecanismo ya funciona de forma nativa a través de los directorios de autostart del estándar XDG. 
+- Se ha expuesto `churros-tour` en `/usr/share/applications/churros-tour.desktop` para que sea visible en cualquier lanzador o menú, y se ha limpiado su binario de desarrollo compilado que había entrado en caché del repositorio.
+
+
