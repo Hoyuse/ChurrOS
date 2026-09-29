@@ -466,4 +466,8 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
 - Para el entorno **XFCE**, este mecanismo ya funciona de forma nativa a través de los directorios de autostart del estándar XDG. 
 - Se ha expuesto `churros-tour` en `/usr/share/applications/churros-tour.desktop` para que sea visible en cualquier lanzador o menú, y se ha limpiado su binario de desarrollo compilado que había entrado en caché del repositorio.
 
+### Corrección de Cursor de Ratón en Entorno XFCE (Hardware Real)
+- **El problema:** Al acceder a XFCE desde una instalación física, el ratón no aparecía ni respondía. Esto se debe a que `xorg-server` requiere un módulo adaptador (`xf86-input-libinput`) para interpretar eventos de hardware de entrada provenientes de `libinput`, lo cual es vital al iniciar fuera de un gestor de pantalla compuesto como GDM.
+- **La solución:** Se ha añadido el paquete `xf86-input-libinput` a la lista de paquetes requeridos (`packages.xfce.x86_64`), permitiendo que Xorg detecte correctamente los periféricos en hardware físico.
+
 
