@@ -475,7 +475,7 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
 - **La solución:** Se ha inyectado un `unset WAYLAND_DISPLAY` en `churros-xfce-session` para limpiar el entorno residual heredado del greeter y forzar siempre un entorno X11 robusto para XFCE. (Nota: los errores de `libseat` mostrados en log son inofensivos; simplemente indican el *fallback* seguro a `systemd-logind`).
 
 ### Solución a Fallo de Xorg (AddScreen/ScreenInit) en VMs
-- **El problema:** Al transicionar del greeter Wayland (`cage`) a la sesión X11 (`startx`) en una máquina virtual (QEMU/KVM), Xorg colapsaba con el error `AddScreen/ScreenInit failed for driver 0`. Esto ocurre por dos motivos combinados: (1) una condición de carrera (*race condition*) donde `cage` aún no ha liberado por completo el control del nodo DRM de la GPU (`/dev/dri/card0`) cuando `startx` intenta capturarlo, y (2) la falta de drivers de respaldo para tarjetas emuladas.
-- **La solución:** Se ha introducido un micro-retraso (`sleep 1`) antes de ejecutar `startx` en el wrapper de sesión para permitir la desconexión total del KMS/DRM por parte de `cage`. Adicionalmente, se han añadido los drivers `xf86-video-vmware`, `xf86-video-qxl` y `xf86-video-vesa` a `packages.xfce.x86_64` para garantizar soporte gráfico universal de X11 en cualquier entorno virtualizado.
+- **El problema:** Al transicionar del greeter Wayland (`cage`) a la sesión X11 (`startx`) en una máquina virtual (QEMU/KVM), Xorg colapsaba con el error `AddScreen/ScreenInit failed for driver 0`. Esto ocurre por una condición de carrera (*race condition*) donde `cage` aún no ha liberado por completo el control del nodo DRM de la GPU (`/dev/dri/card0`) cuando `startx` intenta capturarlo.
+- **La solución:** Se ha introducido un micro-retraso (`sleep 1`) antes de ejecutar `startx` en el wrapper de sesión para permitir la desconexión total del KMS/DRM por parte de `cage`.
 
 
