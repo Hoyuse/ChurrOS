@@ -14,10 +14,16 @@ pub fn build() -> gtk::Box {
     title.add_css_class("page-title");
     title.set_halign(gtk::Align::Center);
 
-    let subtitle = gtk::Label::new(Some("Selecciona los paquetes que deseas instalar para preparar tu ChurrOS."));
+    let subtitle = gtk::Label::new(Some("Despliega cada grupo y selecciona las herramientas que deseas instalar."));
     subtitle.add_css_class("page-subtitle");
     subtitle.set_halign(gtk::Align::Center);
 
+    // Make the list scrollable in case there are many items
+    let scrolled_window = gtk::ScrolledWindow::new();
+    scrolled_window.set_policy(gtk::PolicyType::Never, gtk::PolicyType::Automatic);
+    scrolled_window.set_min_content_height(400); // Give it some height
+    scrolled_window.set_vexpand(true);
+    
     let listbox = gtk::ListBox::new();
     listbox.add_css_class("boxed-list");
     listbox.set_margin_start(32);
@@ -25,38 +31,93 @@ pub fn build() -> gtk::Box {
     listbox.set_selection_mode(gtk::SelectionMode::None);
 
     let categories = vec![
-        ("Ofimática", "LibreOffice, fuentes y herramientas", vec!["libreoffice-fresh", "ttf-ms-fonts", "hunspell-es_es"]),
-        ("Gaming", "Steam, Lutris, Wine, Heroic", vec!["steam", "lutris", "wine", "heroic-games-launcher-bin", "gamemode"]),
-        ("Programación", "VS Code, Git, Docker", vec!["visual-studio-code-bin", "git", "docker", "docker-compose"]),
-        ("Multimedia", "VLC, OBS, GIMP", vec!["vlc", "obs-studio", "gimp"]),
+        ("Navegadores Web", "Explora internet de forma rápida y segura", vec![
+            ("google-chrome", "Google Chrome"),
+            ("brave-bin", "Brave Browser"),
+            ("firefox", "Mozilla Firefox"),
+            ("tor-browser", "Tor Browser"),
+        ]),
+        ("Ofimática y Productividad", "Herramientas para documentos y organización", vec![
+            ("libreoffice-fresh", "LibreOffice (Suite Libre)"),
+            ("onlyoffice-bin", "OnlyOffice (Suite Moderna)"),
+            ("obsidian", "Obsidian (Notas y conocimiento)"),
+            ("notion-app-electron", "Notion (Workspace)"),
+            ("ttf-ms-fonts", "Fuentes de Microsoft"),
+            ("hunspell-es_es", "Diccionario en Español"),
+        ]),
+        ("Gaming", "Steam, Lutris, optimizadores y comunicación", vec![
+            ("steam", "Steam"),
+            ("lutris", "Lutris (Gestor de juegos)"),
+            ("heroic-games-launcher-bin", "Heroic (Lanzador Epic/GOG)"),
+            ("wine", "Wine (Compatibilidad con Windows)"),
+            ("gamemode", "GameMode (Optimizador de rendimiento)"),
+            ("mangohud", "MangoHud (FPS Overlay)"),
+            ("discord", "Discord (Chat y Voz)"),
+        ]),
+        ("Desarrollo y Programación", "Lenguajes, contenedores y editores de código", vec![
+            ("visual-studio-code-bin", "Visual Studio Code"),
+            ("neovim", "Neovim"),
+            ("git", "Git (Control de versiones)"),
+            ("docker", "Docker (Contenedores)"),
+            ("docker-compose", "Docker Compose"),
+            ("nodejs", "Node.js"),
+            ("npm", "NPM (Gestor de paquetes)"),
+            ("postman-bin", "Postman (Testing de APIs)"),
+        ]),
+        ("Multimedia y Edición", "Producción de foto, video y audio", vec![
+            ("vlc", "VLC (Reproductor de medios)"),
+            ("obs-studio", "OBS Studio (Streaming y grabación)"),
+            ("gimp", "GIMP (Edición de imágenes)"),
+            ("kdenlive", "Kdenlive (Edición de video)"),
+            ("audacity", "Audacity (Edición de audio)"),
+            ("blender", "Blender (Modelado 3D)"),
+        ]),
+        ("Herramientas del Sistema", "Monitoreo, respaldos y utilidades", vec![
+            ("btop", "Btop (Monitor de recursos)"),
+            ("gparted", "GParted (Gestor de particiones)"),
+            ("timeshift", "Timeshift (Copias de seguridad del sistema)"),
+            ("flameshot", "Flameshot (Capturas de pantalla avanzadas)"),
+            ("qdirstat", "QDirStat (Análisis visual de almacenamiento)"),
+            ("unrar", "Unrar (Soporte para archivos .rar)"),
+        ]),
     ];
 
     for (name, desc, pkgs) in categories {
-        let row = adw::ActionRow::builder()
+        let expander = adw::ExpanderRow::builder()
             .title(name)
             .subtitle(desc)
             .build();
 
-        let switch = gtk::Switch::new();
-        switch.set_valign(gtk::Align::Center);
-        
-        // Connect the switch to our install state
-        let pkgs_clone = pkgs.clone();
-        switch.connect_active_notify(move |sw| {
-            if sw.is_active() {
-                install::add_packages(&pkgs_clone);
-            } else {
-                install::remove_packages(&pkgs_clone);
-            }
-        });
+        for (pkg_id, pkg_name) in pkgs {
+            let row = adw::ActionRow::builder()
+                .title(pkg_name)
+                .subtitle(pkg_id)
+                .build();
 
-        row.add_suffix(&switch);
-        listbox.append(&row);
+            let check_btn = gtk::CheckButton::new();
+            check_btn.set_valign(gtk::Align::Center);
+            
+            let pkg_id_clone = pkg_id.to_string();
+            check_btn.connect_toggled(move |btn| {
+                if btn.is_active() {
+                    install::add_packages(&[&pkg_id_clone]);
+                } else {
+                    install::remove_packages(&[&pkg_id_clone]);
+                }
+            });
+
+            row.add_prefix(&check_btn);
+            expander.add_row(&row);
+        }
+
+        listbox.append(&expander);
     }
+
+    scrolled_window.set_child(Some(&listbox));
 
     container.append(&title);
     container.append(&subtitle);
-    container.append(&listbox);
+    container.append(&scrolled_window);
 
     container
 }

@@ -105,9 +105,45 @@ pub fn start_installation() {
 
     STATUS_LABEL.with(|l| {
         if let Some(lbl) = l.borrow().as_ref() {
-            lbl.set_label("Instalando controladores y paquetes...");
+            lbl.set_label("Por favor, sigue las instrucciones en la terminal emergente...");
         }
     });
+
+    // We start foot terminal running the yay installation.
+    // This allows the user to see the process, enter passwords and diagnose issues.
+    let pkgs_str = pkgs.join(" ");
+    let sh_cmd = format!(
+        "yay -Sy --needed --noconfirm {}; echo '\n[ChurrOS] Proceso terminado. Presiona Enter para cerrar.'; read", 
+        pkgs_str
+    );
+
+    let args = vec![
+        "foot".to_string(),
+        "-a".to_string(),
+        "churros-installer".to_string(), // App ID to set float rules if any
+        "-W".to_string(), "80x24".to_string(),
+        "-e".to_string(),
+        "sh".to_string(),
+        "-c".to_string(),
+        sh_cmd,
+    ];
+
+    let os_args: Vec<&std::ffi::OsStr> = args.iter().map(|s| std::ffi::OsStr::new(s)).collect();
+
+    let subprocess = match gio::Subprocess::newv(
+        &os_args,
+        gio::SubprocessFlags::NONE,
+    ) {
+        Ok(proc) => proc,
+        Err(e) => {
+            STATUS_LABEL.with(|l| {
+                if let Some(lbl) = l.borrow().as_ref() {
+                    lbl.set_label(&format!("Error al lanzar terminal: {}", e));
+                }
+            });
+            return;
+        }
+    };
 
     // Start a pulsing animation
     let tick_id = gtk::glib::timeout_add_local(std::time::Duration::from_millis(100), || {
@@ -119,44 +155,21 @@ pub fn start_installation() {
         gtk::glib::ControlFlow::Continue
     });
 
-    // We use gio::Subprocess to run pkexec pacman asynchronously
-    // Notice: we need a Polkit agent running (which ChurrOS has by default, lxqt-policykit or polkit-gnome)
-    let mut args = vec!["pkexec".to_string(), "pacman".to_string(), "-S".to_string(), "--noconfirm".to_string(), "--needed".to_string(), "--noprogressbar".to_string()];
-    args.extend(pkgs);
-
-    let os_args: Vec<&std::ffi::OsStr> = args.iter().map(|s| std::ffi::OsStr::new(s)).collect();
-
-    let subprocess = gio::Subprocess::newv(
-        &os_args,
-        gio::SubprocessFlags::STDOUT_PIPE | gio::SubprocessFlags::STDERR_PIPE,
-    ).expect("Failed to start pkexec");
-
     subprocess.wait_async(
         gio::Cancellable::NONE,
-        move |res| {
+        move |_res| {
             tick_id.remove(); // Stop pulsing
 
-            match res {
-                Ok(_) => {
-                    PROGRESS_BAR.with(|p| {
-                        if let Some(bar) = p.borrow().as_ref() {
-                            bar.set_fraction(1.0);
-                        }
-                    });
-                    STATUS_LABEL.with(|l| {
-                        if let Some(lbl) = l.borrow().as_ref() {
-                            lbl.set_label("¡Instalación completada con éxito!");
-                        }
-                    });
+            PROGRESS_BAR.with(|p| {
+                if let Some(bar) = p.borrow().as_ref() {
+                    bar.set_fraction(1.0);
                 }
-                Err(e) => {
-                    STATUS_LABEL.with(|l| {
-                        if let Some(lbl) = l.borrow().as_ref() {
-                            lbl.set_label(&format!("Error: {}", e));
-                        }
-                    });
+            });
+            STATUS_LABEL.with(|l| {
+                if let Some(lbl) = l.borrow().as_ref() {
+                    lbl.set_label("¡Instalación completada!");
                 }
-            }
+            });
         }
     );
 }
