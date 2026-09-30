@@ -44,6 +44,7 @@ file_permissions=(
   ["/usr/share/churros/scripts/set-icons"]="0:0:755"
   ["/usr/share/churros/scripts/make-boot-grub-readable"]="0:0:755"
   ["/usr/share/churros/scripts/configure-greeter-locale"]="0:0:755"
+  ["/usr/share/churros/scripts/configure-greetd-session"]="0:0:755"
   ["/usr/share/icons/hicolor/scalable/apps/churros-welcome.svg"]="0:0:644"
   ["/usr/share/icons/hicolor/scalable/apps/churros-settings.svg"]="0:0:644"
   ["/usr/share/icons/hicolor/scalable/apps/churros-logo.svg"]="0:0:644"

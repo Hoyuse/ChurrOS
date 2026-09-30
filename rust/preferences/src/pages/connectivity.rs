@@ -7,6 +7,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use gtk::prelude::*;
+
 use crate::services::connectivity::ConnectivityService;
 use crate::widgets::group::Group;
 use crate::widgets::page::Page;
@@ -202,8 +204,59 @@ fn populate(
                                 let _ = (ok, err);
                             });
                         } else {
-                            // TODO: diálogo de contraseña (AlertDialog con PasswordEntry)
-                            eprintln!("[connectivity] password dialog pendiente de portar");
+                            let root = _btn.root().and_downcast::<gtk::Window>().expect("no root window");
+                            let dialog = gtk::Window::builder()
+                                .title(&format!("Conectar a {}", ssid_owned))
+                                .modal(true)
+                                .transient_for(&root)
+                                .default_width(320)
+                                .resizable(false)
+                                .build();
+                            
+                            let vbox = gtk::Box::new(gtk::Orientation::Vertical, 16);
+                            vbox.set_margin_top(16);
+                            vbox.set_margin_bottom(16);
+                            vbox.set_margin_start(16);
+                            vbox.set_margin_end(16);
+                            
+                            let label = gtk::Label::new(Some(&format!("Introduce la contraseña para la red Wi-Fi protegida '{}':", ssid_owned)));
+                            label.set_wrap(true);
+                            label.set_xalign(0.0);
+                            vbox.append(&label);
+                            
+                            let entry = gtk::PasswordEntry::new();
+                            entry.set_show_peek_icon(true);
+                            vbox.append(&entry);
+                            
+                            let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+                            hbox.set_halign(gtk::Align::End);
+                            
+                            let cancel_btn = gtk::Button::with_label("Cancelar");
+                            let dialog_clone = dialog.clone();
+                            cancel_btn.connect_clicked(move |_| {
+                                dialog_clone.close();
+                            });
+                            
+                            let connect_btn = gtk::Button::with_label("Conectar");
+                            connect_btn.add_css_class("suggested-action");
+                            let dialog_clone2 = dialog.clone();
+                            let entry_clone = entry.clone();
+                            let ssid_for_connect = ssid_owned.clone();
+                            connect_btn.connect_clicked(move |_| {
+                                let password = entry_clone.text().to_string();
+                                let ssid = ssid_for_connect.clone();
+                                std::thread::spawn(move || {
+                                    let _ = ConnectivityService::wifi_connect(&ssid, Some(&password));
+                                });
+                                dialog_clone2.close();
+                            });
+                            
+                            hbox.append(&cancel_btn);
+                            hbox.append(&connect_btn);
+                            vbox.append(&hbox);
+                            
+                            dialog.set_child(Some(&vbox));
+                            dialog.show();
                         }
                     })),
                 ));

@@ -13,6 +13,9 @@ use crate::services::accent::AccentService;
 use crate::services::settings;
 use crate::services::wallpaper::WallpaperService;
 use crate::services::waybar::WaybarService;
+use crate::services::foot_config::FootConfig;
+use crate::services::fuzzel_config::FuzzelConfig;
+use crate::services::mako_config::MakoConfig;
 
 pub struct PywalService;
 
@@ -108,6 +111,12 @@ impl PywalService {
 
         // Waybar: colors-waybar.css
         WaybarService::apply_pywal_colors(bg, fg, accent);
+
+        if let (Some(colors_map), Some(special_map)) = (colors, specials) {
+            FootConfig::apply_pywal(colors_map, special_map);
+            FuzzelConfig::apply_pywal(colors_map, special_map);
+            MakoConfig::apply_pywal(colors_map, special_map);
+        }
 
         crate::logging::log("[pywal] apply_accent completado OK");
         true

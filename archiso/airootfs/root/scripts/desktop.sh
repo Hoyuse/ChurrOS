@@ -36,7 +36,7 @@ EOF
 
     # Asegurar que la sesión Wayland ejecute directamente churros-niri-session en el scope de LightDM
     if [ -f /usr/share/wayland-sessions/niri.desktop ]; then
-        sed -i 's|^Exec=.*|Exec=churros-niri-session|' /usr/share/wayland-sessions/niri.desktop
+        sed -i 's|^Exec=.*|Exec=/usr/bin/churros-niri-session|' /usr/share/wayland-sessions/niri.desktop
     fi
 fi
 chown -R churros:churros "/home/churros/.config/environment.d"

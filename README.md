@@ -578,7 +578,7 @@ Escritorio
 - [x] Mako
 - [x] Centro de control
 - [x] Tema oficial
-- [ ] Wlogout
+- [x] Wlogout
 
 Instalador
 

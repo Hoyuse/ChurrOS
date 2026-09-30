@@ -11,9 +11,5 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export XCURSOR_THEME=Adwaita
 export XCURSOR_SIZE=24
 
-if [ -x /usr/bin/niri-session ]; then
-    exec /usr/bin/niri-session "$@"
-else
-    exec /usr/bin/niri "$@"
-fi
+exec /usr/bin/niri "$@"
 
