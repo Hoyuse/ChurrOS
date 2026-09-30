@@ -174,7 +174,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             Some(cb_str(state, &scheduler)),
         );
         st.height = SliderRow::new(
-            "Altura",
+            "Tamaño (Grosor)",
             None,
             None,
             20.0,

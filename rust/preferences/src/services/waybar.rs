@@ -439,10 +439,21 @@ impl WaybarService {
             .get("spacing")
             .and_then(|v| v.as_i64())
             .unwrap_or(d["spacing"].as_i64().unwrap()));
-        cfg["height"] = json!(values
+            
+        let size_val = json!(values
             .get("height")
             .and_then(|v| v.as_i64())
             .unwrap_or(d["height"].as_i64().unwrap()));
+            
+        if let Some(obj) = cfg.as_object_mut() {
+            if position == "left" || position == "right" {
+                obj.insert("width".to_string(), size_val);
+                obj.remove("height");
+            } else {
+                obj.insert("height".to_string(), size_val);
+                obj.remove("width");
+            }
+        }
 
         for key in ["modules-left", "modules-center", "modules-right"] {
             if let Some(modules) = values.get(key) {
