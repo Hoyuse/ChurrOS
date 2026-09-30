@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# churros-write-root-config — escribe un fichero de configuración de sistema
+# desde la sesión de usuario sin exponer un `install` genérico a root.
+#
+# El contenido llega por stdin (nunca por una ruta temporal compartida), el
+# destino está en una lista cerrada y la escritura es atómica dentro del
+# directorio de destino. Así no hay carreras de symlink en /tmp ni posibilidad
+# de escribir en rutas arbitrarias.
+#
+# Uso:
+#   churros-write-root-config /etc/greetd/config.toml < contenido
+#
+# Se ejecuta como root vía churros-pkexec (regla polkit 50-churros-store.rules).
+
+set -euo pipefail
+
+PROG="${0##*/}"
+
+die() { printf '%s: ERROR: %s\n' "$PROG" "$*" >&2; exit 1; }
+
+[ "$#" -eq 1 ] || die "se espera exactamente un camino de destino"
+
+target="$1"
+
+# Lista cerrada de destinos. Cualquier otra ruta se rechaza.
+case "$target" in
+    /etc/greetd/config.toml) mode=644 ;;
+    /etc/greetd/regreet.toml) mode=644 ;;
+    /etc/lightdm/lightdm.conf.d/autologin.conf) mode=644 ;;
+    *) die "destino no permitido: $target" ;;
+esac
+
+dir="${target%/*}"
+[ "$dir" = "$target" ] && dir="/"
+
+# Directorio de destino: 0755 y propiedad root, para que el temporal con el
+# contenido no pueda ser leído ni sustituido por otro usuario.
+install -d -m 0755 -o root -g root "$dir"
+
+# Temporal en el MISMO directorio que el destino: mktemp lo crea con 0600 de
+# forma atómica y el `mv` dentro del mismo sistema de ficheros también lo es.
+tmp="$(mktemp "$dir/.churros-cfg.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+
+cat > "$tmp"
+chmod "$mode" "$tmp"
+chown root:root "$tmp"
+mv -f "$tmp" "$target"
+trap - EXIT
