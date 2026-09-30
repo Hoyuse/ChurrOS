@@ -97,10 +97,6 @@ polkit.addRule(function(action, subject) {
         return false;
     }
 
-    function isColor(arg) {
-        return /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/.test(arg);
-    }
-
     // -S / -Sy / -Syu / -R / -Q y paquetes. Se rechazan las opciones
     // estructurales del propio pacman para que el binario no pueda redirigir
     // sus ganchos, base de datos o caché a rutas controladas por el usuario.
@@ -202,9 +198,6 @@ polkit.addRule(function(action, subject) {
         // Solo sin argumentos: escribe en $HOME/.cache, cualquier ruta extra
         // no aporta nada y ensucia la comprobacion.
         return args.length === 0 ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
-    case "/usr/share/churros/scripts/set-accent":
-        return (args.length <= 1 && (args.length === 0 || isColor(args[0])))
-            ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
     default:
         return polkit.Result.NOT_HANDLED;
     }
