@@ -308,36 +308,47 @@ impl UsersService {
         Self::write_root_file(REGREET_CONFIG_PATH, &new_content)
     }
 
+    /// Escribe una configuración de sistema (/etc) como root.
+    ///
+    /// El contenido viaja por stdin hasta `churros-write-root-config`, un
+    /// helper con lista cerrada de destinos que hace la escritura atómica en
+    /// el directorio de destino. Antes se escribía un temporal predecible en
+    /// /tmp (`churros-cfg-<pid>.tmp`) y se instalaba con `install`: cualquier
+    /// usuario local podía plantar un symlink y lograr que root escribiera
+    /// contenido arbitrario, ni dejar `install`/`mkdir` genéricos autorizados a root.
     fn write_root_file(target_path: &str, content: &str) -> bool {
-        let tmp = std::env::temp_dir().join(format!("churros-cfg-{}.tmp", std::process::id()));
-        if fs::write(&tmp, content).is_err() {
-            return false;
+        use std::io::Write;
+        use std::process::Stdio;
+
+        let mut cmd = if getuid() == 0 {
+            let mut c = Command::new("churros-write-root-config");
+            c.arg(target_path);
+            c
+        } else {
+            let mut c = Command::new("churros-pkexec");
+            c.args(["churros-write-root-config", target_path]);
+            c
+        };
+
+        let mut child = match cmd
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+        {
+            Ok(c) => c,
+            Err(_) => return false,
+        };
+
+        if let Some(stdin) = child.stdin.as_mut() {
+            if stdin.write_all(content.as_bytes()).is_err() {
+                let _ = child.wait();
+                return false;
+            }
         }
-        let tmp_str = tmp.to_string_lossy().to_string();
+        // Cierra stdin para que el helper vea el EOF y pueda escribir.
+        drop(child.stdin.take());
 
-        let target_dir = std::path::Path::new(target_path).parent().unwrap_or(std::path::Path::new("/etc"));
-        let dir_str = target_dir.to_string_lossy().to_string();
-
-        let _ = if getuid() == 0 {
-            Command::new("mkdir").args(["-p", &dir_str]).status()
-        } else {
-            Command::new("churros-pkexec").args(["mkdir", "-p", &dir_str]).status()
-        };
-
-        let ok = if getuid() == 0 {
-            Command::new("install")
-                .args(["-m", "644", &tmp_str, target_path])
-                .status()
-                .map(|s| s.success())
-                .unwrap_or(false)
-        } else {
-            Command::new("churros-pkexec")
-                .args(["install", "-m", "644", &tmp_str, target_path])
-                .status()
-                .map(|s| s.success())
-                .unwrap_or(false)
-        };
-        let _ = fs::remove_file(&tmp);
-        ok
+        child.wait().map(|s| s.success()).unwrap_or(false)
     }
 }
