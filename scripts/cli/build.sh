@@ -26,8 +26,33 @@ if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
 fi
 
 PACKAGES_BACKED_UP=0
+unmount_work_submounts() {
+    local target_dir="${1:-work}"
+    if [ -d "$target_dir" ]; then
+        local abs_target
+        abs_target=$(cd "$target_dir" 2>/dev/null && pwd)
+        if [ -n "$abs_target" ]; then
+            local mounts
+            if command -v findmnt >/dev/null 2>&1; then
+                mounts=$(findmnt -lno TARGET 2>/dev/null | grep "^$abs_target/" | sort -r || true)
+            else
+                mounts=$(awk -v p="$abs_target" '$2 ~ "^"p"/" {print $2}' /proc/mounts 2>/dev/null | sort -r || true)
+            fi
+            if [ -n "$mounts" ]; then
+                echo "  [cleanup] Desmontando sistemas de archivos residuales en $target_dir..."
+                while IFS= read -r mnt; do
+                    if [ -n "$mnt" ]; then
+                        sudo umount -l "$mnt" 2>/dev/null || true
+                    fi
+                done <<< "$mounts"
+            fi
+        fi
+    fi
+}
+
 cleanup_temp() {
     echo "[cleanup] Removing temporary build files..."
+    unmount_work_submounts work
     if [ "$HOST_REPO_SYMLINK" -eq 1 ]; then
         echo "[cleanup] Removing host /root/packages symlink..."
         sudo rm -f /root/packages 2>/dev/null || true
@@ -207,7 +232,9 @@ bash scripts/build-rust.sh;
 
 echo "[4/5] Cleaning previous build...";
 
+unmount_work_submounts work
 if mountpoint -q work 2>/dev/null; then
+    echo "  work is mounted (tmpfs) — cleaning contents..."
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
 else
     sudo rm -rf work
@@ -240,10 +267,11 @@ sudo chown -R "$USER:$USER" work out 2>/dev/null || true
 
 echo "[5/5] Cleaning build artifacts..."
 
+unmount_work_submounts work
 if mountpoint -q work 2>/dev/null; then
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
 else
-    rm -rf work 2>/dev/null || true
+    sudo rm -rf work 2>/dev/null || true
 fi
 
 echo
