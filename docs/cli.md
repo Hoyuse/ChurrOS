@@ -46,11 +46,12 @@ Construye una nueva imagen ISO de ChurrOS.
 ```bash
 ./churros build
 ./churros build --edition xfce
+./churros build --edition kde
 ./churros build --edition niri
 ```
 
 Opciones:
-- `--edition <niri|xfce>` (o `-e`): Selecciona el entorno de escritorio de la ISO (por defecto: `niri`).
+- `--edition <niri|xfce|kde>` (o `-e`): Selecciona el entorno de escritorio de la ISO (por defecto: `niri`).
   - `niri`: Compositor Wayland con tiling dinámico horizontal (Waybar, foot, Fuzzel, Mako).
   - `xfce`: Entorno de escritorio clásico X11 (XFCE 4, panel ChurrOS, xfwm4, xfce4-terminal).
 

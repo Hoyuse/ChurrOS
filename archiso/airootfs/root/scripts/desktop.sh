@@ -37,6 +37,19 @@ EOF
     ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-verticals.png
     ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-teal.jpg
     ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-stripes.png
+elif [ "$EDITION" = "kde" ]; then
+    cat > "$SESSION_FILE" << 'EOF'
+XDG_CURRENT_DESKTOP=KDE
+XDG_SESSION_DESKTOP=plasma
+XDG_SESSION_TYPE=wayland
+DESKTOP_SESSION=plasma
+EOF
+
+    # Plasma arranca con su propio lanzador (startplasma-wayland); lo unico que
+    # hace falta es dejar el fondo de ChurrOS entre los predeterminados para
+    # que aparezca en la primera sesion.
+    mkdir -p /usr/share/backgrounds/xdg
+    cp -f /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xdg/churros.png
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri

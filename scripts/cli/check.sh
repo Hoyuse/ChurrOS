@@ -75,25 +75,20 @@ fi
 
 section "ISO package list"
 
-duplicates=$(grep -v '^#' archiso/packages.x86_64 | grep -v '^$' | sort | uniq -d)
-if [ -n "$duplicates" ]; then
-    fail "duplicate entries in archiso/packages.x86_64:"
-    # shellcheck disable=SC2086
-    printf '      %s\n' $duplicates
-else
-    pass "no duplicates (packages.x86_64)"
-fi
+# Una lista por edicion (packages.<edicion>.x86_64). Se recorren todas para
+# que anadir una edicion no obligue a tocar este script.
+for pkg_list in archiso/packages*.x86_64; do
+    [ -f "$pkg_list" ] || continue
 
-if [ -f archiso/packages.xfce.x86_64 ]; then
-    duplicates_xfce=$(grep -v '^#' archiso/packages.xfce.x86_64 | grep -v '^$' | sort | uniq -d)
-    if [ -n "$duplicates_xfce" ]; then
-        fail "duplicate entries in archiso/packages.xfce.x86_64:"
+    dups=$(grep -v '^#' "$pkg_list" | grep -v '^$' | sort | uniq -d)
+    if [ -n "$dups" ]; then
+        fail "duplicate entries in $pkg_list:"
         # shellcheck disable=SC2086
-        printf '      %s\n' $duplicates_xfce
+        printf '      %s\n' $dups
     else
-        pass "no duplicates (packages.xfce.x86_64)"
+        pass "no duplicates ($pkg_list)"
     fi
-fi
+done
 
 # ------------------------------------------------------- Shared resolvers
 

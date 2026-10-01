@@ -20,8 +20,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
-if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
-    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce)" >&2
+if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ]; then
+    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde)" >&2
     exit 1
 fi
 
@@ -116,14 +116,15 @@ if [ "${#missing_deps[@]}" -gt 0 ]; then
 fi
 
 # 0. Configurar paquetes según la edición
-if [ "$EDITION" = "xfce" ]; then
-    echo "[0/5] Selecting XFCE packages..."
-    if [ -f archiso/packages.xfce.x86_64 ]; then
+if [ "$EDITION" != "niri" ]; then
+    PKG_LIST="archiso/packages.${EDITION}.x86_64"
+    echo "[0/5] Selecting ${EDITION} packages..."
+    if [ -f "$PKG_LIST" ]; then
         cp archiso/packages.x86_64 archiso/packages.x86_64.orig
         PACKAGES_BACKED_UP=1
-        cp archiso/packages.xfce.x86_64 archiso/packages.x86_64
+        cp "$PKG_LIST" archiso/packages.x86_64
     else
-        echo "Error: archiso/packages.xfce.x86_64 not found!" >&2
+        echo "Error: $PKG_LIST not found!" >&2
         exit 1
     fi
 fi
@@ -132,10 +133,17 @@ fi
 mkdir -p archiso/airootfs/etc
 echo "$EDITION" > archiso/airootfs/etc/churros-edition
 
-# Configurar greetd autologin para la sesión Live
+# Configurar greetd autologin para la sesión Live.
+# SESSION_CMD es el punto de entrada al escritorio de cada edición.
 mkdir -p archiso/airootfs/etc/greetd
-if [ "$EDITION" = "xfce" ]; then
-    cat > archiso/airootfs/etc/greetd/config.toml << 'EOF'
+
+case "$EDITION" in
+    xfce) SESSION_CMD="startxfce4" ;;
+    kde)  SESSION_CMD="startplasma-wayland" ;;
+    *)    SESSION_CMD="niri" ;;
+esac
+
+cat > archiso/airootfs/etc/greetd/config.toml << EOF
 [terminal]
 vt = 7
 
@@ -144,23 +152,9 @@ command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 c
 user = "greeter"
 
 [initial_session]
-command = "startxfce4"
+command = "$SESSION_CMD"
 user = "churros"
 EOF
-else
-    cat > archiso/airootfs/etc/greetd/config.toml << 'EOF'
-[terminal]
-vt = 7
-
-[default_session]
-command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
-user = "greeter"
-
-[initial_session]
-command = "niri"
-user = "churros"
-EOF
-fi
 
 echo "[1/5] Preparing branding..."
 
