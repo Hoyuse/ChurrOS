@@ -41,6 +41,8 @@ pub fn build() -> gtk::Box {
 
     card.append(&create_row("CPU", &system_info::get_cpu()));
     card.append(&create_row("RAM", &system_info::get_memory()));
+    card.append(&create_row("Disco", &system_info::get_root_filesystem()));
+    card.append(&create_row("Uptime", &system_info::get_uptime()));
     card.append(&create_row("Kernel", &system_info::get_kernel()));
     card.append(&create_row("SO", &system_info::get_os()));
     card.append(&create_row("Arquitectura", &system_info::get_architecture()));
@@ -69,6 +71,9 @@ fn create_row(key: &str, value: &str) -> gtk::Box {
     value_label.set_halign(gtk::Align::End);
 
     value_label.set_wrap(true);
+    // La RAM ya trae el porcentaje y el disco las unidades: encolumnar ambos
+    // extremos con la etiqueta a la izquierda hace la tarjeta más legible.
+    value_label.set_xalign(1.0);
 
     row.append(&key_label);
     row.append(&value_label);

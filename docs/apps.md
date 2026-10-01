@@ -32,7 +32,7 @@ Pantalla de bienvenida al iniciar la sesión Live.
 ## Purpose
 
 - Dar la bienvenida al usuario.
-- Mostrar resumen de información del hardware del sistema (CPU, RAM, Kernel, SO, Arquitectura, Hostname).
+- Mostrar resumen de información del sistema: CPU, RAM (usada de total con porcentaje), espacio de `/`, uptime, Kernel, SO, Arquitectura y Hostname.
 - Ofrecer accesos rápidos a instalación con Calamares, GitHub y comunidad.
 
 El footer muestra `Linux • <Entorno> • ChurrOS <Versión>` detectado dinámicamente con `churros_services::version::desktop_name()` y `churros_services::version::distro()`.
@@ -74,12 +74,22 @@ rust/churros-welcome/
 
 | Tarjeta / Icono | Título | Descripción / Acción |
 |-----------------|--------|----------------------|
-| `computer-symbolic` | Información | Muestra CPU, RAM total, Kernel, SO, Arquitectura y Hostname |
+| `computer-symbolic` | Información | CPU, RAM (usada de total con porcentaje), espacio libre de `/`, uptime, Kernel, SO, Arquitectura y Hostname |
 | `install.svg` | Install ChurrOS | Lanza el instalador `calamares.desktop` |
 | `github.svg` | GitHub | Abre el repositorio oficial |
 | `community.svg` | Comunidad | Abre el enlace a la comunidad de ChurrOS |
 
-Hasta 4 columnas en pantallas anchas; se reorganiza automáticamente a 2 o 1 columna en ventanas reducidas.
+Son cuatro tarjetas. Con el `AdwClamp` de 840 px entran dos por fila (cada tarjeta pide 280 px más separación), así que el reparto real es 2×2 en ventana grande y una columna al estrecharse. `max_children_per_line` es 4 para que pueda aprovechar más espacio si el clamp cambia.
+
+La tarjeta de información no es un botón: es un `GtkBox`, y por eso no se eleva al pasar el ratón (el hover solo se aplica a `.action-card`).
+
+## Tests
+
+`system_info.rs` separa el acceso a `/proc` de la lógica: los parsers son funciones puras (`parse_cpu`, `parse_memory`, `parse_uptime`, `parse_os_release`, `format_uptime`, `format_filesystem`) y hay tests para cada una, incluidos los casos en los que el kernel no publica `MemAvailable` y la variante de CPU sin `model name` de aarch64.
+
+```bash
+cargo test -p churros-welcome
+```
 
 ## Desktop Entry
 
