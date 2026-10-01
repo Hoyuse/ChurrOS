@@ -474,8 +474,8 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
 - **El problema:** En las últimas versiones, el script `startxfce4` comprueba la existencia de la variable `WAYLAND_DISPLAY`. Greetd/Regreet dejaban un residuo de esta variable en la sesión tras cerrar `cage` (su propio entorno Wayland). Como resultado, XFCE creía que debía arrancar una sesión nativa en Wayland y pedía a gritos el compositor `labwc`, abortando el arranque de Xorg.
 - **La solución:** Se ha inyectado un `unset WAYLAND_DISPLAY` en `churros-xfce-session` para limpiar el entorno residual heredado del greeter y forzar siempre un entorno X11 robusto para XFCE. (Nota: los errores de `libseat` mostrados en log son inofensivos; simplemente indican el *fallback* seguro a `systemd-logind`).
 
-### Solución a Fallo de Xorg (AddScreen/ScreenInit) en VMs
-- **El problema:** Al transicionar del greeter Wayland (`cage`) a la sesión X11 (`startx`) en una máquina virtual (QEMU/KVM), Xorg colapsaba con el error `AddScreen/ScreenInit failed for driver 0`. Esto ocurre por una condición de carrera (*race condition*) donde `cage` aún no ha liberado por completo el control del nodo DRM de la GPU (`/dev/dri/card0`) cuando `startx` intenta capturarlo.
-- **La solución:** Se ha introducido un micro-retraso (`sleep 1`) antes de ejecutar `startx` en el wrapper de sesión para permitir la desconexión total del KMS/DRM por parte de `cage`.
+### Solución a Crash de Xorg (Recursive xinit)
+- **El problema:** Tras corregir el error del DRM con `sleep 1`, persistía una pantalla negra que devolvía a Greetd. Al ejecutar `unset DISPLAY` globalmente al inicio del wrapper, se borraba la variable `$DISPLAY` inyectada por Xorg en la sesión cliente. Como resultado, `startxfce4` creía que no había un servidor gráfico activo y lanzaba `xinit` por segunda vez dentro del propio `xinit`, colapsando inmediatamente.
+- **La solución:** Se ha reubicado el `unset DISPLAY` y `unset WAYLAND_DISPLAY` para que solo afecten al proceso padre (Greetd) y no al proceso hijo (la sesión X11 iniciada con `--xinit`). De esta forma, `startxfce4` reconoce `$DISPLAY=:0` correctamente.
 
 
