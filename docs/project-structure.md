@@ -38,7 +38,7 @@ Perfil de ArchISO usado para construir la ISO Live.
 
 Incluye:
 
-- `packages.x86_64` — lista de paquetes
+- `packages.x86_64`, `packages.xfce.x86_64`, `packages.kde.x86_64` — una lista de paquetes por edición
 - `profiledef.sh` — metadatos, bootmodes (`bios.syslinux` + `uefi.grub`) y permisos
 - `airootfs/` — overlay del sistema Live (skel, servicios, assets)
 - `grub/` y `syslinux/` — cargadores de la ISO

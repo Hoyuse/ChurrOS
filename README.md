@@ -8,7 +8,7 @@
     <img alt="Base" src="https://img.shields.io/badge/base-Arch%20Linux-1793D1.svg">
     <img alt="Build" src="https://img.shields.io/badge/build-archiso-1793D1.svg">
     <img alt="Apps" src="https://img.shields.io/badge/apps-Rust-orange.svg">
-    <img alt="Escritorios" src="https://img.shields.io/badge/escritorios-Niri%20%2F%20XFCE-FFBC00.svg">
+    <img alt="Escritorios" src="https://img.shields.io/badge/escritorios-Niri%20%2F%20XFCE%20%2F%20Plasma-FFBC00.svg">
   </p>
 </div>
 
@@ -44,6 +44,7 @@ ChurrOS utiliza Arch Linux como base actualmente, mientras desarrolla progresiva
 | QEMU para pruebas | ✅ |
 | Edición Niri | ✅ |
 | Edición XFCE | ✅ |
+| Edición KDE Plasma | ✅ |
 | Aplicaciones oficiales en Rust | ✅ |
 | Calamares con branding propio | ✅ |
 | Tema GRUB | ✅ |
@@ -80,6 +81,16 @@ Edición basada en XFCE, orientada a una experiencia de escritorio tradicional y
 ```bash
 ./churros build --edition xfce
 ```
+
+### KDE Plasma
+
+Edición basada en KDE Plasma 6, completa y orientada a un escritorio tradicional con muchas opciones. Usa su propia lista de paquetes (`archiso/packages.kde.x86_64`, 209 paquetes) y arranca en la sesión Wayland de Plasma (`startplasma-wayland`).
+
+```bash
+./churros build --edition kde
+```
+
+Es la edición más pesada de las tres: el cierre de dependencias ronda los **3340 MiB instalados**, frente a unos 3140 (niri) y 3100 (xfce).
 
 ---
 
@@ -155,6 +166,7 @@ Se recomienda trabajar mediante ramas y pull requests en lugar de realizar cambi
 ```bash
 ./churros build              # edición Niri
 ./churros build --edition xfce
+./churros build --edition kde
 ```
 
 ### Probar en QEMU
@@ -189,7 +201,7 @@ Elimina los artefactos generados (`work/` y `out/`). No toca el código fuente.
 
 | Comando | Qué hace |
 |---|---|
-| `build` | Construye la ISO (`--edition niri\|xfce`) |
+| `build` | Construye la ISO (`--edition niri\|xfce\|kde`) |
 | `run` | Construye si hace falta y lanza QEMU (`--nokvm`, `--fresh`, `--clean`) |
 | `clean` | Elimina los artefactos de construcción |
 | `check` | Ejecuta las comprobaciones estáticas del repositorio |

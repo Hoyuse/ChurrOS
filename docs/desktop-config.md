@@ -255,6 +255,40 @@ El script es seguro para el Live porque el sistema corre en RAM: cualquier cambi
 
 ChurrOS XFCE Edition ofrece una experiencia de escritorio clásica, ligera y basada en ventanas flotantes tradicionales gestionadas por `xfwm4`.
 
+---
+
+# KDE Plasma Edition (Wayland)
+
+ChurrOS KDE Plasma Edition parte de Plasma 6 con su propia lista de paquetes (`archiso/packages.kde.x86_64`) y arranca en la sesión Wayland de Plasma.
+
+## Sesión
+
+| Aspecto | Valor |
+|---|---|
+| Comando de sesión | `startplasma-wayland` |
+| `XDG_CURRENT_DESKTOP` | `KDE` |
+| `XDG_SESSION_DESKTOP` | `plasma` |
+| `XDG_SESSION_TYPE` | `wayland` |
+| Pantalla de inicio | greetd + ReGreet sobre cage, igual que en las otras ediciones |
+
+El comando de sesión queda escrito en `/etc/greetd/environments` por `configure-greetd-session` al terminar la instalación, en función de `/etc/churros-edition`.
+
+## Lo que aporta Plasma
+
+- Escritorio: Plasma 6 (`plasma-desktop`, `plasma-workspace`, `kwin`).
+- Gestión de energía y red: `plasma-pa` y `plasma-nm`.
+- Portales: `xdg-desktop-portal-kde` y `polkit-kde-agent` para los avisos de privilegios.
+- Aplicaciones: Dolphin, Konsole, Kate, Gwenview, KCalc, Ark, Spectacle.
+
+## Lo que cambia respecto a la edición Niri
+
+La capa de shell de Niri no se instala en esta edición: `niri`, Waybar, foot, Fuzzel, Mako, swaybg, grim/slurp y swaylock/swayidle se sustituyen por los equivalentes de Plasma (KRunner, paneles de Plasma, Konsole, notificaciones de Plasma, capturas con Spectacle y kscreenlocker).
+
+## Limitaciones conocidas
+
+- `churros-apply-wallpaper` no funciona bajo Plasma: usa `swww`/`awww`, que dependen de *layer-shell* de wlroots y KWin no lo implementa. El fondo de ChurrOS sí se instala entre los predeterminados de Plasma.
+- Las páginas de `churros-settings` que editan `waybar`, `foot`, `fuzzel` o `mako` no tienen efecto en esta edición.
+
 ## Estructura de configuración (xfconf y GTK)
 
 ```text

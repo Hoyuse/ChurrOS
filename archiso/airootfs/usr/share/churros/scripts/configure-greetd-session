@@ -6,7 +6,8 @@
 #   'agreety' as the default session and doesn't handle XFCE editions properly.
 # - We extract the autologin user (if any) that Calamares carefully configured.
 # - We rewrite the config.toml to use our graphical regreet GTK theme.
-# - We correctly enforce churros-niri-session or startxfce4 based on the edition.
+# - We correctly enforce the session command of the installed edition (niri,
+#   startxfce4 or startplasma-wayland).
 
 set -euo pipefail
 
@@ -15,10 +16,11 @@ SESSION_CMD="/usr/bin/churros-niri-session"
 
 # Detect edition and adjust session command
 if [ -f /etc/churros-edition ]; then
-    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]')"
-    if [ "$EDITION" = "xfce" ]; then
-        SESSION_CMD="/usr/bin/startxfce4"
-    fi
+    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+    case "$EDITION" in
+        xfce) SESSION_CMD="/usr/bin/startxfce4" ;;
+        kde)  SESSION_CMD="/usr/bin/startplasma-wayland" ;;
+    esac
 fi
 
 # Extract the autologin user that Calamares displaymanager wrote
