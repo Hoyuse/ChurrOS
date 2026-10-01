@@ -8,7 +8,7 @@
     <img alt="Base" src="https://img.shields.io/badge/base-Arch%20Linux-1793D1.svg">
     <img alt="Build" src="https://img.shields.io/badge/build-archiso-1793D1.svg">
     <img alt="Apps" src="https://img.shields.io/badge/apps-Rust-orange.svg">
-    <img alt="Escritorios" src="https://img.shields.io/badge/escritorios-Niri%20%2F%20XFCE%20%2F%20Plasma-FFBC00.svg">
+    <img alt="Escritorios" src="https://img.shields.io/badge/escritorios-Niri%20%2F%20XFCE%20%2F%20Plasma%20%2F%20Server-FFBC00.svg">
   </p>
 </div>
 
@@ -45,6 +45,7 @@ ChurrOS utiliza Arch Linux como base actualmente, mientras desarrolla progresiva
 | Edición Niri | ✅ |
 | Edición XFCE | ✅ |
 | Edición KDE Plasma | ✅ |
+| Edición Servidor (sin escritorio, por SSH) | ✅ |
 | Aplicaciones oficiales en Rust | ✅ |
 | Calamares con branding propio | ✅ |
 | Tema GRUB | ✅ |
@@ -88,9 +89,20 @@ Edición basada en KDE Plasma 6, completa y orientada a un escritorio tradiciona
 
 ```bash
 ./churros build --edition kde
+./churros build --edition server
 ```
 
-Es la edición más pesada de las tres: el cierre de dependencias ronda los **3340 MiB instalados**, frente a unos 3140 (niri) y 3100 (xfce).
+Es la edición más pesada: el cierre de dependencias ronda los **3340 MiB instalados**, frente a unos 3140 (niri) y 3100 (xfce).
+
+### Servidor
+
+Edición sin escritorio gráfico en el sistema instalado, accesible por SSH. La ISO lleva un XFCE mínimo porque el instalador (Calamares) es gráfico; `configure-server` lo quita al terminar la instalación y deja el arranque en `multi-user`.
+
+```bash
+./churros build --edition server
+```
+
+Es la más ligera: **1843 MiB instalados**, un 41 % menos que la edición Niri. Incluye `sshd`, `chronyd` y `fail2ban` habilitados. Los detalles y las limitaciones están en [`docs/server.md`](docs/server.md).
 
 ---
 
@@ -201,7 +213,7 @@ Elimina los artefactos generados (`work/` y `out/`). No toca el código fuente.
 
 | Comando | Qué hace |
 |---|---|
-| `build` | Construye la ISO (`--edition niri\|xfce\|kde`) |
+| `build` | Construye la ISO (`--edition niri\|xfce\|kde\|server`) |
 | `run` | Construye si hace falta y lanza QEMU (`--nokvm`, `--fresh`, `--clean`) |
 | `clean` | Elimina los artefactos de construcción |
 | `check` | Ejecuta las comprobaciones estáticas del repositorio |
@@ -264,6 +276,8 @@ ChurrOS utiliza un repositorio local de paquetes durante la construcción (`arch
 - bazaar (parcheado para resolver un conflicto de `libdex`)
 
 El objetivo a largo plazo es disponer de un repositorio oficial de paquetes de ChurrOS.
+
+Cada edición de escritorio tiene además su propio perfil en `archiso/`: `packages.x86_64` (206 entradas), `packages.xfce.x86_64` (214), `packages.kde.x86_64` (209) y `packages.server.x86_64` (185).
 
 ---
 
@@ -410,6 +424,8 @@ ChurrOS/
 | [Popups](docs/popups.md) | `churros-popup` |
 | [Services](docs/services.md) | Capa de servicios compartida |
 | [Rollback](docs/rollback.md) | Snapshots de Btrfs |
+| [Server](docs/server.md) | Edición para servidores, sin escritorio |
+| [Installer](docs/installer.md) | Cómo instala ChurrOS, edition por edition |
 | [Privileged Execution](docs/privileged-execution.md) | Cómo se obtiene privilegio y con qué reglas |
 | [Branding](docs/branding.md) | Identidad visual |
 | [Boot](docs/boot.md) | Arranque de la ISO |

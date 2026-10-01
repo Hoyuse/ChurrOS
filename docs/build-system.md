@@ -47,11 +47,11 @@ El objetivo es generar imágenes ISO reproducibles, mantener un flujo sencillo y
 
 # Flujo de compilación
 
-`./churros build [--edition <niri|xfce|kde>]` hace, en este orden:
+`./churros build [--edition <niri|xfce|kde|server>]` hace, en este orden:
 
 ## 0. Selección de edición y paquetes
 
-- Si se especifica una edición que no sea `niri`: selecciona `archiso/packages.<edición>.x86_64`, configura `/etc/churros-edition` y ajusta el autologin de `greetd` al lanzador de sesión de esa edición (`startxfce4` para xfce, `startplasma-wayland` para kde).
+- Si se especifica una edición que no sea `niri`: selecciona `archiso/packages.<edición>.x86_64`, configura `/etc/churros-edition` y ajusta el autologin de `greetd` al lanzador de sesión (`startxfce4` para xfce, `startplasma-wayland` para kde, `startxfce4` también para server, que usa el XFCE de la ISO solo para el instalador).
 - Si se especifica `--edition niri` (por defecto): utiliza `archiso/packages.x86_64` (Waybar, Niri, foot, Fuzzel, Mako) y el autologin a sesión Niri.
 
 ## 1. Branding y tema GRUB

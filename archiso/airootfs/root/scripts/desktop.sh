@@ -18,7 +18,7 @@ fi
 SESSION_FILE="/home/churros/.config/environment.d/churros-session.conf"
 mkdir -p "/home/churros/.config/environment.d"
 
-if [ "$EDITION" = "xfce" ]; then
+if [ "$EDITION" = "xfce" ] || [ "$EDITION" = "server" ]; then
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=XFCE
 XDG_SESSION_DESKTOP=xfce
