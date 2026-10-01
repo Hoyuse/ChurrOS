@@ -479,3 +479,7 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
 - **La solución:** Se ha reubicado el `unset DISPLAY` y `unset WAYLAND_DISPLAY` para que solo afecten al proceso padre (Greetd) y no al proceso hijo (la sesión X11 iniciada con `--xinit`). De esta forma, `startxfce4` reconoce `$DISPLAY=:0` correctamente.
 
 
+
+### Soporte de Particiones BTRFS en BIOS (grub-install error 1)
+- **El problema:** Al instalar en modo BIOS usando BTRFS, `grub-install` fallaba con el error `this GPT partition label contains no BIOS Boot Partition`. Esto ocurría porque Calamares retenía la cabecera GPT del disco pero no generaba la partición de incrustación `bios-boot` necesaria.
+- **La solución:** Se ha activado `createHybridBootloaderLayout: true` en `installer/calamares/modules/partition.conf`. Esto obliga a Calamares a añadir siempre una partición `bios-boot` (de 8MB) para que GRUB se incruste, salvando así el problema de instalar en BIOS sobre discos previamente formateados como GPT.
