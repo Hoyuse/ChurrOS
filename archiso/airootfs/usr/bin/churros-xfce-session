@@ -8,6 +8,19 @@ echo "  DISPLAY=$DISPLAY WAYLAND_DISPLAY=$WAYLAND_DISPLAY XDG_VTNR=$XDG_VTNR" >>
 
 if [ "$1" = "--xinit" ]; then
     echo "$(date): --xinit mode, launching startxfce4 (DISPLAY=$DISPLAY)" >> "$LOG"
+
+    # ====================================================================
+    # CRÍTICO: Forzar entorno X11 justo antes de llamar a startxfce4.
+    # greetd/PAM/systemd-logind pueden inyectar XDG_SESSION_TYPE=wayland
+    # a nivel de sesión (porque el greeter corrió bajo cage/Wayland).
+    # Si startxfce4 ve XDG_SESSION_TYPE=wayland o WAYLAND_DISPLAY,
+    # intenta arrancar labwc en lugar de usar el Xorg que ya está corriendo.
+    # ====================================================================
+    unset WAYLAND_DISPLAY
+    export XDG_SESSION_TYPE=x11
+    export XDG_CURRENT_DESKTOP=XFCE
+    export XDG_SESSION_DESKTOP=xfce
+
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
     exec /usr/bin/startxfce4
