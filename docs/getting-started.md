@@ -94,6 +94,17 @@ Este comando:
 
 Hace falta `sudo` para `mkarchiso`.
 
+## Elegir edición
+
+Sin opciones compila la edición **niri**. Las otras se piden explícitamente:
+
+```bash
+./churros build --edition xfce   # XFCE
+./churros build --edition kde    # KDE Plasma
+```
+
+Cada edición tiene su lista de paquetes (`archiso/packages.<edición>.x86_64`) y su lanzador de sesión. La lista se elige al construir, no después: una ISO de niri no se convierte en una de XFCE. El detalle de cada escritorio está en [`docs/desktop-config.md`](desktop-config.md).
+
 ---
 
 # Ejecutar la ISO

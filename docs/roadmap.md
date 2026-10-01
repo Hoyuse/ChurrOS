@@ -10,7 +10,7 @@ La hoja de ruta puede cambiar conforme evolucione la distribución.
 
 # Estado actual
 
-La versión publicada es **v1.2**. ChurrOS sigue en etapa temprana: hay ISO, escritorio, instalador, apps oficiales, actualizador y rollback.
+La versión publicada es **v1.2**. ChurrOS sigue en etapa temprana: hay ISO, tres ediciones de escritorio (Niri, XFCE y KDE Plasma), instalador, apps oficiales, actualizador y rollback.
 
 El objetivo principal es consolidar esa base (identidad de arranque y repositorio propio) antes de ampliar el alcance.
 
@@ -101,6 +101,7 @@ Crear herramientas propias.
 - [x] Herramienta de configuración (`churros-settings`, Rust).
 - [x] Centro de control (`churros-control-center`, Rust).
 - [x] Popups integrados (`churros-popup`: audio, bluetooth, battery, brightness, network, power).
+- [x] Tour de bienvenida (`churros-tour`, Rust), que se limpia al instalar.
 
 ---
 
