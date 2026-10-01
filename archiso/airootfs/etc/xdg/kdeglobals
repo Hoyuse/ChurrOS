@@ -22,7 +22,7 @@ Theme=Papirus-Dark
 [General]
 ColorScheme=ChurroOSDark
 Name=Churros Dark
-fixed=Hack Nerd Font
+fixed=JetBrains Mono
 font=Inter,10,-1,5,50,0,0,0,0,0
 menuFont=Inter,10,-1,5,50,0,0,0,0,0
 smallestReadableFont=Inter,8,-1,5,50,0,0,0,0,0

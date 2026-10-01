@@ -21,7 +21,7 @@
   </property>
   <property name="Gtk" type="empty">
     <property name="FontName" type="string" value="DejaVu Sans 10"/>
-    <property name="MonospaceFontName" type="string" value="JetBrainsMono Nerd Font 10"/>
+    <property name="MonospaceFontName" type="string" value="JetBrains Mono 10"/>
     <property name="CursorBlink" type="bool" value="true"/>
     <property name="CursorBlinkTime" type="int" value="1200"/>
     <property name="DecorationLayout" type="string" value="close,minimize,maximize:"/>

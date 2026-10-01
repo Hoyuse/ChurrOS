@@ -139,7 +139,7 @@ impl MakoConfig {
     // ------------------------------------------------------------ Getters
 
     pub fn get_font() -> String {
-        get_key("", "font", "JetBrainsMono Nerd Font:size=11").unwrap()
+        get_key("", "font", "JetBrains Mono:size=11").unwrap()
     }
 
     pub fn get_background_color() -> String {

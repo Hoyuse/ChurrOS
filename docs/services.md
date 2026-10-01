@@ -77,7 +77,7 @@ Wrapper sobre `upower`.
 available, percentage, state, time_to_full, time_to_empty, icon
 ```
 
-Si no hay batería, `available` es `false`. Iconos Nerd Font según porcentaje y carga.
+Si no hay batería, `available` es `false`. Iconos de `Symbols Nerd Font Mono` según porcentaje y carga.
 
 ---
 

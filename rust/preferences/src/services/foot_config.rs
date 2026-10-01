@@ -104,7 +104,7 @@ impl FootConfig {
     // ------------------------------------------------------------ Getters
 
     pub fn get_font() -> String {
-        get_key("main", "font", "JetBrainsMono Nerd Font:size=10")
+        get_key("main", "font", "JetBrains Mono:size=10")
     }
 
     pub fn get_pad() -> String {

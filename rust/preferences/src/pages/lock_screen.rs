@@ -21,10 +21,8 @@ use crate::widgets::row::Row;
 use crate::widgets::slider_row::SliderRow;
 use crate::widgets::switch_row::SwitchRow;
 
-const FONTS: [&str; 7] = [
-    "JetBrainsMono Nerd Font",
+const FONTS: [&str; 5] = [
     "JetBrains Mono",
-    "FiraCode Nerd Font",
     "Inter",
     "Cantarell",
     "Hack",
@@ -356,9 +354,9 @@ pub fn build(navigator: gtk::Stack) -> Page {
             "Familia",
             &FONTS,
             Some(
-                get("font", json!("JetBrainsMono Nerd Font"))
+                get("font", json!("JetBrains Mono"))
                     .as_str()
-                    .unwrap_or("JetBrainsMono Nerd Font"),
+                    .unwrap_or("JetBrains Mono"),
             ),
             None,
             None,

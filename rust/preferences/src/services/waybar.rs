@@ -56,7 +56,7 @@ pub fn defaults() -> Value {
         "spacing": 0,
         "height": 30,
         "font-size": 14,
-        "font-family": "JetBrainsMono Nerd Font",
+        "font-family": "JetBrains Mono",
         "background": "#2a1612",
         "foreground": "#c9c4c3",
         "accent": "#DE8636",

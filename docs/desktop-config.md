@@ -167,7 +167,7 @@ Waybar es la barra superior de ChurrOS. Configurada con estilo dark y acento nar
 | `custom/screenrecording-indicator` | Indicador cuando wf-recorder está activo. |
 | `mpris` | Playerctl. Clic izq → prev, centro → play/pause, der → next. Scroll → ±5%. |
 
-Los iconos usados son glyphs Nerd Font (`󰈀 󰖩 󰖪 󰂯 󰕾 󰃠 󰁹` etc.).
+Los iconos vienen de `Symbols Nerd Font Mono` (`󰈀 󰖩 󰖪 󰂯 󰕾 󰃠 󰁹` etc.).
 
 ## Style
 
@@ -197,7 +197,7 @@ Hover:
 background: rgba(249,115,22,0.15);
 ```
 
-Tipografía: `JetBrainsMono Nerd Font`, 14px en todo.
+Tipografía: `JetBrains Mono`, 14px en todo.
 
 ---
 

@@ -15,10 +15,8 @@ use crate::widgets::page::Page;
 use crate::widgets::row::Row;
 use crate::widgets::slider_row::SliderRow;
 
-const FONT_FAMILIES: [&str; 7] = [
-    "JetBrainsMono Nerd Font",
+const FONT_FAMILIES: [&str; 5] = [
     "JetBrains Mono",
-    "FiraCode Nerd Font",
     "Inter",
     "Cantarell",
     "Hack",

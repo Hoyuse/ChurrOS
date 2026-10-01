@@ -106,7 +106,7 @@ impl FuzzelConfig {
     // ------------------------------------------------------------ Getters
 
     pub fn get_font() -> String {
-        get_key("main", "font", "JetBrainsMono Nerd Font:size=13")
+        get_key("main", "font", "JetBrains Mono:size=13")
     }
 
     pub fn get_icon_theme() -> String {

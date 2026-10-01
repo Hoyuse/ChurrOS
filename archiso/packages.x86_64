@@ -175,7 +175,8 @@ libadwaita
 gobject-introspection
 awww
 ddcutil
-ttf-jetbrains-mono-nerd
+ttf-jetbrains-mono
+ttf-nerd-fonts-symbols-mono
 otf-font-awesome
 firefox
 pavucontrol
