@@ -26,8 +26,13 @@ export XDG_SESSION_TYPE=x11
 # Esperar a que cage libere el DRM master antes de que Xorg lo reclame
 sleep 1
 
+VT_ARG=""
+if [ -n "${XDG_VTNR:-}" ]; then
+    VT_ARG="vt$XDG_VTNR"
+fi
+
 # -keeptty: Xorg permanece en el TTY de greetd en vez de desconectarse.
-# Sin esto, greetd detecta que el proceso hijo cerró el TTY, reinicia el
-# greeter y cage arrebata el DRM master — causando un bucle infinito.
-exec startx /usr/bin/churros-xfce-session --xinit -- -keeptty
+# vt$XDG_VTNR: Requerido para que Xorg rootless pueda pedir a systemd-logind
+# el control del DRM/KMS. Sin esto, Xorg falla al inicializar la gráfica.
+exec startx /usr/bin/churros-xfce-session --xinit -- $VT_ARG -keeptty
 
