@@ -425,6 +425,7 @@ ChurrOS/
 | [Services](docs/services.md) | Capa de servicios compartida |
 | [Rollback](docs/rollback.md) | Snapshots de Btrfs |
 | [Server](docs/server.md) | Edición para servidores, sin escritorio |
+| [Installer](docs/installer.md) | Cómo instala ChurrOS, edition por edition |
 | [Privileged Execution](docs/privileged-execution.md) | Cómo se obtiene privilegio y con qué reglas |
 | [Branding](docs/branding.md) | Identidad visual |
 | [Boot](docs/boot.md) | Arranque de la ISO |
