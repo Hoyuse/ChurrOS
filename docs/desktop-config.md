@@ -82,6 +82,7 @@ layout {
 | `SUPER + P` | Abre preferencias (churros-settings) |
 | `SUPER + W` | Abre churros-welcome |
 | `SUPER + S` | Abre Bazaar (tienda Flatpak) |
+| `SUPER + SHIFT + S` | Abre churros-software (tienda de paquetes) |
 | `SUPER + V` | Toggle ventana flotante |
 | `SUPER + SHIFT + V` | Cambiar foco entre floating y tiling |
 | `SUPER + O` | Toggle overview |
@@ -254,6 +255,8 @@ El script es seguro para el Live porque el sistema corre en RAM: cualquier cambi
 **Session command:** `/usr/bin/startxfce4`
 
 ChurrOS XFCE Edition ofrece una experiencia de escritorio clásica, ligera y basada en ventanas flotantes tradicionales gestionadas por `xfwm4`.
+
+El menú de aplicaciones incluye los favoritos de ChurrOS en este orden: `churros-welcome`, Calamares, Thunar, Firefox, foot, `churros-settings`, Bazaar y `churros-software`.
 
 ---
 

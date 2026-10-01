@@ -61,6 +61,7 @@ rust/                         Rust workspace (apps portadas a gtk4-rs/libadwaita
   services/                   Crate de servicios (wpctl, nmcli, bluetoothctl, brightnessctl…)
   popups/                     Crate de los popups (binario churros-popup + toggle nativo)
   control-center/             Crate del control center (binario churros-control-center)
+  software/                   Crate de la tienda de paquetes (binario churros-software)
 scripts/
   cli/                        build.sh, run.sh, clean.sh, check.sh, doctor.sh, apps.sh, info.sh, version.sh, logo.sh
   build-calamares.sh          Produces archiso/packages/calamares-*.pkg.tar.zst
@@ -113,7 +114,8 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 - **Compositor**: Niri (Wayland scrollable-tiling). Requires 3D accel in QEMU (see Testing).
 - **Display Manager**: greetd (tuigreet, autologin en Live y sesión niri nativa).
 - **Panel/Launcher/Terminal**: Waybar / Fuzzel / foot.
-- **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`) y `churros-control-center`. Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). `usr/share/churros/i18n.py` (gettext) sigue en Python para las apps que lo usan.
+- **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`), `churros-control-center` y `churros-software` (tienda de paquetes: pacman, Flatpak y AUR).
+- **Tienda de paquetes**: `churros-software` no llama a pacman directamente; usa `/usr/local/bin/churros-pkg` vía `churros-pkexec`. El helper valida el nombre (`^[a-zA-Z0-9][a-zA-Z0-9@._+:-]*$`), exige que el paquete exista (`pacman -Si`) y llama a pacman con `--` delante del nombre. El AUR **no** pasa por polkit: se instala con `yay` en una terminal como el usuario, porque `makepkg` como root es root sin más. `yay` y `paru` no están en el allowlist de polkit, y `flatpak` solo con una lista cerrada de subcomandos. Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). `usr/share/churros/i18n.py` (gettext) sigue en Python para las apps que lo usan.
 - **Installer**: Calamares with custom `churros` branding (slideshow, QSS stylesheet).
 - **Boot modes** (from `profiledef.sh`): `bios.syslinux` + `uefi.grub`. No systemd-boot, no Limine (mkarchiso del host no lo soporta).
 - **Audio**: PipeWire + WirePlumber.

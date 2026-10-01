@@ -226,6 +226,7 @@ Las aplicaciones oficiales de ChurrOS están desarrolladas en Rust, utilizando G
 | Welcome | `churros-welcome` | Pantalla de bienvenida |
 | Settings | `churros-settings` | Configuración del sistema |
 | Control Center | `churros-control-center` | Centro de control |
+| Software | `churros-software` | Tienda de paquetes (Arch, Flatpak y AUR) |
 | Popups | `churros-popup` | Controles rápidos |
 | Services | `churros_services` | Biblioteca de servicios compartidos |
 
@@ -242,6 +243,12 @@ Aplicación principal de configuración, con GTK4 y libadwaita. En Niri se abre 
 ### churros-control-center
 
 Centraliza red, Bluetooth, brillo, batería y audio. En Niri se abre con `Mod+C`.
+
+### churros-software
+
+Tienda de paquetes propia: busca en el catálogo de Arch, en Flathub y en el AUR, muestra qué está instalado y deja instalar o desinstalar. Sustituye a Bazaar.
+
+Los paquetes de Arch se instalan con un helper privilegiado que valida el nombre y comprueba que el paquete existe; el AUR se instala en una terminal como el usuario, porque compilar un `PKGBUILD` como root sería root sin más. El detalle está en [`docs/privileged-execution.md`](docs/privileged-execution.md). En Niri se abre con `Mod+Shift+S`.
 
 ### churros-popup
 

@@ -1,5 +1,19 @@
 # Devlog
 
+## 2026-10-01 — Tienda de paquetes propia y drivers
+
+**Tienda (`churros-software`)**
+
+- Nueva app Rust que sustituye a Bazaar: busca en el catálogo de pacman, en Flathub y en el AUR, muestra el estado instalado/no instalado e instala o desinstala.
+- El catálogo se lee con `gio::spawn_blocking` y se vuelve con `spawn_future_local`, así que los widgets nunca se tocan desde otro hilo. La búsqueda remota tiene 350 ms de retardo y la lista se limita a 300 filas indicando cuántas quedan fuera.
+- 32 tests sobre parsers, fusión de instalados, filtrado, validación de nombres y construcción de comandos. Es lo que CI puede verificar: la app necesita root y repos sincronizados para probarse de verdad.
+- Nuevo helper `/usr/local/bin/churros-pkg`: valida el nombre, comprueba que el paquete existe con `pacman -Si` y llama a pacman con `--` delante. La regla de polkit lo autoriza solo con `<install|remove> <paquete>`.
+- `flatpak` pasa a una lista cerrada de subcomandos: con el binario entero autorizado, `flatpak run` y `flatpak override` eran root. `yay` y `paru` dejan de autorizarse, porque compilan el `PKGBUILD` con `makepkg`. El AUR se instala en una terminal como el usuario.
+
+**Drivers**
+
+- GPU, impresión, firmware, DKMS y gestión de energía en las tres ediciones de escritorio. Verificados contra las bases de datos de Arch; +142,0 MiB de cierre por edición, idéntico en las tres.
+
 ## 2026-09-23 — ChurrOS 1.2
 
 Release pública **v1.2**. Optimizaciones de rendimiento, rediseño de UI y mejoras de conectividad y audio:

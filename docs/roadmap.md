@@ -101,6 +101,7 @@ Crear herramientas propias.
 - [x] Herramienta de configuración (`churros-settings`, Rust).
 - [x] Centro de control (`churros-control-center`, Rust).
 - [x] Popups integrados (`churros-popup`: audio, bluetooth, battery, brightness, network, power).
+- [x] Tienda de paquetes (`churros-software`): busca en Arch, Flatpak y AUR, e instala o desinstala.
 
 ---
 

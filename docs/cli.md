@@ -166,11 +166,12 @@ Abre las apps propias de ChurrOS en el host, sin construir la ISO ni QEMU.
 ./churros apps welcome
 ./churros apps settings
 ./churros apps control-center
+./churros apps software
 ./churros apps popup audio
 ./churros apps calamares
 ```
 
-Los targets GTK (`welcome`, `settings`, `control-center`, `popup`) se compilan desde `rust/`. Hace falta sesión gráfica y gtk4/libadwaita. Por defecto corren en modo preview: `HOME` es un directorio temporal y los comandos que cambian el sistema (volumen, red, energía, gsettings, pkill) no se ejecutan. Aparecen como `[churros-dev] blocked:` en stderr. `--live-host` desactiva ese aislamiento.
+Los targets GTK (`welcome`, `settings`, `control-center`, `software`, `popup`) se compilan desde `rust/`. Hace falta sesión gráfica y gtk4/libadwaita. Por defecto corren en modo preview: `HOME` es un directorio temporal y los comandos que cambian el sistema (volumen, red, energía, gsettings, pkill) no se ejecutan. Aparecen como `[churros-dev] blocked:` en stderr. `--live-host` desactiva ese aislamiento.
 
 `calamares` copia la config del repo a un directorio temporal y lanza el instalador con `-c` sobre ese overlay: no escribe `/etc/calamares`, no usa `sudo`, no pide contraseña, no abre la página de particiones (eso dispara Polkit/KPMCore contra discos reales) y no aplica teclado ni zona horaria a esta sesión. El paso de instalar es un `sleep` (para ver el slideshow) y la página final no ofrece reiniciar. El overlay incluye `qml/` del paquete extraído. `--live-host` está prohibido con este target.
 
