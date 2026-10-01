@@ -11,6 +11,8 @@
 #
 # Origen: estas asignaciones se han deducido del historial de commits (qué
 # persona tocó más cada área) y de los permisos de escritura del repositorio.
+# Cuentas con permiso de escritura: @Hoyuse, @CRISTOP-bot, @sebaspi0922,
+# @elgatolinux y @LuisAristi.
 # No proceden de un acuerdo previo con los interesados. Si algo está mal
 # asignado, corrígelo en un pull request.
 #
@@ -19,7 +21,7 @@
 # `.github/CODEOWNERS`.
 
 # ── General ──────────────────────────────────────────────────────────────────
-*                                @Hoyuse
+*                                @Hoyuse @CRISTOP-bot
 
 # ── Base del sistema ─────────────────────────────────────────────────────────
 /archiso/                        @Hoyuse @elgatolinux
@@ -28,7 +30,7 @@
 /archiso/airootfs/etc/skel/      @Hoyuse @elgatolinux @LuisAristi
 
 # ── Instalador ───────────────────────────────────────────────────────────────
-/installer/                      @Hoyuse @elgatolinux
+/installer/                      @Hoyuse @CRISTOP-bot @elgatolinux
 /installer/calamares/modules/grubcfg.conf  @elgatolinux
 /installer/patches/              @Hoyuse
 
@@ -46,30 +48,25 @@
 /rust/control-center/            @Hoyuse
 
 # ── CLI de desarrollo y scripts de build ─────────────────────────────────────
-/scripts/                        @Hoyuse @elgatolinux @sebaspi0922
+/scripts/                        @Hoyuse @CRISTOP-bot @elgatolinux @sebaspi0922
 /scripts/cli/check.sh            @sebaspi0922
 /scripts/cli/build.sh            @Hoyuse @sebaspi0922
 /churros                         @Hoyuse @sebaspi0922
 
 # ── Continuous integration ───────────────────────────────────────────────────
-/.github/workflows/              @Hoyuse @sebaspi0922
+/.github/workflows/              @Hoyuse @CRISTOP-bot @sebaspi0922
 
 # ── Documentación ───────────────────────────────────────────────────────────
-/docs/                           @Hoyuse @sebaspi0922
+/docs/                           @Hoyuse @CRISTOP-bot @sebaspi0922
 /docs/contributing.md            @Hoyuse @sebaspi0922
 /docs/cli.md                     @Hoyuse @sebaspi0922
 /AGENTS.md                       @Hoyuse @sebaspi0922
 /ARCHITECTURE.md                 @Hoyuse
 /SECURITY.md                     @Hoyuse
-/README.md                       @Hoyuse
+/README.md                       @Hoyuse @CRISTOP-bot
 
 # ── Traducciones ────────────────────────────────────────────────────────────
 /po/                             @elgatolinux
-
-# ── Automatización ──────────────────────────────────────────────────────────
-# @CRISTOP-bot es la cuenta del bot que publica y actualiza el repositorio.
-# Aparece en el historial de commits, pero no es una persona a la que dirigir
-# dudas ni revisiones.
 
 # ── Otros temas ─────────────────────────────────────────────────────────────
 # Seguridad: los reportes de vulnerabilidades no van en issues públicos. El
