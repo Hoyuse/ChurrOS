@@ -199,3 +199,12 @@ Mejoras previstas:
 - Comando `./churros release`.
 
 `./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v1.2 se publica a mano en download.churroslinux.org (ISO + torrent).
+
+## CI
+
+| Workflow | Dónde corre | Qué hace |
+|----------|-------------|----------|
+| `ci.yml` | `ubuntu-latest` | `./churros check` y `cargo test -p churros-services` (rápido, sin GTK) |
+| `rust.yml` | contenedor `archlinux:latest` | Compila el workspace completo (`--all-targets`), ejecuta sus tests y pasa clippy |
+
+Las apps GTK no se compilan en `ubuntu-latest`: gtk4-rs 0.11 exige GTK ≥ 4.22 y libadwaita-rs 0.9 exige libadwaita ≥ 1.9, versiones que Ubuntu no alcanza. `rust.yml` corre dentro de una imagen Arch, que es el mismo entorno donde se construye la ISO.

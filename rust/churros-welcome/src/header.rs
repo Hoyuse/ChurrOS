@@ -17,20 +17,36 @@ pub fn build() -> gtk::Box {
     // Título
     // =====================================
 
-    let title = gtk::Label::new(None);
-    title.set_markup(
-        "<span foreground='white'>Churr</span><span foreground='#ff8c00'>OS</span>",
-    );
-    title.add_css_class("title");
-    title.set_halign(gtk::Align::Center);
+    // Los colores salen de clases CSS y no de atributos foreground del markup,
+    // para que "OS" respete el acento dinámico que escriben pywal o
+    // churros-settings en ~/.config/churros/accent.css (antes iba #ff8c00
+    // fijo en el código, que además no coincide con el naranja de marca).
+    //
+    // Son dos labels y no un markup con <span class="..."> porque Pango no
+    // admite el atributo class: rechaza el markup entero y el título se
+    // queda en blanco. Se comprobó ejecutando la app.
+    let title_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    title_box.set_halign(gtk::Align::Center);
+
+    let title_plain = gtk::Label::new(Some("Churr"));
+    title_plain.add_css_class("title");
+    title_plain.add_css_class("title-plain");
+
+    let title_accent = gtk::Label::new(Some("OS"));
+    title_accent.add_css_class("title");
+    title_accent.add_css_class("title-accent");
+
+    title_box.append(&title_plain);
+    title_box.append(&title_accent);
 
     // =====================================
     // Subtítulo
     // =====================================
 
     let subtitle = gtk::Label::new(Some(
-        "Bienvenido a ChurrOS\nUna distribución Linux moderna basada en Arch Linux.",
+        "Bienvenido a ChurrOS\nUna distribución Linux basada en Arch Linux.",
     ));
+    subtitle.set_max_width_chars(48);
     subtitle.set_halign(gtk::Align::Center);
     subtitle.set_justify(gtk::Justification::Center);
     subtitle.set_wrap(true); // wrap en pantallas pequeñas
@@ -49,7 +65,7 @@ pub fn build() -> gtk::Box {
     // =====================================
 
     container.append(&logo);
-    container.append(&title);
+    container.append(&title_box);
     container.append(&subtitle);
     container.append(&separator);
 
