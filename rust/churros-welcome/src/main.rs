@@ -4,6 +4,7 @@ mod assets;
 mod cards;
 mod footer;
 mod header;
+mod system_card;
 
 use gtk::prelude::*;
 use adw::prelude::*;
