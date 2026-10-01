@@ -227,6 +227,7 @@ Las aplicaciones oficiales de ChurrOS están desarrolladas en Rust, utilizando G
 | Settings | `churros-settings` | Configuración del sistema |
 | Control Center | `churros-control-center` | Centro de control |
 | Popups | `churros-popup` | Controles rápidos |
+| Tour | `churros-tour` | Recorrido guiado del escritorio |
 | Services | `churros_services` | Biblioteca de servicios compartidos |
 
 Los crates con `deploy = true` se compilan durante la construcción y se despliegan en `/usr/bin`. `churros_services` es una biblioteca: la usan las demás apps y no se despliega por separado.
@@ -250,6 +251,10 @@ Controles rápidos para red, audio, volumen, Bluetooth, batería, brillo y energ
 ```bash
 churros-popup audio
 ```
+
+### churros-tour
+
+Recorrido guiado que se abre en el primer arranque para enseñar las esquinas del escritorio. Se limpia al terminar la instalación, así que no aparece en el sistema instalado.
 
 ---
 
@@ -417,7 +422,7 @@ ChurrOS/
 | [Release](docs/release.md) | Proceso de publicación |
 | [Contributing](docs/contributing.md) | Cómo contribuir |
 | [Roadmap](docs/roadmap.md) | Hoja de ruta por fases |
-| [Vision](docs/vision.md) | Objectives de largo plazo |
+| [Vision](docs/vision.md) | Objetivos de largo plazo |
 | [Devlog](docs/devlog.md) | Registro de cambios |
 
 ---
@@ -441,7 +446,7 @@ El detalle completo está en [`docs/roadmap.md`](docs/roadmap.md).
 
 Versión del proyecto: **1.2** ( [`VERSION`](VERSION) ).
 
-ChurrOS cuenta con ISO personalizada, dos ediciones de escritorio, construcción basada en archiso, CLI de desarrollo, instalador Calamares, aplicaciones oficiales en Rust, centro de control, herramientas de configuración, popups del sistema, actualizador, rollback Btrfs, branding propio, tema GRUB, CI y sistema de comprobaciones.
+ChurrOS cuenta con ISO personalizada, tres ediciones de escritorio (Niri, XFCE y KDE Plasma), construcción basada en archiso, CLI de desarrollo, instalador Calamares, aplicaciones oficiales en Rust, centro de control, herramientas de configuración, popups del sistema, actualizador, rollback Btrfs, branding propio, tema GRUB, CI y sistema de comprobaciones.
 
 El proyecto está en desarrollo activo y en etapa temprana: no hay soporte fuera de GitHub, el instalador es Calamares con parches propios y los paquetes que no están en Arch se compilan en el host durante cada build.
 

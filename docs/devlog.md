@@ -1,5 +1,39 @@
 # Devlog
 
+## 2026-10-01 — Tercera edición, auditoría de seguridad y apps
+
+Trabajo integrado en `main`, todavía sin número de versión.
+
+**Ediciones**
+
+- **KDE Plasma**: tercera edición de escritorio, con su propia lista de paquetes (`archiso/packages.kde.x86_64`) y sesión Wayland nativa. Detalle en [`docs/desktop-config.md`](desktop-config.md).
+
+**Seguridad**
+
+- La regla de polkit pasa a ser una allowlist estricta: se autoriza por ruta absoluta exacta, nunca por basename ni comodín, y se rechazan las opciones que convierten una utilidad en vector de escalada (`--hookdir`, `--config`, `--dbpath`, `--root`).
+- `churros-pkexec` deja de estar autorizado: reenvía argumentos libres a `pkexec` y anularía la allowlist entera.
+- El actualizador fija la URL de descarga a `https://download.churroslinux.org/churros/` y solo admite otro espejo con `CHURROS_UPDATE_ALLOW_MIRROR=1` y base `https`. El JSON de actualizaciones se parsea sin `unwrap`.
+- El instalador deja de arrastrar la configuración SSH del Live: `shellprocess@post-install` borra `/etc/ssh/sshd_config.d/10-archiso.conf` y las claves de host.
+- `churros-welcome` lanza las acciones sin shell: pasa el `Exec` del `.desktop` como `argv` a `execvp` y solo si el binario está en su lista de permitidos.
+- Nuevo documento [`docs/privileged-execution.md`](privileged-execution.md): modelo, allowlist y checklist para añadir helpers.
+
+**Apps**
+
+- `churros-welcome`: `AdwToolbarView` con `AdwClamp`, tarjeta de información del sistema y 17 tests sobre los parsers que leen `/proc` y `/etc/os-release`.
+- `MAINTAINERS`: cada área del repositorio tiene una persona responsable.
+
+**Construcción**
+
+- `rust` y `cargo` salen de la ISO de niri y de XFCE: solo hacen falta en el host, durante la construcción.
+- La fuente Nerd Font se sustituye por `JetBrains Mono` + `Symbols Nerd Font Mono`, que es lo que usan los iconos.
+
+**Correcciones**
+
+- `procps-ng` y `pciutils` en la ISO de niri y XFCE: los invocaba el código que faltaba.
+- El tour se limpia al terminar la instalación y no aparece en el sistema instalado.
+
+---
+
 ## 2026-09-23 — ChurrOS 1.2
 
 Release pública **v1.2**. Optimizaciones de rendimiento, rediseño de UI y mejoras de conectividad y audio:
