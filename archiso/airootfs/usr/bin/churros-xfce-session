@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
-# Wrapper to launch XFCE correctly from Greetd
+# Wrapper to launch XFCE correctly from Greetd.
+#
+# greetd + cage (regreet) runs the greeter on Wayland. When the user logs in,
+# greetd kills cage and starts this script. We need to:
+#   1. Clean Wayland variables left by cage
+#   2. Launch Xorg via startx with -keeptty so Xorg stays on greetd's VT
+#      (without it, Xorg detaches → greetd thinks the session died → loop)
+#   3. Use the full absolute path as the client program for startx
+#      ($0 may be relative, and startx only recognises /absolute paths)
 
 if [ "$1" = "--xinit" ]; then
-    # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
+    # Called back by xinit after Xorg is up — cursor fix for VMs, then XFCE
     xsetroot -cursor_name left_ptr || true
     exec /usr/bin/startxfce4
 fi
 
 # Limpiar variables residuales del greeter (Wayland) que confunden a startxfce4
 unset WAYLAND_DISPLAY
-# Si vamos a lanzar startx, Xorg necesita un entorno limpio sin un DISPLAY viejo
 unset DISPLAY
 
 export XDG_CURRENT_DESKTOP=XFCE
 export XDG_SESSION_DESKTOP=xfce
 export XDG_SESSION_TYPE=x11
 
-if command -v startx >/dev/null 2>&1; then
-    # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame
-    sleep 1
-    exec startx "$0" --xinit
-else
-    exec /usr/bin/startxfce4
-fi
+# Esperar a que cage libere el DRM master antes de que Xorg lo reclame
+sleep 1
+
+# -keeptty: Xorg permanece en el TTY de greetd en vez de desconectarse.
+# Sin esto, greetd detecta que el proceso hijo cerró el TTY, reinicia el
+# greeter y cage arrebata el DRM master — causando un bucle infinito.
+exec startx /usr/bin/churros-xfce-session --xinit -- -keeptty
+
