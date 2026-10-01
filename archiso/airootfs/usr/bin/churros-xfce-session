@@ -1,34 +1,52 @@
 #!/usr/bin/env bash
 # Wrapper to launch XFCE correctly from Greetd
-# Flujo: greetd → churros-xfce-session → startx → Xorg → churros-xfce-session --xinit → startxfce4
+#
+# Flujo:
+#   greetd → churros-xfce-session → startx → Xorg → churros-xfce-session --xinit → xfce4-session
+#
+# Problema raíz: startxfce4 de XFCE 4.20 detecta que no hay $DISPLAY
+# (porque xinit lo inyecta tarde o se pierde en la cadena) y lanza su
+# propio xinit interno, creando un bucle recursivo. Para evitarlo,
+# llamamos directamente a xfce4-session (que es lo que startxfce4
+# ejecuta al final de su xinitrc) y configuramos el entorno nosotros.
 
 LOG="/tmp/churros-xfce-session.log"
 echo "$(date): churros-xfce-session invoked with args: $*" >> "$LOG"
-echo "  DISPLAY=$DISPLAY WAYLAND_DISPLAY=$WAYLAND_DISPLAY XDG_VTNR=$XDG_VTNR" >> "$LOG"
+echo "  DISPLAY=${DISPLAY:-<unset>} WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-<unset>} XDG_VTNR=${XDG_VTNR:-<unset>}" >> "$LOG"
 
+# =====================================================================
+# FASE CLIENTE (--xinit): Xorg ya está corriendo, lanzar la sesión XFCE
+# =====================================================================
 if [ "$1" = "--xinit" ]; then
-    echo "$(date): --xinit mode, launching startxfce4 (DISPLAY=$DISPLAY)" >> "$LOG"
+    echo "$(date): --xinit mode (DISPLAY=$DISPLAY)" >> "$LOG"
 
-    # ====================================================================
-    # CRÍTICO: Forzar entorno X11 justo antes de llamar a startxfce4.
-    # greetd/PAM/systemd-logind pueden inyectar XDG_SESSION_TYPE=wayland
-    # a nivel de sesión (porque el greeter corrió bajo cage/Wayland).
-    # Si startxfce4 ve XDG_SESSION_TYPE=wayland o WAYLAND_DISPLAY,
-    # intenta arrancar labwc en lugar de usar el Xorg que ya está corriendo.
-    # ====================================================================
+    # Blindar el entorno: forzar X11 sin importar lo que PAM/systemd digan
     unset WAYLAND_DISPLAY
+    unset XFCE4_SESSION_COMPOSITOR
     export XDG_SESSION_TYPE=x11
     export XDG_CURRENT_DESKTOP=XFCE
     export XDG_SESSION_DESKTOP=xfce
 
-    # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
+    # Cursor visible en VMs (evita el bug de cursor invisible en QEMU)
     xsetroot -cursor_name left_ptr || true
-    exec /usr/bin/startxfce4
+
+    # Cargar recursos X del sistema (xrdb, xmodmap, etc.)
+    if [ -f /etc/X11/xinit/xinitrc ]; then
+        . /etc/X11/xinit/xinitrc
+    fi
+
+    # Ejecutar directamente xfce4-session. NO llamamos a startxfce4
+    # porque su lógica interna de detección de compositor/xinit causa
+    # un bucle recursivo cuando no detecta $DISPLAY a tiempo.
+    echo "$(date): exec xfce4-session" >> "$LOG"
+    exec xfce4-session
 fi
 
-# === Fase padre: preparar entorno y lanzar startx ===
+# =====================================================================
+# FASE PADRE: preparar entorno y arrancar Xorg vía startx
+# =====================================================================
 
-# Limpiar variables residuales del greeter Wayland (cage) que confunden a startxfce4
+# Limpiar variables residuales del greeter Wayland (cage)
 unset WAYLAND_DISPLAY
 unset DISPLAY
 
@@ -36,16 +54,11 @@ export XDG_CURRENT_DESKTOP=XFCE
 export XDG_SESSION_DESKTOP=xfce
 export XDG_SESSION_TYPE=x11
 
-# Determinar el VT que greetd asignó a esta sesión.
-# Sin esto, startx/Xorg intentan abrir un VT aleatorio que puede seguir
-# ocupado por cage, provocando el crash loop.
+# VT que greetd asignó (evita colisión con cage)
 VT="${XDG_VTNR:-7}"
 echo "$(date): Starting Xorg on vt${VT}" >> "$LOG"
 
-if command -v startx >/dev/null 2>&1; then
-    # Esperar a que cage libere el DRM master del VT
-    sleep 1
-    exec startx "$0" --xinit -- :"${DISPLAY:-0}" "vt${VT}"
-else
-    exec /usr/bin/startxfce4
-fi
+# Esperar a que cage libere el DRM master
+sleep 1
+
+exec startx "$0" --xinit -- :"0" "vt${VT}"
