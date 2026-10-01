@@ -20,8 +20,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
-if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ]; then
-    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde)" >&2
+if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ] && [ "$EDITION" != "server" ]; then
+    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde, server)" >&2
     exit 1
 fi
 
@@ -137,10 +137,13 @@ echo "$EDITION" > archiso/airootfs/etc/churros-edition
 # SESSION_CMD es el punto de entrada al escritorio de cada edición.
 mkdir -p archiso/airootfs/etc/greetd
 
+# La edición server arranca en XFCE porque su único escritorio está en la ISO
+# para poder ejecutar el instalador gráfico; el sistema instalado lo quita
+# después configure-server.
 case "$EDITION" in
-    xfce) SESSION_CMD="startxfce4" ;;
-    kde)  SESSION_CMD="startplasma-wayland" ;;
-    *)    SESSION_CMD="niri" ;;
+    xfce|server) SESSION_CMD="startxfce4" ;;
+    kde)         SESSION_CMD="startplasma-wayland" ;;
+    *)           SESSION_CMD="niri" ;;
 esac
 
 cat > archiso/airootfs/etc/greetd/config.toml << EOF
