@@ -189,7 +189,6 @@ playerctl
 pamixer
 
 # Rust toolchain & libraries
-rust
 gtk4
 libadwaita
 python
