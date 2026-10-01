@@ -52,12 +52,14 @@ bash /root/scripts/users.sh
 echo "Enabling services..."
 bash /root/scripts/services.sh
 
-echo "Initializing pacman keyring..."
-pacman-key --init
-pacman-key --populate archlinux
-
-echo "Populating package databases (incl. multilib para Steam)..."
-pacman -Sy --noconfirm
+# Ni keyring ni bases de datos: los paquetes ya están instalados por
+# pacstrap antes de este script, y Calamares se instala con bsdtar más abajo.
+#
+# El keyring que se generase aquí se descartaría: en el Live, /etc/pacman.d/gnupg
+# se monta como tmpfs al arrancar (etc-pacman.d-gnupg.mount) y lo vuelve a
+# crear pacman-init.service. En el sistema instalado lo inicializa el paso
+# shellprocess@pacman-init de Calamares. Y un `pacman -Sy` en pleno build solo
+# descarga bases de datos que nadie consulta durante la construcción.
 
 echo "Configuring desktop..."
 bash /root/scripts/desktop.sh
