@@ -376,7 +376,15 @@ Inicializa ordenadamente los servicios de portales `xdg-desktop-portal` en Wayla
 
 **Path:** `/usr/bin/churros-update-utils`
 
-Comprueba y descarga actualizaciones del bundle de utilidades oficiales de ChurrOS desde el servidor de distribución (`https://download.churroslinux.org/churros/updates.json`). Verifica la firma SHA-256 del archivo `churros-utils-<version>.tar.zst` antes de extraerlo sobre la raíz `/`.
+Comprueba y descarga actualizaciones del bundle de utilidades oficiales de ChurrOS desde el servidor de distribución (`https://download.churroslinux.org/churros/updates.json`).
+
+El origen está **fijado en el binario** y el comando no acepta argumentos: una URL configurable por el usuario convertía esto en ejecución de root. Antes de extraer se valida:
+
+- la versión y el nombre del fichero del manifiesto, contra expresiones regulares;
+- el SHA-256 del paquete frente al anunciado en el manifiesto;
+- la lista de miembros del tarball: sin rutas absolutas, sin `..`, sin enlaces simbólicos o duros, y solo sobre los prefijos autorizados (`usr/bin`, `usr/lib`, `usr/local/*`, `usr/share/churros`, `etc/churros-version`, `etc/churros-edition`).
+
+La extracción se hace en un directorio de stage y solo después se copia sobre `/`. Si existe `/usr/share/churros/churros-release.pubkey`, el manifiesto además debe venir firmado por minisign y la actualización se aborta si la firma no valida.
 
 ## churros-theme
 
