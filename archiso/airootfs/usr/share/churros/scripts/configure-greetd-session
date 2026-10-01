@@ -13,11 +13,25 @@ set -euo pipefail
 GREETD_CONF="/etc/greetd/config.toml"
 SESSION_CMD="/usr/bin/churros-niri-session"
 
-# Detect edition and adjust session command
+# Detectar la edición y elegir el lanzador de sesión.
+#
+# Para xfce no vale startxfce4 a secas: regreet corre bajo cage (Wayland), y
+# greetd lanza la sesión pedida por el greeter como hija de esa sesión, así que
+# el hijo hereda WAYLAND_DISPLAY y XDG_SESSION_TYPE=wayland. startxfce4
+# interpreta eso como "hay un compositor Wayland" e intenta arrancar labwc en
+# lugar de usar Xorg; si labwc no está instalado la sesión muere y greetd
+# vuelve al greeter, en bucle, con un pantallazo negro entre medias.
+#
+# churros-xfce-session es justamente el wrapper que limpia esas variables
+# antes de exec startxfce4 (y además pasa a Xorg el VT que asignó greetd).
 if [ -f /etc/churros-edition ]; then
-    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]')"
+    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
     if [ "$EDITION" = "xfce" ]; then
-        SESSION_CMD="/usr/bin/startxfce4"
+        if [ -x /usr/bin/churros-xfce-session ]; then
+            SESSION_CMD="/usr/bin/churros-xfce-session"
+        else
+            SESSION_CMD="/usr/bin/startxfce4"
+        fi
     fi
 fi
 
