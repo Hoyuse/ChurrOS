@@ -36,7 +36,7 @@ Define los metadatos de la distribución:
 Lista declarativa de todos los paquetes instalados en la imagen squashfs (un paquete por línea). Se valida automáticamente mediante `./churros check` para evitar duplicados.
 
 ### `packages/` (Repositorio local `[churros]`)
-Almacena paquetes generados en local durante el proceso de compilación (`calamares`, `yay`, `waypaper`, `python-pywal`). `scripts/cli/build.sh` ejecuta `repo-add` sobre este directorio para que `mkarchiso` pueda resolver dependencias offline.
+Almacena paquetes generados en local durante el proceso de compilación (`calamares`, `yay`, `wlogout`, `python-pywal`). `scripts/cli/build.sh` ejecuta `repo-add` sobre este directorio para que `mkarchiso` pueda resolver dependencias offline.
 
 ### `airootfs/`
 Contiene la estructura de archivos que se fusiona con el sistema raíz de la ISO:

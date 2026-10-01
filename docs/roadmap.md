@@ -93,7 +93,7 @@ Crear herramientas propias.
 ## Objetivos
 
 - [ ] Repositorio oficial.
-- [ ] Paquetes propios (en desarrollo — Calamares, yay, waypaper y python-pywal se construyen en local).
+- [ ] Paquetes propios (en desarrollo — Calamares, yay, wlogout y python-pywal se construyen en local).
 - [x] ChurrOS CLI.
 - [x] Actualizador (pacman, Flatpak y utilidades de ChurrOS).
 - [x] Rollback con snapshots btrfs (`churros-snapshot` + hook de pacman).

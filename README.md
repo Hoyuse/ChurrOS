@@ -110,7 +110,7 @@ ChurrOS utiliza una cadena de construcción basada en archiso.
 `./churros build` ejecuta cinco pasos:
 
 1. **Preparing branding** — copia `branding/` al airootfs y genera el tema de GRUB.
-2. **Checking packages** — compila Calamares y los extras de AUR (`yay`, `waypaper`, `python-pywal`, `bazaar`) si faltan, despliega la configuración del instalador y copia los paquetes al repositorio local.
+2. **Checking packages** — compila Calamares y los extras locales (`yay`, `wlogout`, `python-pywal`, `bazaar`) si faltan, despliega la configuración del instalador y copia los paquetes al repositorio local.
 3. **Building Rust apps** — compila las apps en release y despliega los binarios en `usr/bin/`.
 4. **Cleaning previous build** — borra `work/` y `out/`.
 5. **Building ISO** — ejecuta `mkarchiso` y deja la imagen en `out/`.
@@ -247,7 +247,7 @@ ChurrOS utiliza un repositorio local de paquetes durante la construcción (`arch
 
 - Calamares
 - yay
-- waypaper
+- wlogout
 - python-pywal
 - bazaar (parcheado para resolver un conflicto de `libdex`)
 

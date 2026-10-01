@@ -37,7 +37,7 @@ El objetivo es generar imágenes ISO reproducibles, mantener un flujo sencillo y
 - Scripts de compilación auxiliares en `scripts/`:
   - `build-rust.sh`: Compila en release todos los crates de `rust/` con `deploy = true` y los instala en el airootfs.
   - `build-calamares.sh`: Compila el instalador Calamares desde AUR con parches locales y soporte de Python.
-  - `build-aur.sh`: Compila paquetes AUR necesarios (`python-pywal`, `waypaper`, `yay`).
+  - `build-aur.sh`: Compila paquetes AUR necesarios (`python-pywal`, `yay`, `wlogout`).
   - `build-bazaar.sh`: Compila la tienda de aplicaciones Bazaar resolviendo conflictos de dependencias con libdex.
   - `build-grub-theme.sh`: Genera fuentes `.pf2` y recursos gráficos para el tema de GRUB.
   - `build-i18n.sh`: Compila catálogos gettext de `po/*.po` a `.mo` en `archiso/airootfs/usr/share/locale/`.
@@ -60,7 +60,7 @@ Copia `branding/customize_airootfs.sh` y `branding/files/` al airootfs. Estampa 
 
 ## 2. Paquetes locales
 
-Si no están, construye Calamares y los extras AUR (`python-pywal`, `waypaper`, `yay`) en `archiso/packages/`. Si hay paquete de Calamares, `installer/apply-calamares.sh` despliega la config y se copian los `.pkg.tar.zst` a `airootfs/root/packages/`.
+Si no están, construye Calamares y los extras AUR (`python-pywal`, `yay`, `wlogout`) en `archiso/packages/`. Si hay paquete de Calamares, `installer/apply-calamares.sh` despliega la config y se copian los `.pkg.tar.zst` a `airootfs/root/packages/`.
 
 ## 3. Apps Rust
 

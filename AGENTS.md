@@ -13,7 +13,7 @@
 ./churros apps               # Open distro apps on the host (GTK preview is dummy; Calamares uses a tmp overlay)
 ./churros doctor             # Check for mkarchiso, qemu, xorriso, mksquashfs, mcopy, mkinitcpio
 ./scripts/build-calamares.sh # Build Calamares .pkg.tar.zst from AUR into archiso/packages/
-./scripts/build-aur.sh       # Build python-pywal + waypaper + yay AUR packages
+./scripts/build-aur.sh       # Build python-pywal + yay + wlogout AUR packages
 ./scripts/build-grub-theme.sh # Regenerate GRUB theme fonts (.pf2) + assets in branding/grub-theme/
 ```
 
@@ -24,7 +24,7 @@ The `churros` dispatcher is at repo root and `cd`s to its own dir before delegat
 Five ordered steps, runs from repo root:
 
 1. Copy `branding/customize_airootfs.sh` + `branding/files/` into `archiso/airootfs/root/`.
-2. `scripts/build-calamares.sh` (rebuilds if missing, if libpython does not match host/`python` on the ISO, or if `installer/patches/calamares-*.patch` changed), then `scripts/build-aur.sh` if those pkgs are missing. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `waypaper-*.pkg.tar.zst`, `yay-*.pkg.tar.zst` in `archiso/packages/`.
+2. `scripts/build-calamares.sh` (rebuilds if missing, if libpython does not match host/`python` on the ISO, or if `installer/patches/calamares-*.patch` changed), then `scripts/build-aur.sh` if those pkgs are missing. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `yay-*.pkg.tar.zst`, `wlogout-*.pkg.tar.zst` in `archiso/packages/`.
 3. If Calamares pkg exists: run `installer/apply-calamares.sh` (deploys `settings.conf`, `modules/*.conf`, `modules/*.yaml`, `branding/churros/`, plus a polkit rule `49-calamares.rules` allowing user `churros` to pkexec calamares) and copy all `archiso/packages/*.pkg.tar.zst` into `airootfs/root/packages/`.
 4. Run `scripts/build-rust.sh`: compiles every crate in `rust/` (release) and deploys binaries into `archiso/airootfs/usr/bin/`. Binary names match crate names (e.g. `churros-welcome`).
 5. `sudo rm -rf work out` then `sudo mkarchiso -v -w work -o out archiso`.
@@ -63,7 +63,7 @@ rust/                         Rust workspace (apps portadas a gtk4-rs/libadwaita
 scripts/
   cli/                        build.sh, run.sh, clean.sh, check.sh, doctor.sh, apps.sh, info.sh, version.sh, logo.sh
   build-calamares.sh          Produces archiso/packages/calamares-*.pkg.tar.zst
-  build-aur.sh                Produces python-pywal + waypaper + yay pkgs
+  build-aur.sh                Produces python-pywal + yay + wlogout pkgs
   build-rust.sh               Compiles rust/* crates -> archiso/airootfs/usr/bin/
 archiso/                      ArchISO profile root
   profiledef.sh               iso metadata, bootmodes, file_permissions map
@@ -99,7 +99,7 @@ docs/                         Project documentation
 
 - `shellprocess@boot-nocow` runs after `mount` and **MUST** come before `unpackfs`: `chattr +C` + `compression=none` on the target `/boot` so vmlinuz is never stored as btrfs zstd (GRUB `premature end of file`).
 - `shellprocess@pacman-init` (keyring init) **MUST** come before `shellprocess@fix-boot` (mkinitcpio preset rewrite + kernel modules) — both already ordered this way; do not reorder.
-- `shellprocess@fix-boot` runs before `shellprocess@churros-repo`, which registers the build-time `[churros]` repo (`Server = file:///root/packages`) in the target's pacman.conf so `netinstall` can resolve yay/waypaper/python-pywal.
+- `shellprocess@fix-boot` runs before `shellprocess@churros-repo`, which registers the build-time `[churros]` repo (`Server = file:///root/packages`) in the target's pacman.conf so `netinstall` can resolve yay/wlogout/python-pywal.
 - `shellprocess@churros-repo` **MUST** run before `netinstall`/`packages`; the repo is removed again by `shellprocess@post-install` (unanchored `sed /churros/d` is forbidden — use the anchored `[churros]` block removal).
 - `shellprocess@post-install` (cleanup: drops `[churros]`, `userdel -r churros`, removes live-only `/root` artifacts) is the last exec step before `umount`.
 - `shellprocess@grub-theme` runs right after `bootloader`: copies `branding/grub-theme` (deployed to `/usr/share/churros/grub-theme/` at live boot) into `/boot/grub/themes/churros/`, appends `GRUB_THEME` to the target's `/etc/default/grub`, reruns `grub-mkconfig -o /boot/grub/grub.cfg`, then `make-boot-grub-readable` so GRUB can read `/boot` on btrfs+zstd.

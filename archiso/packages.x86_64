@@ -59,7 +59,9 @@ openssh
 openvpn
 partclone
 parted
+pciutils
 pptpclient
+procps-ng
 pv
 qemu-guest-agent
 refind
