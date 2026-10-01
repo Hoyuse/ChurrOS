@@ -177,13 +177,43 @@ polkit.addRule(function(action, subject) {
         return polkit.Result.NOT_HANDLED;
     }
 
+    // churros-pkg: exactamente <install|remove> <nombre de paquete>. El helper
+    // vuelve a validar el nombre contra la base de datos sincronizada, pero la
+    // polka no puede ser la unica barrera: se comprueba aqui tambien.
+    var PKG_ACTIONS = ["install", "remove"];
+    var PKG_NAME = /^[a-zA-Z0-9][a-zA-Z0-9@._+:-]*$/;
+
+    function churrosPkgOk() {
+        if (args.length !== 2) {
+            return false;
+        }
+        return PKG_ACTIONS.indexOf(args[0]) !== -1 && PKG_NAME.test(args[1]);
+    }
+
+    // flatpak: solo las operaciones de gestion de paquetes. Autorizar el
+    // binario entero (como se hacia antes) permite escalar a root con
+    // `flatpak run`, `flatpak override` o `flatpak install` de un repo
+    // arbitrario, que es una puerta abierta equivalente a root.
+    var FLATPAK_OPS = [
+        "install", "remove", "uninstall", "update", "repair",
+        "list", "search", "info", "remotes", "flathub"
+    ];
+
+    function flatpakOk() {
+        if (args.length === 0) {
+            return false;
+        }
+        return FLATPAK_OPS.indexOf(args[0]) !== -1;
+    }
+
     switch (prog) {
     case "/usr/bin/pacman":
         return pacmanOk() ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
     case "/usr/bin/flatpak":
-    case "/usr/bin/yay":
-    case "/usr/bin/paru":
-        return polkit.Result.YES;
+        return flatpakOk() ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
+    // yay y paru NO se autorizan: compilan el PKGBUILD con makepkg, asi que
+    // darlos root equivale a dar root. churros-software lanza la instalacion
+    // de AUR en una terminal como el usuario, que es donde yay pide el sudo.
     case "/usr/bin/timedatectl":
         return timedatectlOk() ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
     case "/usr/bin/churros-update-utils":
@@ -194,6 +224,8 @@ polkit.addRule(function(action, subject) {
         return args.length === 1 ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
     case "/usr/local/bin/churros-snapshot":
         return snapshotOk() ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
+    case "/usr/local/bin/churros-pkg":
+        return churrosPkgOk() ? polkit.Result.YES : polkit.Result.NOT_HANDLED;
     case "/usr/local/bin/churros-theme":
         // Solo sin argumentos: escribe en $HOME/.cache, cualquier ruta extra
         // no aporta nada y ensucia la comprobacion.

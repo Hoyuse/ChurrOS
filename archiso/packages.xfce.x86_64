@@ -1,13 +1,17 @@
+alsa-firmware
 alsa-utils
 amd-ucode
 arch-install-scripts
 archinstall
+avahi
 base
 bcachefs-tools
 btrfs-progs
 cryptsetup
+cups-filters
 dhcpcd
 diffutils
+dkms
 dmidecode
 dmraid
 dosfstools
@@ -18,9 +22,12 @@ ethtool
 exfatprogs
 f2fs-tools
 fsarchiver
+fwupd
 gptfdisk
 grub
 hdparm
+hplip
+intel-media-driver
 intel-ucode
 iw
 iwd
@@ -29,6 +36,7 @@ kitty-terminfo
 less
 libfido2
 libusb-compat
+libwacom
 linux
 linux-atm
 linux-firmware
@@ -50,6 +58,7 @@ nbd
 ndisc6
 nfs-utils
 nilfs-utils
+nss-mdns
 nvme-cli
 open-vm-tools
 openconnect
@@ -59,6 +68,7 @@ openvpn
 partclone
 parted
 pciutils
+power-profiles-daemon
 pptpclient
 procps-ng
 pv
@@ -89,6 +99,7 @@ usbutils
 vim
 virtualbox-guest-utils-nox
 vpnc
+vulkan-radeon
 wireless-regdb
 wireless_tools
 wpa_supplicant
@@ -96,6 +107,7 @@ wvdial
 xdg-utils
 xfsprogs
 xl2tpd
+xorg-xinput
 zsh
 
 # ===========================

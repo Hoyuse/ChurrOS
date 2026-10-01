@@ -64,7 +64,7 @@ show_help() {
 Usage:
   ./churros apps
   ./churros apps doctor
-  ./churros apps welcome|settings|control-center|tour|calamares
+  ./churros apps welcome|settings|control-center|software|tour|calamares
   ./churros apps popup <audio|volume|network|bluetooth|brightness|battery|power>
 
 Open ChurrOS apps on this machine without building the ISO.
@@ -221,6 +221,7 @@ crate_bin_name() {
         churros-settings) printf '%s\n' churros-settings ;;
         churros-control-center) printf '%s\n' churros-control-center ;;
         churros-popup) printf '%s\n' churros-popup ;;
+        churros-software) printf '%s\n' churros-software ;;
         *) die "unknown crate $1" ;;
     esac
 }
@@ -491,6 +492,9 @@ case "${TARGET:-}" in
         ;;
     control-center)
         run_gtk_crate churros-control-center "${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"}"
+        ;;
+    software)
+        run_gtk_crate churros-software "${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"}"
         ;;
     popup)
         if [ "${#TARGET_ARGS[@]}" -lt 1 ]; then

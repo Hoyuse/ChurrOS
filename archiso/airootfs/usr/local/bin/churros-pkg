@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# churros-pkg — instala y desinstala paquetes de Arch como root.
+#
+# Lo usa churros-software a traves de churros-pkexec (regla polkit
+# 50-churros-store.rules). Es deliberadamente estrecho: la tienda no ejecuta
+# pacman con lo que le llegue, sino con un nombre de paquete que se valida aqui
+# y contra la base de datos sincronizada.
+#
+# Uso:
+#   churros-pkg install <paquete>
+#   churros-pkg remove  <paquete>
+#
+# Salida: 0 correcto, 1 uso invalido, 2 paquete no existe, 3 fallo de pacman.
+
+set -uo pipefail
+
+LOG=/var/log/churros-software.log
+PROG="${0##*/}"
+
+# El log es una ayuda para el usuario, nunca un requisito: si no se puede
+# escribir (permisos, /var/log de solo lectura) la operación sigue.
+log() {
+    if { : >>"$LOG"; } 2>/dev/null; then
+        printf '%s %s %s\n' "$(date -Is)" "$PROG" "$1" >>"$LOG" 2>/dev/null || true
+    fi
+}
+
+die() {
+    printf '%s: ERROR: %s\n' "$PROG" "$1" >&2
+    log "ERROR: $1"
+    exit "${2:-1}"
+}
+
+[ "$#" -eq 2 ] || die "uso: $PROG install|remove <paquete>"
+ACTION="$1"
+PKG="$2"
+
+case "$ACTION" in
+    install|remove) ;;
+    *) die "acción desconocida: $ACTION" 1 ;;
+esac
+
+# El nombre de paquete solo puede llevar los caracteres que pacman acepta en
+# un nombre de repositorio. Esto descarta de entrada un `--hookdir=/tmp/evil`,
+# un `-S --asdeps` colado o un `../../etc/passwd`.
+if [[ ! "$PKG" =~ ^[a-zA-Z0-9][a-zA-Z0-9@._+:-]*$ ]]; then
+    die "nombre de paquete no válido: $PKG" 1
+fi
+
+# Comprobar que el paquete existe en los repos sincronizados antes de tocar el
+# sistema: instalar "algoinexistente" por error de dedo no debe dejar el
+# registro de pacman a medias.
+if ! pacman -Si -- "$PKG" >/dev/null 2>&1; then
+    die "el paquete '$PKG' no existe en los repos de Arch" 2
+fi
+
+log "accion=$ACTION paquete=$PKG"
+
+# El separador `--` es lo que impide que un nombre malicioso se interprete
+# como opción de pacman (--hookdir, --dbpath, --cachedir...).
+case "$ACTION" in
+    install)
+        pacman -S --needed --noconfirm -- "$PKG"
+        rc=$?
+        ;;
+    remove)
+        # -Rns: quita el paquete y las dependencias que seedhzo a instalar.
+        pacman -Rns --noconfirm -- "$PKG"
+        rc=$?
+        ;;
+esac
+
+if [ "$rc" -ne 0 ]; then
+    log "pacman devolvio $rc en $ACTION $PKG"
+    exit 3
+fi
+
+log "hecho: $ACTION $PKG"
+exit 0

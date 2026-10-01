@@ -11,6 +11,7 @@ rust/
 ├── preferences/            # binario churros-settings
 ├── control-center/         # binario churros-control-center
 ├── popups/                 # binario churros-popup
+├── software/               # binario churros-software
 └── services/               # crate churros_services (no se despliega)
 ```
 
@@ -130,6 +131,59 @@ Usa el crate `churros_services` (`rust/services/`): wifi, ethernet, bluetooth, b
 Logs de arranque: `/tmp/churros/churros-control-center.log`.
 
 ---
+
+# churros-software
+
+**Path:** `rust/software/`
+
+Tienda de paquetes propia: busca, muestra el estado e instala o desinstala
+paquetes de **Arch**, **Flatpak** y **AUR** en una sola ventana.
+
+## Ventana
+
+- `AdwToolbarView` con `AdwHeaderBar` (recargar, acerca de).
+- `GtkSearchEntry` con retardo de 350 ms: solo consulta Flatpak y AUR cuando
+  hay al menos dos caracteres escritos.
+- Filtro de origen (`GtkDropDown`): Todos, Arch, Flatpak, AUR.
+- Lista de paquetes con origen, versión, descripción y botón según el estado.
+- `AdwBanner` para el resultado de la última operación.
+
+## Fuentes
+
+| Origen | Datos | Instalación |
+|---|---|---|
+| Arch | `pacman -Sl` (catálogo) + `pacman -Q` (instalados) | `churros-pkexec churros-pkg install\|remove <pkg>` |
+| Flatpak | `flatpak search` + `flatpak list` | `churros-pkexec flatpak install\|uninstall -- <id>` |
+| AUR | RPC v5 de aur.archlinux.org (vía `curl`) | `yay` en una terminal, como el usuario |
+
+El catálogo de Arch son decenas de miles de entradas: se lee con
+`gio::spawn_blocking` y se limita la lista a 300 filas, indicando cuántas quedan
+fuera. Flatpak y AUR solo se consultan con una búsqueda activa.
+
+## Permisos
+
+- `churros-pkg` (`/usr/local/bin`) valida el nombre del paquete contra
+  `^[a-zA-Z0-9][a-zA-Z0-9@._+:-]*$`, comprueba que existe con `pacman -Si` y
+  llama a pacman con `--` delante del nombre para que nada se interprete como
+  opción.
+- La regla `50-churros-store.rules` solo autoriza `churros-pkg` con exactamente
+  `<install|remove> <paquete>`, y `flatpak` con una lista cerrada de
+  subcomandos. `yay` y `paru` **no** están autorizados: compilan el `PKGBUILD`
+  con `makepkg`, así que darlos root equivale a dar root; por eso la
+  instalación de AUR va en una terminal donde `yay` pide el sudo.
+- Registro de las operaciones en `/var/log/churros-software.log`.
+
+## Tests
+
+Los parsers son funciones puras y están cubiertos: catálogo de pacman
+(incluido epoch y `repo/nombre`), instalados, `flatpak list` y `flatpak search`,
+URL de la RPC del AUR y su JSON, fusión de instalados con el catálogo, filtrado,
+validación de nombres y construcción de comandos. Es lo que puede verificar CI:
+la app necesita root y repos sincronizados para probarse de verdad.
+
+## Atajo
+
+Niri: `Mod+Shift+S`. En XFCE aparece en el menú de aplicaciones.
 
 # churros-settings
 

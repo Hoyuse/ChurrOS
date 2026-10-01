@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Churros Software
+Comment=Buscar e instalar paquetes de Arch, Flatpak y AUR
+Exec=churros-software
+Icon=system-software-install
+Terminal=false
+StartupNotify=true
+Categories=System;PackageManager;Settings;
+Keywords=paquetes;instalar;software;flatpak;aur;pacman;

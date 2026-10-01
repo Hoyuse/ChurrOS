@@ -160,6 +160,7 @@ binds {
     Mod+P { spawn "churros-settings"; }
     Mod+W { spawn "churros-welcome"; }
     Mod+S { spawn "bazaar"; }
+    Mod+Shift+S { spawn "churros-software"; }
     Mod+E { spawn "thunar"; }
     Mod+Shift+E { spawn "wlogout"; }
     Mod+Shift+N { spawn "churros-popup" "network"; }

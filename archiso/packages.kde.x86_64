@@ -1,4 +1,5 @@
 adwaita-icon-theme
+alsa-firmware
 alsa-utils
 amd-ucode
 appstream
@@ -6,6 +7,7 @@ arch-install-scripts
 archinstall
 archlinux-keyring
 ark
+avahi
 base
 bazaar
 bcachefs-tools
@@ -17,9 +19,11 @@ btrfs-progs
 cage
 cryptsetup
 cups
+cups-filters
 curl
 dhcpcd
 diffutils
+dkms
 dmidecode
 dmraid
 dolphin
@@ -36,6 +40,7 @@ ffmpeg
 firefox
 flatpak
 fsarchiver
+fwupd
 glycin
 glycin-gtk4
 gnome-calculator
@@ -56,7 +61,9 @@ gvfs
 gvfs-mtp
 gwenview
 hdparm
+hplip
 imv
+intel-media-driver
 intel-ucode
 iw
 iwd
@@ -83,6 +90,7 @@ libnotify
 libpwquality
 libsoup3
 libusb-compat
+libwacom
 libxmlb
 libyaml
 linux
@@ -113,6 +121,7 @@ networkmanager
 nfs-utils
 nilfs-utils
 noto-fonts
+nss-mdns
 nvme-cli
 open-vm-tools
 openconnect
@@ -138,6 +147,7 @@ polkit
 polkit-gnome
 polkit-kde-agent
 polkit-qt6
+power-profiles-daemon
 pptpclient
 pv
 python
@@ -187,6 +197,7 @@ usbutils
 vim
 virtualbox-guest-utils-nox
 vpnc
+vulkan-radeon
 vulkan-virtio
 webkitgtk-6.0
 wireless-regdb
@@ -200,8 +211,10 @@ xdg-desktop-portal
 xdg-desktop-portal-gtk
 xdg-desktop-portal-kde
 xdg-utils
+xf86-input-libinput
 xfsprogs
 xl2tpd
+xorg-xinput
 xorg-xwayland
 yaml-cpp
 yay
