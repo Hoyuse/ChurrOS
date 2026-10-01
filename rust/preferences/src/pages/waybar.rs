@@ -115,7 +115,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
         height: SliderRow::new("", None, None, 20.0, 80.0, 1.0, 30.0, None),
         spacing: SliderRow::new("", None, None, 0.0, 16.0, 1.0, 0.0, None),
         font_size: SliderRow::new("", None, None, 10.0, 24.0, 1.0, 14.0, None),
-        font_family: ComboRow::new("", &["JetBrainsMono Nerd Font"], None, None, None, None),
+        font_family: ComboRow::new("", &["JetBrains Mono"], None, None, None, None),
         bg: ColorPickerRow::new("", "#2a1612", None, None),
         fg: ColorPickerRow::new("", "#c9c4c3", None, None),
         accent: ColorPickerRow::new("", "#DE8636", None, None),
@@ -219,7 +219,6 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             Some(cb_f64(state, &scheduler)),
         );
         let font_families = [
-            "JetBrainsMono Nerd Font",
             "JetBrains Mono",
             "Inter",
             "Cantarell",
@@ -397,7 +396,7 @@ fn save_and_reload(state: &WaybarStateRef) {
         "spacing": st.spacing.get_value() as i64,
         "height": st.height.get_value() as i64,
         "font-size": st.font_size.get_value() as i64,
-        "font-family": st.font_family.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "JetBrainsMono Nerd Font".into()),
+        "font-family": st.font_family.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "JetBrains Mono".into()),
         "background": st.bg.get_value(),
         "foreground": st.fg.get_value(),
         "accent": st.accent.get_value(),

@@ -28,7 +28,7 @@ pub fn defaults() -> Value {
         "screenshot": false,
         "fade_in": 200,
         "grace": 0,
-        "font": "JetBrainsMono Nerd Font",
+        "font": "JetBrains Mono",
         "font_size": 24,
         "ring_color": "7aa2f7ff",
         "inside_color": "00000088",

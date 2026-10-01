@@ -199,7 +199,8 @@ gobject-introspection
 # Fonts
 ttf-dejavu
 noto-fonts
-ttf-jetbrains-mono-nerd
+ttf-jetbrains-mono
+ttf-nerd-fonts-symbols-mono
 otf-font-awesome
 
 # User Apps
