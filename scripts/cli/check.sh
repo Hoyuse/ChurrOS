@@ -90,6 +90,78 @@ for pkg_list in archiso/packages*.x86_64; do
     fi
 done
 
+# ------------------------------------------------------- Installer por edicion
+
+# Anadir una edicion a medias (lista de paquetes pero sin lanzador de sesion,
+# o al reves) deja instalaciones que no arrancan. Se comprueba que cada lista
+# de paquetes tenga su edicion cableada en los cuatro sitios que la necesitan:
+# build.sh, stamp-os-release.sh, configure-greetd-session y el dispatcher.
+
+# Brazo de un case. Se admiten los brazos combinados (xfce|server).
+arm_pattern() {
+    printf '^[[:space:]][^#]*\\b%s\\b[|)]' "$1"
+}
+
+list_editions() {
+    for list in archiso/packages*.x86_64; do
+        [ -f "$list" ] || continue
+        base="${list##*/}"
+        base="${base#packages.}"
+        # packages.x86_64 es el perfil por defecto y es la edicion niri.
+        if [ "$base" = "x86_64" ]; then
+            echo "niri"
+        else
+            echo "${base%.x86_64}"
+        fi
+    done
+}
+
+for ed in $(list_editions); do
+    problems=""
+
+    # En build.sh el brazo que importa es el que asigna el comando de sesion;
+    # el case del nombre que ve el slideshow tambien menciona la edicion y no
+    # cuenta.
+    if ! grep -qE "$(arm_pattern "$ed")[^#]*SESSION_CMD=" scripts/cli/build.sh; then
+        problems="$problems build.sh-sin-brazo-de-sesion"
+    fi
+
+    if [ "$ed" = "niri" ]; then
+        # niri es el valor por defecto: en estos dos scripts no aparece con su
+        # nombre, sino como el brazo * del case o como valor inicial.
+        if ! grep -qE '^[[:space:]]*\*\)' branding/stamp-os-release.sh; then
+            problems="$problems os-release-sin-variante"
+        fi
+        if ! grep -qE '\*\)|churros-niri-session' \
+            archiso/airootfs/usr/share/churros/scripts/configure-greetd-session; then
+            problems="$problems greetd-sin-edicion"
+        fi
+    else
+        if ! grep -qE "$(arm_pattern "$ed")" branding/stamp-os-release.sh; then
+            problems="$problems os-release-sin-variante"
+        fi
+        if ! grep -qE "$(arm_pattern "$ed")" \
+            archiso/airootfs/usr/share/churros/scripts/configure-greetd-session; then
+            problems="$problems greetd-sin-edicion"
+        fi
+    fi
+
+    if [ -z "$problems" ]; then
+        pass "edicion $ed cableada en el instalador"
+    else
+        fail "edicion $ed incompleta:$problems"
+    fi
+done
+
+# El instalador no puede quedarse en una sola edicion: el ejecutable que
+# declara Calamares tiene que resolver la edicion en runtime.
+if grep -q 'executable: "churros-xsession"' installer/calamares/modules/displaymanager.conf &&
+   [ -x archiso/airootfs/usr/local/bin/churros-xsession ]; then
+    pass "el instalador resuelve la edicion en runtime (churros-xsession)"
+else
+    fail "displaymanager.conf sigue con un ejecutable de una sola edicion, o falta churros-xsession"
+fi
+
 # ------------------------------------------------------- Shared resolvers
 
 mapfile -t PACKAGES < <(grep -v '^#' archiso/packages.x86_64 | grep -v '^$')
