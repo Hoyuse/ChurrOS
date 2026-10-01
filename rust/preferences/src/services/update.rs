@@ -204,11 +204,36 @@ impl UpdateService {
     // ------------------------------------------- utilidades de ChurrOS
 
     /// URL base del servidor de releases de utilidades de ChurrOS.
+    ///
+    /// El origen está fijado en el binario a propósito. Antes se leía de
+    /// `~/.config/churros/settings.json` (`updates.churros_url`), un fichero
+    /// que escribe el usuario, y esa URL se pasaba tal cual al helper root
+    /// `churros-update-utils`, que descarga y extrae sobre `/`: cualquiera
+    /// podía lograr que root instalara un tarball arbitrario desde un host
+    /// propio (y el sha256 del manifiesto venía del mismo origen no
+    /// autenticado, así que no compensaba nada).
+    ///
+    /// Para mirrors corporativos o de test existe `CHURROS_UPDATE_BASE_URL`,
+    /// que solo se aplica si `CHURROS_UPDATE_ALLOW_MIRROR=1` está en el
+    /// entorno; pkexec y sudo limpian el entorno, así que un usuario no
+    /// puede influir en ella desde la sesión gráfica.
     pub fn churros_url() -> String {
-        settings::get_string(
-            "updates.churros_url",
-            "https://download.churroslinux.org/churros/",
-        )
+        const PINNED: &str = "https://download.churroslinux.org/churros/";
+        match std::env::var("CHURROS_UPDATE_BASE_URL") {
+            Ok(base)
+                if std::env::var("CHURROS_UPDATE_ALLOW_MIRROR")
+                    .ok()
+                    .as_deref()
+                    == Some("1") =>
+            {
+                let trimmed = base.trim();
+                if trimmed.starts_with("https://") {
+                    return format!("{}/", trimmed.trim_end_matches('/'));
+                }
+                PINNED.to_string()
+            }
+            _ => PINNED.to_string(),
+        }
     }
 
     /// Versión instalada de las utilidades (lee /etc/churros-version).
@@ -224,7 +249,16 @@ impl UpdateService {
         let base = Self::churros_url();
         let url = format!("{base}updates.json");
         let out = run_capture(
-            &["curl", "-fsSL", "--connect-timeout", "10", url.as_str()],
+            &[
+                "curl",
+                "-fsSL",
+                "--proto",
+                "=https",
+                "--tlsv1.2",
+                "--connect-timeout",
+                "10",
+                url.as_str(),
+            ],
             15,
         )?;
         let update = parse_updates_json(&out)?;
@@ -236,9 +270,11 @@ impl UpdateService {
     }
 
     /// Actualiza las utilidades de ChurrOS vía churros-update-utils (root).
+    ///
+    /// No se le pasa la URL: `churros-update-utils` la tiene fijada y rechaza
+    /// cualquier argumento.
     pub fn update_churros(cb: &dyn Fn(&str)) -> bool {
-        let url = Self::churros_url();
-        run_streaming(&["churros-pkexec", "churros-update-utils", url.as_str()], cb)
+        run_streaming(&["churros-pkexec", "churros-update-utils"], cb)
     }
 
     // ------------------------------------------------ snapshots (rollback)

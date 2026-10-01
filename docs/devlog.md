@@ -457,3 +457,25 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
   - `theme.rs`: Evitada la ejecución repetitiva de `gsettings` y migración de temas en cada arranque mediante un flag en caché.
   - `style.css`: Corregida la sintaxis duplicada de offsets en `box-shadow` (`0 0 20px var(--accent-glow)`) que provocaba avisos de parseo CSS en GTK4.
 
+### Solución a Crash de Sesión X11 (XFCE) en Greetd
+- **`churros-xfce-session`**: Se ha creado un script contenedor en `/usr/bin/churros-xfce-session` que se encarga de lanzar de manera correcta el entorno XFCE desde el Display Manager (Regreet/Greetd). Este contenedor ejecuta `startx /usr/bin/startxfce4` de forma condicional si no se detecta el entorno de visualización, logrando que el servidor Xorg asigne apropiadamente el TTY mediante `systemd-logind` y se resuelva el crasheo que devolvía al usuario a la pantalla de login.
+- Integración en `desktop.sh`: Se ha automatizado la inyección en `/usr/share/xsessions/xfce.desktop` para usar este wrapper en entornos X11.
+
+### Autostart Condicional de ChurrOS Tour
+- Para el entorno **Niri**, se ha incluido un `spawn-sh-at-startup` en `config.kdl` que invoca `churros-tour` condicionalmente solo si existe el archivo `~/.config/autostart/churros-tour.desktop`.
+- Para el entorno **XFCE**, este mecanismo ya funciona de forma nativa a través de los directorios de autostart del estándar XDG. 
+- Se ha expuesto `churros-tour` en `/usr/share/applications/churros-tour.desktop` para que sea visible en cualquier lanzador o menú, y se ha limpiado su binario de desarrollo compilado que había entrado en caché del repositorio.
+
+### Corrección de Cursor de Ratón en Entorno XFCE (Hardware Real)
+- **El problema:** Al acceder a XFCE desde una instalación física, el ratón no aparecía ni respondía. Esto se debe a que `xorg-server` requiere un módulo adaptador (`xf86-input-libinput`) para interpretar eventos de hardware de entrada provenientes de `libinput`, lo cual es vital al iniciar fuera de un gestor de pantalla compuesto como GDM.
+- **La solución:** Se ha añadido el paquete `xf86-input-libinput` a la lista de paquetes requeridos (`packages.xfce.x86_64`), permitiendo que Xorg detecte correctamente los periféricos en hardware físico.
+
+### Falsa detección de Wayland en XFCE (Error de labwc)
+- **El problema:** En las últimas versiones, el script `startxfce4` comprueba la existencia de la variable `WAYLAND_DISPLAY`. Greetd/Regreet dejaban un residuo de esta variable en la sesión tras cerrar `cage` (su propio entorno Wayland). Como resultado, XFCE creía que debía arrancar una sesión nativa en Wayland y pedía a gritos el compositor `labwc`, abortando el arranque de Xorg.
+- **La solución:** Se ha inyectado un `unset WAYLAND_DISPLAY` en `churros-xfce-session` para limpiar el entorno residual heredado del greeter y forzar siempre un entorno X11 robusto para XFCE. (Nota: los errores de `libseat` mostrados en log son inofensivos; simplemente indican el *fallback* seguro a `systemd-logind`).
+
+### Solución a Fallo de Xorg (AddScreen/ScreenInit) en VMs
+- **El problema:** Al transicionar del greeter Wayland (`cage`) a la sesión X11 (`startx`) en una máquina virtual (QEMU/KVM), Xorg colapsaba con el error `AddScreen/ScreenInit failed for driver 0`. Esto ocurre por una condición de carrera (*race condition*) donde `cage` aún no ha liberado por completo el control del nodo DRM de la GPU (`/dev/dri/card0`) cuando `startx` intenta capturarlo.
+- **La solución:** Se ha introducido un micro-retraso (`sleep 1`) antes de ejecutar `startx` en el wrapper de sesión para permitir la desconexión total del KMS/DRM por parte de `cage`.
+
+

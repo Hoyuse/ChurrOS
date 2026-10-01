@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Configure greetd session for the installed system.
+# Called from Calamares shellprocess-cleanup after Calamares displaymanager module.
+#
+# - Calamares displaymanager natively writes /etc/greetd/config.toml, but it uses
+#   'agreety' as the default session and doesn't handle XFCE editions properly.
+# - We extract the autologin user (if any) that Calamares carefully configured.
+# - We rewrite the config.toml to use our graphical regreet GTK theme.
+# - We correctly enforce churros-niri-session or startxfce4 based on the edition.
+
+set -euo pipefail
+
+GREETD_CONF="/etc/greetd/config.toml"
+SESSION_CMD="/usr/bin/churros-niri-session"
+
+# Detect edition and adjust session command
+if [ -f /etc/churros-edition ]; then
+    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]')"
+    if [ "$EDITION" = "xfce" ]; then
+        SESSION_CMD="/usr/bin/startxfce4"
+    fi
+fi
+
+# Extract the autologin user that Calamares displaymanager wrote
+AUTOLOGIN_USER=""
+if [ -f "$GREETD_CONF" ]; then
+    if grep -q "\[initial_session\]" "$GREETD_CONF"; then
+        AUTOLOGIN_USER="$(grep -A 5 '\[initial_session\]' "$GREETD_CONF" | grep '^user *=' | head -1 | cut -d '=' -f 2 | tr -d ' "' || true)"
+    fi
+fi
+
+# Write our preferred greetd config
+mkdir -p "$(dirname "$GREETD_CONF")"
+cat > "$GREETD_CONF" <<EOF
+[terminal]
+vt = 7
+
+[default_session]
+command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
+user = "greeter"
+EOF
+
+# Append the fixed autologin block if a user was found
+if [ -n "$AUTOLOGIN_USER" ]; then
+    cat >> "$GREETD_CONF" <<EOF
+
+[initial_session]
+command = "$SESSION_CMD"
+user = "$AUTOLOGIN_USER"
+EOF
+    echo "[greetd] Autologin enabled for user '$AUTOLOGIN_USER' with session '$SESSION_CMD'"
+else
+    echo "[greetd] No autologin — regreet greeter will prompt for credentials"
+fi
+
+# Write environments file so regreet knows which sessions are available
+echo "$SESSION_CMD" > /etc/greetd/environments

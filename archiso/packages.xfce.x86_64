@@ -109,6 +109,7 @@ xorg-xinit
 xorg-xrandr
 xorg-xset
 xorg-xsetroot
+xf86-input-libinput
 xclip
 picom
 

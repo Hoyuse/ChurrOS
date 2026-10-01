@@ -25,6 +25,18 @@ XDG_SESSION_DESKTOP=xfce
 XDG_SESSION_TYPE=x11
 DESKTOP_SESSION=xfce
 EOF
+
+    # Asegurar que la sesión X11 ejecute el wrapper para iniciar Xorg desde greetd
+    if [ -f /usr/share/xsessions/xfce.desktop ]; then
+        sed -i 's|^Exec=.*|Exec=churros-xfce-session|' /usr/share/xsessions/xfce.desktop
+    fi
+
+    # Asegurar que el fondo de ChurrOS se aplique incluso en monitores no preconfigurados por XFCE
+    mkdir -p /usr/share/backgrounds/xfce
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-shapes.svg
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-verticals.png
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-teal.jpg
+    ln -sf /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xfce/xfce-stripes.png
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri
@@ -36,7 +48,7 @@ EOF
 
     # Asegurar que la sesión Wayland ejecute directamente churros-niri-session en el scope de LightDM
     if [ -f /usr/share/wayland-sessions/niri.desktop ]; then
-        sed -i 's|^Exec=.*|Exec=churros-niri-session|' /usr/share/wayland-sessions/niri.desktop
+        sed -i 's|^Exec=.*|Exec=/usr/bin/churros-niri-session|' /usr/share/wayland-sessions/niri.desktop
     fi
 fi
 chown -R churros:churros "/home/churros/.config/environment.d"

@@ -22,6 +22,8 @@ file_permissions=(
 
   ["/usr/bin/churros-welcome"]="0:0:755"
   ["/usr/bin/churros-niri-session"]="0:0:755"
+  ["/usr/bin/churros-xfce-session"]="0:0:755"
+  ["/usr/bin/churros-tour"]="0:0:755"
 
   ["/usr/bin/churros-popup"]="0:0:755"
 
@@ -30,6 +32,7 @@ file_permissions=(
 ["/usr/local/bin/calamares"]="0:0:755"
   ["/usr/local/bin/churros-update-auto"]="0:0:755"
   ["/usr/local/bin/churros-snapshot"]="0:0:755"
+  ["/usr/local/bin/churros-write-root-config"]="0:0:755"
   ["/usr/bin/churros-update-utils"]="0:0:755"
   ["/usr/bin/churros-settings"]="0:0:755"
   ["/usr/bin/churros-control-center"]="0:0:755"
@@ -37,13 +40,9 @@ file_permissions=(
   ["/usr/bin/churros-pkexec"]="0:0:755"
   ["/usr/bin/churros-portal-start"]="0:0:755"
   ["/usr/bin/churros-apply-wallpaper"]="0:0:755"
-  ["/usr/share/churros/scripts/set-accent"]="0:0:755"
-  ["/usr/share/churros/scripts/set-theme"]="0:0:755"
-  ["/usr/share/churros/scripts/set-wallpaper"]="0:0:755"
-  ["/usr/share/churros/scripts/set-cursor"]="0:0:755"
-  ["/usr/share/churros/scripts/set-icons"]="0:0:755"
   ["/usr/share/churros/scripts/make-boot-grub-readable"]="0:0:755"
   ["/usr/share/churros/scripts/configure-greeter-locale"]="0:0:755"
+  ["/usr/share/churros/scripts/configure-greetd-session"]="0:0:755"
   ["/usr/share/icons/hicolor/scalable/apps/churros-welcome.svg"]="0:0:644"
   ["/usr/share/icons/hicolor/scalable/apps/churros-settings.svg"]="0:0:644"
   ["/usr/share/icons/hicolor/scalable/apps/churros-logo.svg"]="0:0:644"

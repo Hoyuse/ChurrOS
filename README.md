@@ -1,457 +1,200 @@
-ChurrOS
+<div align="center">ChurrOS
 
-<p align="center">
-  <strong>Una distribución Linux basada en Arch Linux, construida con ArchISO.</strong>
-</p><p align="center">
-  Desarrollo orientado a rendimiento, simplicidad, identidad propia y automatización.
-</p><p align="center">
-  <a href="https://github.com/Hoyuse/ChurrOS">
-    <img src="https://img.shields.io/badge/GitHub-Hoyuse%2FChurrOS-black?logo=github" alt="GitHub">
-  </a>
-  <img src="https://img.shields.io/badge/Base-Arch%20Linux-1793D1?logo=archlinux&logoColor=white" alt="Arch Linux">
-  <img src="https://img.shields.io/badge/Build-ArchISO-1793D1" alt="ArchISO">
-  <img src="https://img.shields.io/badge/Language-Rust-orange?logo=rust" alt="Rust">
-  <img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="GPL-3.0">
-</p>---
+Una distribución Linux basada en Arch Linux, diseñada con identidad propia.
+
+""License" (https://img.shields.io/badge/license-GPL--3.0-blue.svg)" (LICENSE)
+""Base" (https://img.shields.io/badge/base-Arch%20Linux-1793D1.svg)" (https://archlinux.org/)
+""Build" (https://img.shields.io/badge/build-ArchISO-1793D1.svg)" (https://wiki.archlinux.org/title/Archiso)
+""Rust" (https://img.shields.io/badge/apps-Rust-orange.svg)" (https://www.rust-lang.org/)
+""Wayland" (https://img.shields.io/badge/desktop-Wayland-FFBC00.svg)" (https://wayland.freedesktop.org/)
+
+</div>---
 
 ¿Qué es ChurrOS?
 
 ChurrOS es una distribución Linux basada en Arch Linux y construida mediante ArchISO.
 
-El proyecto mantiene su propio sistema de construcción, branding, CLI de desarrollo, aplicaciones oficiales, configuración de escritorio e integración con Calamares.
+El proyecto busca ofrecer una experiencia moderna, organizada y coherente, combinando:
 
-El desarrollo está organizado alrededor de una infraestructura automatizada que permite preparar el sistema, construir la ISO y ejecutarla en una máquina virtual mediante QEMU.
-
-La versión indicada actualmente por el repositorio es 1.2.
-
----
-
-Características
-
-- Basado en Arch Linux.
-- Construcción mediante ArchISO.
-- CLI de desarrollo "./churros".
-- Edición Niri como configuración predeterminada.
-- Edición XFCE disponible.
+- Una base Arch Linux.
+- Un sistema de construcción automatizado.
+- Una identidad visual propia.
+- Escritorios configurados por edición.
 - Aplicaciones oficiales desarrolladas en Rust.
-- Integración con GTK 4 y libadwaita.
-- Instalador Calamares con branding de ChurrOS.
-- Tema personalizado de GRUB.
-- Paquetes locales utilizados durante la construcción.
-- Ejecución de la ISO mediante QEMU.
-- Sistema de comprobaciones estáticas mediante "./churros check".
-- GitHub Actions para comprobaciones y pruebas de Rust.
-- Sistema de actualización y rollback documentado en el proyecto.
+- Integración con Calamares.
+- Herramientas propias de desarrollo y administración.
+- Documentación orientada al mantenimiento del proyecto.
+
+ChurrOS utiliza Arch Linux como base actualmente, mientras desarrolla progresivamente su propio ecosistema.
 
 ---
 
-Ediciones
+✨ Características
 
-ChurrOS dispone actualmente de dos perfiles de escritorio.
-
-Edición| Escritorio| Sesión
-Niri| Niri| Wayland
-XFCE| XFCE| X11
-
-La edición Niri es la utilizada por defecto.
-
-Para seleccionar una edición durante la compilación:
-
-./churros build --edition niri
-./churros build --edition xfce
-
----
-
-Requisitos de desarrollo
-
-ChurrOS está diseñado para desarrollarse sobre Arch Linux o una distribución basada en Arch.
-
-Los paquetes principales indicados por la documentación son:
-
-sudo pacman -S \
-    archiso \
-    git \
-    qemu-full \
-    edk2-ovmf \
-    rust \
-    cargo
-
-También pueden instalarse:
-
-sudo pacman -S \
-    virt-manager \
-    swtpm
-
-"virt-manager" y "swtpm" son opcionales.
-
-El comando "./churros doctor" permite comprobar el entorno de desarrollo y detectar dependencias ausentes.
+Característica| Estado
+Base Arch Linux| ✅
+ArchISO personalizado| ✅
+CLI "./churros"| ✅
+Construcción automatizada de ISO| ✅
+QEMU para pruebas| ✅
+Edición Niri| ✅
+Edición XFCE| ✅
+Aplicaciones oficiales en Rust| ✅
+Calamares personalizado| ✅
+Tema GRUB| ✅
+Actualizador de ChurrOS| ✅
+Rollback mediante snapshots Btrfs| ✅
+Repositorio oficial de paquetes| 🚧
+Instalador completamente propio| 🚧
+Wiki oficial| 🚧
+Manual de usuario| 🚧
 
 ---
 
-Inicio rápido
+🖥️ Ediciones
 
-Clonar el repositorio
+ChurrOS dispone actualmente de dos ediciones.
 
-git clone https://github.com/Hoyuse/ChurrOS.git
-cd ChurrOS
+Niri
 
-Comprobar el entorno
+La edición predeterminada.
 
-./churros doctor
+Utiliza:
 
-Construir la ISO
+- Niri
+- Waybar
+- foot
+- Fuzzel
+- Mako
+- Aplicaciones oficiales de ChurrOS
+
+Construcción:
 
 ./churros build
 
-Para XFCE:
+---
+
+XFCE
+
+Una edición basada en XFCE orientada a una experiencia de escritorio tradicional y ligera.
+
+Construcción:
 
 ./churros build --edition xfce
+
+---
+
+🛠️ Sistema de construcción
+
+ChurrOS utiliza una cadena de construcción basada en ArchISO.
+
+                    Código fuente
+                         │
+                         ▼
+                  ./churros build
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+          ▼              ▼              ▼
+      Branding      Paquetes        Apps Rust
+          │          locales            │
+          │              │              │
+          └──────────────┼──────────────┘
+                         ▼
+                     mkarchiso
+                         │
+                         ▼
+                    ISO de ChurrOS
+
+El proceso de construcción incluye, entre otras tareas:
+
+1. Selección de la edición.
+2. Preparación del branding.
+3. Generación del tema GRUB.
+4. Construcción de Calamares.
+5. Construcción de paquetes AUR locales.
+6. Construcción de Bazaar.
+7. Compilación de las aplicaciones Rust.
+8. Preparación del perfil ArchISO.
+9. Generación de la ISO.
+10. Limpieza de artefactos temporales.
 
 La ISO generada queda en:
 
 out/
 
-Ejecutar ChurrOS
-
-./churros run
-
-Si no existe una ISO, el comando puede solicitar construirla.
-
-Limpiar artefactos
-
-./churros clean
-
-Esto elimina los directorios de trabajo "work/" y "out/".
-
 ---
 
-CLI
+🚀 Inicio rápido
 
-El ejecutable "./churros" es la interfaz principal para el desarrollo del proyecto.
+Requisitos
 
-./churros <command> [options]
+ChurrOS está diseñado para desarrollarse desde Arch Linux o una distribución basada en Arch.
 
-Comandos disponibles:
+Las dependencias principales incluyen:
 
-Comando| Función
-"build"| Construye la ISO
-"run"| Ejecuta ChurrOS mediante QEMU
-"clean"| Elimina artefactos de compilación
-"check"| Ejecuta comprobaciones estáticas
-"doctor"| Comprueba el entorno de desarrollo
-"info"| Muestra información del proyecto
-"version"| Muestra la versión
-"logo"| Muestra el logo en la terminal
-"apps"| Ejecuta aplicaciones de ChurrOS directamente en el host
+archiso
+git
+qemu
+edk2-ovmf
+rust
+cargo
+xorriso
+squashfs-tools
+mtools
+dosfstools
+grub
+mkinitcpio
+shellcheck
+gettext
+pkgconf
+sudo
 
-Ejemplos:
+También existen herramientas opcionales para determinados flujos de trabajo, como:
 
-./churros build
-./churros build --edition xfce
-./churros run
-./churros run --nokvm
-./churros run --fresh
-./churros run --clean
-./churros check
+virt-manager
+swtpm
+
+La forma recomendada de comprobar el entorno es:
+
 ./churros doctor
-./churros version
-./churros info
+
+El comando puede detectar dependencias faltantes y, cuando corresponde, ofrecer instalarlas mediante "pacman".
 
 ---
 
-Sistema de compilación
+Clonar
 
-El sistema de compilación está basado en ArchISO y se encuentra automatizado mediante "./churros build".
+git clone https://github.com/Hoyuse/ChurrOS.git
+cd ChurrOS
 
-El flujo general es:
-
-Código fuente
-      │
-      ▼
-./churros build
-      │
-      ├── Selección de edición
-      │
-      ├── Branding
-      │
-      ├── Tema GRUB
-      │
-      ├── Paquetes locales
-      │
-      ├── Aplicaciones Rust
-      │
-      ▼
-   mkarchiso
-      │
-      ▼
-     ISO
-      │
-      ▼
-     out/
-
-Durante la compilación se preparan, entre otros componentes:
-
-- Branding de ChurrOS.
-- Tema GRUB.
-- Paquetes locales.
-- Calamares.
-- Paquetes AUR utilizados por el sistema.
-- Aplicaciones Rust.
-- Perfil de ArchISO.
-
-Finalmente se ejecuta "mkarchiso" para generar la ISO.
+Se recomienda trabajar mediante ramas y pull requests en lugar de realizar cambios directamente sobre "main".
 
 ---
 
-Aplicaciones oficiales
-
-Las aplicaciones oficiales de ChurrOS están desarrolladas en Rust utilizando gtk4-rs y libadwaita.
-
-Actualmente el workspace contiene:
-
-rust/
-├── churros-welcome/
-├── preferences/
-├── control-center/
-├── popups/
-└── services/
-
-ChurrOS Welcome
-
-Binario:
-
-churros-welcome
-
-Proporciona una interfaz de bienvenida y muestra información básica del sistema, además de accesos relacionados con ChurrOS.
-
-ChurrOS Settings
-
-Binario:
-
-churros-settings
-
-Aplicación principal de configuración del sistema.
-
-ChurrOS Control Center
-
-Binario:
-
-churros-control-center
-
-Centro de control que proporciona acceso a diferentes funciones del sistema.
-
-ChurrOS Popup
-
-Binario:
-
-churros-popup
-
-Implementa los popups utilizados para funciones como:
-
-- Audio.
-- Bluetooth.
-- Batería.
-- Brillo.
-- Red.
-- Energía.
-
-Services
-
-El crate:
-
-churros_services
-
-proporciona servicios compartidos utilizados por las aplicaciones oficiales.
-
----
-
-Desarrollo de aplicaciones
-
-Las aplicaciones pueden ejecutarse directamente en el host para facilitar su desarrollo.
-
-Ejemplos:
-
-./churros apps welcome
-./churros apps settings
-./churros apps control-center
-./churros apps popup audio
-
-También existe una vista previa de Calamares:
-
-./churros apps calamares
-
-Estas herramientas permiten trabajar en las aplicaciones sin necesidad de construir una ISO para cada cambio.
-
----
-
-Calamares
-
-ChurrOS utiliza Calamares como instalador gráfico.
-
-La configuración se encuentra en:
-
-installer/
-└── calamares/
-
-La configuración incluye:
-
-- "settings.conf"
-- módulos propios de configuración
-- branding de ChurrOS
-- configuración de instalación
-- integración con el sistema de paquetes local.
-
-El proyecto mantiene scripts para construir e integrar Calamares durante el proceso de creación de la ISO.
-
----
-
-Paquetes y componentes locales
-
-El sistema de construcción utiliza un repositorio pacman local situado en:
-
-archiso/packages/
-
-Durante el proceso de compilación pueden construirse e integrarse componentes adicionales, entre ellos:
-
-- Calamares.
-- "python-pywal".
-- "waypaper".
-- "yay".
-- Bazaar.
-
-Estos paquetes se preparan durante el proceso de construcción y se incorporan al entorno de ChurrOS cuando corresponde.
-
----
-
-Branding
-
-El branding se encuentra principalmente en:
-
-branding/
-
-Incluye componentes como:
-
-branding/
-├── customize_airootfs.sh
-├── files/
-├── grub-theme/
-├── colors.md
-├── typography.md
-├── logo-guidelines.md
-├── mascot.md
-└── ui-guidelines.md
-
-Durante la compilación, estos recursos se incorporan al sistema Live.
-
-El proyecto también genera e integra el tema GRUB utilizado por el sistema instalado.
-
----
-
-Entornos de escritorio
+🔨 Construir
 
 Niri
 
-La edición Niri utiliza:
-
-- Niri.
-- Waybar.
-- foot.
-- Fuzzel.
-- Mako.
-
-La configuración del escritorio se encuentra dentro del perfil de ArchISO.
+./churros build
 
 XFCE
 
-La edición XFCE proporciona una alternativa de escritorio basada en X11.
-
-La selección se realiza durante la compilación:
-
 ./churros build --edition xfce
 
----
+La ISO resultante se genera dentro de:
 
-Comprobaciones
+out/
 
-ChurrOS dispone de un sistema de comprobaciones mediante:
-
-./churros check
-
-Entre las comprobaciones realizadas se encuentran:
-
-- Sintaxis de scripts Bash.
-- ShellCheck cuando está disponible.
-- Sintaxis de archivos Python.
-- Duplicados en listas de paquetes.
-- Resolución de comandos utilizados por Niri.
-- Resolución de entradas ".desktop".
-- Rutas absolutas utilizadas por aplicaciones.
-- Secuencia de ejecución de Calamares.
-- Configuraciones de módulos de Calamares.
-- Traducciones gettext.
-- Otros controles de integridad del repositorio.
-
-El objetivo es detectar errores antes de iniciar una compilación completa.
+La construcción utiliza "sudo" para ejecutar las partes de ArchISO que requieren privilegios.
 
 ---
 
-GitHub Actions
-
-El repositorio utiliza GitHub Actions mediante:
-
-.github/workflows/ci.yml
-
-Actualmente el workflow contiene dos trabajos principales.
-
-Static checks
-
-Ejecuta:
-
-./churros check
-
-e instala las herramientas necesarias para las comprobaciones de ShellCheck y gettext.
-
-Tests Rust
-
-Ejecuta:
-
-cargo test -p churros-services --manifest-path rust/Cargo.toml
-
-El workflow se ejecuta en:
-
-- Push a "main".
-- Pull requests.
-
----
-
-QEMU
-
-ChurrOS incluye una configuración de máquina virtual para probar la ISO.
-
-El comando principal es:
+🧪 Probar en QEMU
 
 ./churros run
 
-El sistema utiliza:
-
-- QEMU.
-- OVMF/UEFI.
-- Un disco "qcow2".
-- Virtio.
-- Aceleración KVM cuando está disponible.
-- Renderizado gráfico mediante virtio/virgl cuando el host lo permite.
-
-Los archivos generados para la máquina virtual se encuentran en:
-
-vm/
-
-Por ejemplo:
-
-vm/
-├── ChurrOS.qcow2
-└── OVMF_VARS.fd
-
-Estos archivos son generados durante las pruebas y no forman parte del código fuente.
+Si no existe una ISO, "./churros run" puede solicitar al desarrollador que la construya.
 
 Opciones disponibles:
 
@@ -459,73 +202,327 @@ Opciones disponibles:
 ./churros run --fresh
 ./churros run --clean
 
+"--nokvm"
+
+Ejecuta QEMU sin aceleración KVM.
+
+"--fresh"
+
+Regenera las variables UEFI de la máquina virtual.
+
+"--clean"
+
+Elimina el disco virtual y las variables UEFI antes de iniciar.
+
+La máquina virtual utiliza un disco QCOW2 de desarrollo de 64 GiB.
+
+Los archivos de la VM se almacenan en:
+
+vm/
+
 ---
 
-Estructura del repositorio
+🧹 Limpiar
+
+./churros clean
+
+Esto elimina los artefactos generados de construcción, como:
+
+work/
+out/
+
+No elimina el código fuente del proyecto.
+
+---
+
+🧰 CLI de ChurrOS
+
+La herramienta principal de desarrollo es:
+
+./churros
+
+Comandos disponibles:
+
+build
+run
+clean
+check
+doctor
+info
+version
+logo
+apps
+
+Ejemplos:
+
+./churros check
+./churros doctor
+./churros info
+./churros version
+./churros apps
+
+Para obtener ayuda:
+
+./churros --help
+
+---
+
+🦀 Aplicaciones oficiales
+
+Las aplicaciones oficiales de ChurrOS están desarrolladas en Rust, utilizando principalmente:
+
+- GTK 4
+- libadwaita
+- gtk4-rs
+
+Actualmente existen:
+
+Aplicación| Binario| Función
+Welcome| "churros-welcome"| Pantalla de bienvenida
+Settings| "churros-settings"| Configuración del sistema
+Control Center| "churros-control-center"| Centro de control
+Popups| "churros-popup"| Controles rápidos
+Services| "churros_services"| Servicios compartidos
+
+Los binarios con "deploy = true" se compilan durante el proceso de construcción y se despliegan en la ISO.
+
+---
+
+👋 ChurrOS Welcome
+
+"churros-welcome" proporciona la pantalla inicial de ChurrOS.
+
+Muestra información como:
+
+- CPU
+- RAM
+- Kernel
+- Sistema operativo
+- Arquitectura
+- Hostname
+
+También proporciona accesos rápidos al:
+
+- Instalador
+- GitHub
+- Comunidad
+
+---
+
+⚙️ ChurrOS Settings
+
+"churros-settings" es la aplicación principal de configuración.
+
+Está desarrollada con GTK4 y libadwaita y proporciona distintas páginas de configuración adaptadas al sistema.
+
+En Niri puede abrirse mediante:
+
+Mod + P
+
+---
+
+🎛️ ChurrOS Control Center
+
+"churros-control-center" centraliza funciones del sistema como:
+
+- Red
+- Bluetooth
+- Brillo
+- Batería
+- Audio
+
+En Niri puede abrirse mediante:
+
+Mod + C
+
+---
+
+🔔 ChurrOS Popups
+
+"churros-popup" proporciona controles rápidos para:
+
+audio
+bluetooth
+battery
+brightness
+network
+power
+
+Ejemplo:
+
+churros-popup audio
+
+---
+
+📦 Paquetes y ecosistema
+
+ChurrOS utiliza un repositorio local de paquetes durante la construcción.
+
+El sistema puede construir e integrar componentes adicionales como:
+
+- Calamares
+- yay
+- waypaper
+- python-pywal
+- Bazaar
+
+El objetivo a largo plazo es disponer de un repositorio oficial de paquetes de ChurrOS.
+
+---
+
+💿 Instalador
+
+ChurrOS utiliza actualmente Calamares como instalador gráfico.
+
+El instalador incluye branding propio y configuración específica de ChurrOS.
+
+Actualmente soporta, entre otras funciones:
+
+- Particionado automático.
+- Particionado manual.
+- Selección de idioma.
+- Selección de zona horaria.
+- Creación de usuarios.
+- Instalación del bootloader.
+- Configuración posterior a la instalación.
+
+El proyecto contempla desarrollar un instalador propio en el futuro, pero Calamares es el instalador utilizado actualmente.
+
+---
+
+🎨 Identidad visual
+
+ChurrOS mantiene sus recursos visuales dentro de una estructura organizada.
+
+Actualmente incluye:
+
+- Logo oficial.
+- Mascota.
+- Wallpapers.
+- Fastfetch personalizado.
+- Iconos.
+- Cursor.
+- Tema GRUB.
+- Configuración visual de las aplicaciones.
+- Branding del sistema Live.
+
+El objetivo es que ChurrOS tenga una identidad reconocible independientemente de su base Arch Linux.
+
+---
+
+🔄 Actualizaciones y rollback
+
+ChurrOS incluye herramientas relacionadas con:
+
+- Actualizaciones mediante pacman.
+- Flatpak.
+- Utilidades propias de ChurrOS.
+- Snapshots Btrfs.
+- Rollback mediante "churros-snapshot".
+
+Estas funciones forman parte del ecosistema de administración de la distribución.
+
+---
+
+🧪 Sistema de comprobaciones
+
+ChurrOS dispone de:
+
+./churros check
+
+El sistema de comprobaciones valida diferentes partes del repositorio, incluyendo:
+
+- Sintaxis Bash.
+- ShellCheck.
+- Sintaxis Python.
+- Listas de paquetes.
+- Comandos utilizados por Niri.
+- Desktop entries.
+- Configuración de Calamares.
+- Configuración de GRUB.
+- Traducciones.
+- Versionado.
+- Higiene del repositorio.
+- Integración de las aplicaciones Rust.
+
+La comprobación termina con código de salida distinto de cero cuando encuentra fallos.
+
+---
+
+🩺 Diagnóstico del entorno
+
+Para comprobar las herramientas disponibles en el equipo de desarrollo:
+
+./churros doctor
+
+El diagnóstico comprueba herramientas necesarias para:
+
+- ArchISO.
+- QEMU.
+- Rust.
+- Construcción de la ISO.
+- GRUB.
+- SquashFS.
+- FAT.
+- MTools.
+- gettext.
+- ShellCheck.
+- pkg-config.
+- Virtualización KVM.
+
+También puede detectar si "/dev/kvm" está disponible.
+
+---
+
+🤖 Integración continua
+
+ChurrOS utiliza GitHub Actions.
+
+Actualmente la CI ejecuta dos trabajos principales:
+
+GitHub Actions
+      │
+      ├── Static checks
+      │      └── ./churros check
+      │
+      └── Rust tests
+             └── cargo test
+
+Los workflows se ejecutan para cambios en "main" y para pull requests.
+
+La CI actual no construye la ISO completa.
+
+---
+
+📁 Estructura del proyecto
 
 ChurrOS/
-├── archiso/
-├── branding/
-├── docs/
-├── installer/
-├── po/
-├── rust/
-├── scripts/
-├── out/
-├── vm/
-├── work/
-├── churros
-├── VERSION
-├── LICENSE
+├── archiso/       # Perfil ArchISO
+├── branding/      # Identidad y branding
+├── docs/          # Documentación
+├── installer/     # Configuración de Calamares
+├── po/            # Traducciones
+├── rust/          # Aplicaciones oficiales
+├── scripts/       # Scripts de desarrollo
+├── vm/            # Máquina virtual generada
+├── out/           # ISO generada
+├── work/          # ArchISO temporal
+├── churros        # CLI principal
+├── VERSION        # Versión del proyecto
+├── LICENSE        # Licencia
 └── README.md
 
-"archiso/"
-
-Perfil utilizado para generar la ISO.
-
-"branding/"
-
-Identidad visual y scripts relacionados con el branding.
-
-"docs/"
-
-Documentación del proyecto.
-
-"installer/"
-
-Configuración e integración de Calamares.
-
-"po/"
-
-Archivos de traducción gettext.
-
-"rust/"
-
-Workspace de las aplicaciones oficiales.
-
-"scripts/"
-
-Scripts utilizados durante el proceso de construcción y desarrollo.
-
-"out/"
-
-Salida de las imágenes ISO generadas.
-
-"work/"
-
-Archivos temporales utilizados durante la construcción.
-
-"vm/"
-
-Archivos generados para las máquinas virtuales de desarrollo.
+Los directorios "out/", "work/" y "vm/" contienen artefactos generados y no forman parte del código fuente principal.
 
 ---
 
-Documentación
+📚 Documentación
 
-La documentación adicional está organizada dentro de "docs/".
+La documentación oficial se encuentra en:
 
-Documentos importantes:
+docs/
+
+Documentos principales:
 
 - "getting-started.md"
 - "project-structure.md"
@@ -534,144 +531,194 @@ Documentos importantes:
 - "roadmap.md"
 - "contributing.md"
 - "vision.md"
+- "services.md"
+- "preferences.md"
+- "popups.md"
 
-La documentación debe mantenerse sincronizada con el comportamiento real del proyecto.
+Antes de modificar componentes importantes del proyecto, consulta la documentación correspondiente.
 
 ---
 
-Roadmap
+🗺️ Roadmap
 
-El roadmap oficial se encuentra en:
+La hoja de ruta oficial se encuentra en:
 
 docs/roadmap.md
 
-El estado documentado actualmente incluye:
-
 Fundación
 
-- ArchISO.
-- CLI.
-- Primera ISO.
-- Branding.
-- Documentación.
-- QEMU.
-- CI.
-- Versión Alpha.
+- [x] Repositorio
+- [x] ArchISO
+- [x] Primera ISO
+- [x] CLI
+- [x] Branding
+- [x] Documentación
+- [x] QEMU
+- [x] CI
+- [x] Versión Alpha pública
 
 Identidad
 
-- Logo.
-- Mascota.
-- Wallpapers.
-- Fastfetch.
-- Iconos.
-- Cursor.
-- Tema GRUB.
-
-Pendientes documentados:
-
-- Plymouth.
-- Branding de greetd.
+- [x] Logo
+- [x] Mascota
+- [x] Wallpapers
+- [x] Fastfetch
+- [x] Iconos
+- [x] Cursor
+- [x] Tema GRUB
+- [ ] Plymouth
+- [ ] Branding de greetd
 
 Escritorio
 
-Implementados:
-
-- Niri.
-- Waybar.
-- foot.
-- Fuzzel.
-- Mako.
-- Centro de control.
-- Tema oficial.
-
-Pendiente:
-
-- Wlogout.
+- [x] Niri
+- [x] Waybar
+- [x] foot
+- [x] Fuzzel
+- [x] Mako
+- [x] Centro de control
+- [x] Tema oficial
+- [x] Wlogout
 
 Instalador
 
-Documentado como completado mediante Calamares con:
-
-- Particionado automático.
-- Particionado manual.
-- Selección de idioma.
-- Zona horaria.
-- Creación de usuario.
-- Instalación del bootloader.
-- Configuración inicial.
+- [x] Calamares
+- [x] Particionado automático
+- [x] Particionado manual
+- [x] Idiomas
+- [x] Zona horaria
+- [x] Usuarios
+- [x] Bootloader
 
 Ecosistema
 
-Actualmente existen:
-
-- CLI.
-- Actualizador.
-- Rollback mediante snapshots Btrfs.
-- Welcome.
-- Settings.
-- Control Center.
-- Popups.
-
-El repositorio oficial de paquetes continúa marcado como pendiente.
+- [x] CLI
+- [x] Actualizador
+- [x] Rollback Btrfs
+- [x] Welcome
+- [x] Settings
+- [x] Control Center
+- [x] Popups
+- [ ] Repositorio oficial
+- [ ] Ecosistema de paquetes propio completo
 
 Publicación
 
-La versión indicada actualmente es:
-
-1.2
-
-El roadmap mantiene pendientes elementos como:
-
-- Wiki.
-- Manual de usuario.
-- Comunidad.
+- [x] v1.2
+- [x] Publicación de ISO actual
+- [ ] Wiki
+- [ ] Manual de usuario
+- [ ] Comunidad oficial
 
 ---
 
-Contribuir
+🤝 Contribuir
 
-ChurrOS se encuentra en desarrollo activo.
+Las contribuciones son bienvenidas.
 
-Antes de enviar cambios:
+Antes de comenzar:
+
+./churros doctor
+
+Después de realizar cambios:
 
 ./churros check
 
-Después:
+Y, cuando corresponda:
 
 ./churros build
-
-Y, cuando sea necesario, prueba la ISO:
-
 ./churros run
 
-El flujo recomendado es trabajar en una rama independiente y enviar un pull request hacia "main".
+El flujo recomendado es:
+
+Crear rama
+    ↓
+Modificar código
+    ↓
+./churros check
+    ↓
+./churros build
+    ↓
+./churros run
+    ↓
+Verificar
+    ↓
+Commit
+    ↓
+Pull Request
 
 Consulta:
 
 docs/contributing.md
 
-para las normas específicas del proyecto.
+para conocer las convenciones del proyecto.
 
 ---
 
-Licencia
+🧭 Filosofía
+
+ChurrOS prioriza:
+
+- Calidad sobre cantidad.
+- Estabilidad.
+- Organización.
+- Automatización.
+- Una experiencia coherente.
+- Software libre.
+- Mantenimiento a largo plazo.
+
+El objetivo no es simplemente modificar Arch Linux visualmente.
+
+El proyecto busca construir progresivamente una distribución con:
+
+- identidad propia,
+- herramientas propias,
+- aplicaciones propias,
+- documentación,
+- infraestructura,
+- comunidad,
+- y un ecosistema mantenible.
+
+---
+
+📌 Estado actual
+
+Versión del proyecto: "1.2"
+
+ChurrOS cuenta actualmente con:
+
+- ISO personalizada.
+- Dos ediciones de escritorio.
+- Sistema de construcción basado en ArchISO.
+- CLI de desarrollo.
+- Calamares.
+- Aplicaciones oficiales en Rust.
+- Centro de control.
+- Herramientas de configuración.
+- Popups del sistema.
+- Actualizador.
+- Rollback Btrfs.
+- Branding propio.
+- Tema GRUB.
+- CI mediante GitHub Actions.
+- Sistema de comprobaciones y diagnóstico.
+
+El proyecto continúa en desarrollo activo.
+
+---
+
+📜 Licencia
 
 ChurrOS se distribuye bajo:
 
-GNU General Public License v3.0
+GNU General Public License v3.0 (GPL-3.0).
 
-Consulta "LICENSE" para el texto completo de la licencia.
-
----
-
-Enlaces
-
-- Sitio web: https://www.churroslinux.org/
-- Repositorio: https://github.com/Hoyuse/ChurrOS
+Consulta ""LICENSE"" (LICENSE) para obtener el texto completo de la licencia.
 
 ---
 
-<p align="center">
-  ChurrOS
-</p>
+<div align="center">ChurrOS
+
+Una distribución construida con software libre, dedicación y una buena cantidad de café.
+
+</div>

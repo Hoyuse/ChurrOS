@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=ChurrOS Tour
+Exec=churros-tour
+Terminal=false
+Categories=System;

@@ -29,10 +29,11 @@ La instalación en disco sigue una secuencia validada y crítica que incluye 6 h
 3. shellprocess@pacman-init     -> Inicializa y puebla el keyring de pacman en el sistema instalado.
 4. shellprocess@fix-boot        -> Regenera presets de mkinitcpio y módulos del kernel.
 5. shellprocess@churros-repo    -> Registra el repositorio local [churros] temporalmente.
-6. netinstall / packages        -> Instala paquetes adicionales y extras AUR locales.
+6. netinstall / packages        -> Instala paquetes adicionales y extras AUR locales; sin Internet, Calamares omite este paso y conserva la instalación base de la ISO.
 7. bootloader                   -> Instala GRUB (UEFI) / Syslinux (BIOS).
 8. shellprocess@grub-theme      -> Aplica el tema GRUB centrado y hook de lectura Btrfs.
-9. shellprocess@post-install    -> Elimina el repo local y limpia rastros del usuario Live.
+9. shellprocess@post-install    -> Elimina el repo local, sudoers NOPASSWD, reglas polkit de Calamares y
+                                ajustes de ssh del Live, y limpia rastros del usuario Live.
 10. umount                      -> Desmonta las particiones instaladas.
 ```
 

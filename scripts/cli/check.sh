@@ -250,8 +250,6 @@ else
 
     pacman_i=$(step_index 'shellprocess@pacman-init' || true)
     fixboot_i=$(step_index 'shellprocess@fix-boot' || true)
-    repo_i=$(step_index 'shellprocess@churros-repo' || true)
-    netinstall_i=$(step_index 'netinstall' || true)
     post_i=$(step_index 'shellprocess@post-install' || true)
     umount_i=$(step_index 'umount' || true)
     mount_i=$(step_index 'mount' || true)
@@ -262,8 +260,6 @@ else
     for pair in \
         "shellprocess@pacman-init:$pacman_i" \
         "shellprocess@fix-boot:$fixboot_i" \
-        "shellprocess@churros-repo:$repo_i" \
-        "netinstall:$netinstall_i" \
         "shellprocess@post-install:$post_i" \
         "umount:$umount_i" \
         "mount:$mount_i" \
@@ -283,14 +279,6 @@ else
             fail "shellprocess@pacman-init must run before shellprocess@fix-boot"
             order_ok=0
         fi
-        if [ "$fixboot_i" -ge "$repo_i" ]; then
-            fail "shellprocess@fix-boot must run before shellprocess@churros-repo"
-            order_ok=0
-        fi
-        if [ "$repo_i" -ge "$netinstall_i" ]; then
-            fail "shellprocess@churros-repo must run before netinstall"
-            order_ok=0
-        fi
         if [ "$((post_i + 1))" -ne "$umount_i" ]; then
             fail "shellprocess@post-install must be the last step before umount"
             order_ok=0
@@ -305,7 +293,7 @@ else
         fi
     fi
 
-    [ "$order_ok" -eq 1 ] && pass "boot-nocow after mount; pacman-init → fix-boot → churros-repo → netinstall; post-install before umount"
+    [ "$order_ok" -eq 1 ] && pass "boot-nocow after mount; pacman-init → fix-boot; post-install before umount"
 fi
 
 # --------------------------------------------- Calamares shellprocess confs
@@ -729,33 +717,7 @@ else
     fi
 fi
 
-# ------------------------------------------- Local AUR extras ↔ netinstall
-
-section "Local AUR extras in netinstall"
-
-NETINSTALL=installer/calamares/modules/netinstall.yaml
-
-if [ ! -f "$NETINSTALL" ]; then
-    fail "$NETINSTALL missing"
-elif [ "${#LOCAL_AUR[@]}" -eq 0 ]; then
-    fail "no build_aur calls found in scripts/build-aur.sh"
-else
-    aur_ok=1
-    aur_checked=0
-    for pkg in "${LOCAL_AUR[@]}"; do
-        # Si ya está en la lista base (packages.x86_64) se instala por defecto,
-        # así que no necesita aparecer en netinstall.
-        if printf '%s\n' "${PACKAGES[@]}" | grep -qx "$pkg"; then
-            continue
-        fi
-        aur_checked=$((aur_checked + 1))
-        if ! grep -qE "^[[:space:]]+- name:[[:space:]]+${pkg}[[:space:]]*$" "$NETINSTALL"; then
-            fail "'$pkg' is built by build-aur.sh but missing from netinstall.yaml"
-            aur_ok=0
-        fi
-    done
-    [ "$aur_ok" -eq 1 ] && pass "${aur_checked} local AUR packages listed in netinstall"
-fi
+# Local AUR extras check removed as netinstall module was deprecated in favor of churros-tour
 
 # ------------------------------------------- Calamares Python ABI
 
