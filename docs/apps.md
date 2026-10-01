@@ -37,6 +37,16 @@ Pantalla de bienvenida al iniciar la sesión Live.
 
 El footer muestra `Linux • <Entorno> • ChurrOS <Versión>` detectado dinámicamente con `churros_services::version::desktop_name()` y `churros_services::version::distro()`.
 
+## Traducciones
+
+La interfaz de las apps Rust va en castellano, escrita directamente en el código. El catálogo de gettext en `po/` sigue apuntando a la interfaz en Python anterior (`preferences/pages/*.py`, `popups/*/widgets/*.py`), que ya no está en el repositorio: es decir, **las traducciones no se aplican a nada de lo que el usuario ve hoy**.
+
+`./churros check` valida la sintaxis de los `.po`, no que sirvan para la interfaz actual, y lo dice en pantalla. Conectar gettext (o `i18n-embed`) a las apps Rust es trabajo pendiente, no una función que esté activa a medio hacer.
+
+## Valores por defecto
+
+`/usr/share/churros/defaults/` es una copia de `etc/skel/.config/` y "Restaurar valores por defecto" la copia sobre `~/.config/`. Las dos tienen que estar sincronizadas: si divergen, restaurar da una configuración distinta de la de una instalación nueva. `./churros check` lo verifica fichero a fichero.
+
 ## Stack
 
 - GTK 4 + Libadwaita (gtk4-rs / libadwaita-rs)

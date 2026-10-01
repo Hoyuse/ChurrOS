@@ -161,7 +161,7 @@ binds {
     Mod+W { spawn "churros-welcome"; }
     Mod+S { spawn "bazaar"; }
     Mod+E { spawn "thunar"; }
-    Mod+Shift+E { spawn "churros-popup" "power"; }
+    Mod+Shift+E { spawn "wlogout"; }
     Mod+Shift+N { spawn "churros-popup" "network"; }
     Mod+Shift+A { spawn "churros-popup" "audio"; }
     Mod+Shift+B { spawn "churros-popup" "bluetooth"; }
@@ -236,3 +236,4 @@ spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "waybar"
 spawn-at-startup "mako"
 spawn-at-startup "churros-welcome"
+spawn-sh-at-startup "[ -f ~/.config/autostart/churros-tour.desktop ] && churros-tour"

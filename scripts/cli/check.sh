@@ -95,6 +95,35 @@ if [ -f archiso/packages.xfce.x86_64 ]; then
     fi
 fi
 
+# -------------------------------------------- Defaults vs skel (coherencia)
+
+# /usr/share/churros/defaults lo usa churros-settings para "restaurar valores
+# por defecto": copia esos ficheros sobre ~/.config. Si divergen de
+# /etc/skel/.config, que es lo que recibe una instalacion nueva, el usuario
+# recibe otra configuracion distinta cada vez que restaura. Pasa a ser fallo de
+# CI en vez de sorpresa.
+DEFAULTS_DIR="archiso/airootfs/usr/share/churros/defaults"
+SKEL_DIR="archiso/airootfs/etc/skel/.config"
+defaults_drift=0
+
+if [ -d "$DEFAULTS_DIR" ]; then
+    while IFS= read -r def_file; do
+        rel="${def_file#"$DEFAULTS_DIR"/}"
+        skel_file="$SKEL_DIR/$rel"
+        if [ ! -f "$skel_file" ]; then
+            fail "defaults/$rel no tiene equivalente en el skel"
+            defaults_drift=$((defaults_drift + 1))
+        elif ! cmp -s "$def_file" "$skel_file"; then
+            fail "defaults/$rel difiere del skel (restaurar valores por defecto daria otra config)"
+            defaults_drift=$((defaults_drift + 1))
+        fi
+    done < <(find "$DEFAULTS_DIR" -type f | sort)
+
+    if [ "$defaults_drift" -eq 0 ]; then
+        pass "defaults sincronizado con el skel ($(find "$DEFAULTS_DIR" -type f | wc -l) ficheros)"
+    fi
+fi
+
 # ------------------------------------------------------- Shared resolvers
 
 mapfile -t PACKAGES < <(grep -v '^#' archiso/packages.x86_64 | grep -v '^$')
@@ -791,6 +820,13 @@ done
 # ------------------------------------------------------------ Translations
 
 section "Translations"
+
+# Aviso honesto: el catalogo sigue apuntando a la interfaz en Python
+# (preferences/pages/*.py, popups/*/widgets/*.py), que ya no existe; las apps
+# Rust no usan gettext y escriben los textos en castellano directamente. El
+# chequeo de abajo es de sintaxis del .po, no de que las traducciones se
+# apliquen a la interfaz actual.
+notice "po/*.po cubren la UI en Python antigua; las apps Rust no usan gettext"
 
 if command -v msgfmt >/dev/null 2>&1; then
     for po in po/*.po; do
