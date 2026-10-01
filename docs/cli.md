@@ -59,7 +59,7 @@ Este comando realiza automáticamente:
 - Comprobación pre-flight de dependencias críticas del host (grub, dosfstools, mtools, mkarchiso) antes de compilar para evitar fallos tardíos.
 - Configuración de paquetes y dotfiles según la edición seleccionada.
 - Copia de branding y tema GRUB al airootfs.
-- Construcción de paquetes AUR locales si faltan (Calamares, python-pywal, waypaper, yay).
+- Construcción de paquetes AUR locales si faltan (Calamares, python-pywal, yay, wlogout).
 - Compilación de las apps Rust (`scripts/build-rust.sh`) y despliegue en `usr/bin/`.
 - Limpieza del directorio temporal.
 - Ejecución de ArchISO.
