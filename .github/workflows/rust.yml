@@ -1,0 +1,61 @@
+name: Rust
+
+# La CI de ./churros (ci.yml) solo compila churros-services, porque es el
+# único crate sin dependencias de GTK. Aquí se compila y se prueba el
+# workspace completo: hasta ahora un error en welcome, settings, control
+# center, popups o tour solo aparecía al construir la ISO.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apps:
+    name: Build and test apps
+    runs-on: ubuntu-latest
+
+    # gtk4-rs 0.11 pide GTK >= 4.22 y libadwaita-rs 0.9 pide libadwaita >= 1.9.
+    # Ubuntu no llega a esas versiones, así que el job corre dentro de una
+    # imagen Arch, que es además el entorno de build de la ISO.
+    container: archlinux:latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Initialize pacman keyring
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel \
+            git \
+            gtk4 \
+            libadwaita \
+            rust
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Build workspace
+        run: cargo build --workspace --all-targets --locked --manifest-path rust/Cargo.toml
+
+      - name: Test workspace
+        run: cargo test --workspace --locked --manifest-path rust/Cargo.toml
+
+      # clippy no falla el job: el workspace arrastra avisos previos. Cuando
+      # estén limpios, añadir -- -D warnings para que sí bloquee.
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked --manifest-path rust/Cargo.toml
