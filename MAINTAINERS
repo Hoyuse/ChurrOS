@@ -1,0 +1,76 @@
+# MAINTAINERS
+#
+# Quién responde por cada parte del repositorio. Para saber a quién dirigir
+# una duda o una propuesta antes de abrir un issue.
+#
+# Formato:
+#   <ruta>  <@usuario> [<@usuario>...]   descripción
+#
+# Las reglas más específicas van después de las más generales, y la última
+# que coincide es la que aplica.
+#
+# Origen: estas asignaciones se han deducido del historial de commits (qué
+# persona tocó más cada área) y de los permisos de escritura del repositorio.
+# No proceden de un acuerdo previo con los interesados. Si algo está mal
+# asignado, corrígelo en un pull request.
+#
+# Esto es un documento informativo. GitHub no lo interpreta: para que pida
+# revisión automáticamente hay que replicar estas rutas en
+# `.github/CODEOWNERS`.
+
+# ── General ──────────────────────────────────────────────────────────────────
+*                                @Hoyuse
+
+# ── Base del sistema ─────────────────────────────────────────────────────────
+/archiso/                        @Hoyuse @elgatolinux
+/archiso/packages.x86_64         @elgatolinux
+/archiso/profiledef.sh           @elgatolinux
+/archiso/airootfs/etc/skel/      @Hoyuse @elgatolinux @LuisAristi
+
+# ── Instalador ───────────────────────────────────────────────────────────────
+/installer/                      @Hoyuse @elgatolinux
+/installer/calamares/modules/grubcfg.conf  @elgatolinux
+/installer/patches/              @Hoyuse
+
+# ── Branding e identidad visual ──────────────────────────────────────────────
+/branding/                       @Hoyuse
+/branding/grub-theme/            @Hoyuse @sebaspi0922
+
+# ── Aplicaciones en Rust ─────────────────────────────────────────────────────
+/rust/                           @Hoyuse
+/rust/services/                  @Hoyuse @sebaspi0922
+/rust/preferences/               @Hoyuse @elgatolinux
+/rust/churros-welcome/           @Hoyuse
+/rust/churros-tour/              @Hoyuse
+/rust/popups/                    @Hoyuse
+/rust/control-center/            @Hoyuse
+
+# ── CLI de desarrollo y scripts de build ─────────────────────────────────────
+/scripts/                        @Hoyuse @elgatolinux @sebaspi0922
+/scripts/cli/check.sh            @sebaspi0922
+/scripts/cli/build.sh            @Hoyuse @sebaspi0922
+/churros                         @Hoyuse @sebaspi0922
+
+# ── Continuous integration ───────────────────────────────────────────────────
+/.github/workflows/              @Hoyuse @sebaspi0922
+
+# ── Documentación ───────────────────────────────────────────────────────────
+/docs/                           @Hoyuse @sebaspi0922
+/docs/contributing.md            @Hoyuse @sebaspi0922
+/docs/cli.md                     @Hoyuse @sebaspi0922
+/AGENTS.md                       @Hoyuse @sebaspi0922
+/ARCHITECTURE.md                 @Hoyuse
+/SECURITY.md                     @Hoyuse
+/README.md                       @Hoyuse
+
+# ── Traducciones ────────────────────────────────────────────────────────────
+/po/                             @elgatolinux
+
+# ── Automatización ──────────────────────────────────────────────────────────
+# @CRISTOP-bot es la cuenta del bot que publica y actualiza el repositorio.
+# Aparece en el historial de commits, pero no es una persona a la que dirigir
+# dudas ni revisiones.
+
+# ── Otros temas ─────────────────────────────────────────────────────────────
+# Seguridad: los reportes de vulnerabilidades no van en issues públicos. El
+# procedimiento y los canales privados están en SECURITY.md.
