@@ -66,8 +66,18 @@ scrolledwindow > viewport,
     font-size: 52px;
     font-weight: 800;
     letter-spacing: -0.04em;
-    color: #ffffff;
     text-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
+}
+
+/* Colores del título. --accent lo define ~/.config/churros/accent.css
+   (pywal o churros-settings), con el naranja de marca como valor por
+   defecto. Antes el marcado Pango fijaba blanco y #ff8c00 en el código. */
+.title-plain {
+    color: #f5f5f5;
+}
+
+.title-accent {
+    color: var(--accent, #F97316);
 }
 
 .subtitle {
@@ -112,6 +122,15 @@ button.action-card:active,
 .action-card:active {
     background-color: var(--accent-bg-hover, rgba(249, 115, 22, 0.18));
     transform: translateY(0);
+}
+
+/* Las cards se recorren con el teclado (flowboxchild quita su propio
+   outline), así que el foco tiene que verse aquí. */
+button.action-card:focus,
+button.action-card:focus-visible {
+    outline: 2px solid var(--accent, #F97316);
+    outline-offset: 2px;
+    border-color: var(--accent, #F97316);
 }
 
 /* ── Icon ─────────────────────────────────────────────── */

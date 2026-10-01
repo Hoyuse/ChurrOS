@@ -45,9 +45,11 @@ El footer muestra `Linux • <Entorno> • ChurrOS <Versión>` detectado dinámi
 ## Window
 
 - Tamaño predeterminado: 900×680 (redimensionable, tamaño mínimo 480×400)
-- Barra de título `AdwHeaderBar` integrada con controles de ventana (cerrar, maximizar, minimizar)
-- Layout vertical responsivo con `ScrolledWindow` de desplazamiento automático
+- `AdwToolbarView` como contenedor: la `AdwHeaderBar` va arriba y la toolbar view gestiona los controles de ventana
+- El contenido va dentro de un `AdwClamp` (máximo 840 px) sobre un `ScrolledWindow`, para que en pantallas anchas las cards queden centradas y no se repartan de lado a lado
+- Layout vertical responsivo con desplazamiento automático
 - En Niri se maximiza automáticamente; en XFCE se abre en ventana centrada con decoraciones completas
+- El título son dos labels (`.title-plain` y `.title-accent`), no markup Pango: el color de acento sale de `--accent` (`~/.config/churros/accent.css`, pywal o churros-settings) y no de un valor fijo en el código
 - CSS: `/usr/share/churros/styles/churros.css` + `assets/style.css`
 
 ## Structure
