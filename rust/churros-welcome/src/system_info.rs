@@ -214,8 +214,9 @@ pub fn format_filesystem(total_bytes: u64, available_bytes: u64) -> String {
     let total = total_bytes as f64 / gib;
     let available = available_bytes as f64 / gib;
 
-    if total >= 100.0 {
-        // A partir de 100 GiB los decimales son ruido.
+    if total >= 10.0 {
+        // A partir de 10 GiB los decimales son ruido: "12 GiB de 64 GiB" se
+        // lee mejor que "12.0 GiB de 64.0 GiB".
         format!("{available:.0} GiB de {total:.0} GiB libres")
     } else {
         format!("{available:.1} GiB de {total:.1} GiB libres")
