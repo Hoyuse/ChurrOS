@@ -7,7 +7,7 @@
 # - We extract the autologin user (if any) that Calamares carefully configured.
 # - We rewrite the config.toml to use our graphical regreet GTK theme.
 # - We correctly enforce the session command of the installed edition (niri,
-#   startxfce4 or startplasma-wayland).
+#   churros-xfce-session or startplasma-wayland).
 
 set -euo pipefail
 
@@ -18,7 +18,7 @@ SESSION_CMD="/usr/bin/churros-niri-session"
 if [ -f /etc/churros-edition ]; then
     EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
     case "$EDITION" in
-        xfce) SESSION_CMD="/usr/bin/startxfce4" ;;
+        xfce) SESSION_CMD="/usr/bin/churros-xfce-session" ;;
         kde)  SESSION_CMD="/usr/bin/startplasma-wayland" ;;
     esac
 fi
@@ -57,3 +57,11 @@ fi
 
 # Write environments file so regreet knows which sessions are available
 echo "$SESSION_CMD" > /etc/greetd/environments
+
+# Patch xsessions desktop file so regreet discovers the correct wrapper.
+# Without this, regreet reads the stock xfce.desktop which runs startxfce4
+# directly — that fails because there is no X server, causing a login loop.
+if [ -f /usr/share/xsessions/xfce.desktop ]; then
+    sed -i 's|^Exec=.*|Exec=churros-xfce-session|' /usr/share/xsessions/xfce.desktop
+fi
+
