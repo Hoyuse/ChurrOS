@@ -34,6 +34,9 @@ fn write_atomic(lines: &[String]) {
 }
 
 fn find_section(lines: &[String], section: &str) -> isize {
+    if section.is_empty() {
+        return 0; // global section starts at line 0
+    }
     for (i, line) in lines.iter().enumerate() {
         if line.trim() == format!("[{section}]") {
             return i as isize;
@@ -50,7 +53,8 @@ fn set_key(lines: &mut Vec<String>, section: &str, key: &str, value: &str) {
     }
 
     let mut end = lines.len();
-    for j in (section_idx as usize + 1)..lines.len() {
+    let start_search = if section.is_empty() { 0 } else { section_idx as usize + 1 };
+    for j in start_search..lines.len() {
         let stripped = lines[j].trim();
         if stripped.starts_with('[') && stripped.ends_with(']') {
             end = j;
@@ -58,7 +62,7 @@ fn set_key(lines: &mut Vec<String>, section: &str, key: &str, value: &str) {
         }
     }
 
-    for j in (section_idx as usize + 1)..end {
+    for j in start_search..end {
         let stripped = lines[j].trim();
         if stripped.starts_with(&format!("{key}=")) || stripped.starts_with(&format!("{key} ")) {
             let prefix: String = lines[j]
@@ -80,7 +84,8 @@ fn get_key(section: &str, key: &str, default: &str) -> Option<String> {
     if idx < 0 {
         return Some(default.to_string());
     }
-    for j in (idx as usize + 1)..lines.len() {
+    let start_search = if section.is_empty() { 0 } else { idx as usize + 1 };
+    for j in start_search..lines.len() {
         let stripped = lines[j].trim();
         if stripped.starts_with('[') && stripped.ends_with(']') {
             break;
@@ -99,7 +104,8 @@ fn get_key_opt(section: &str, key: &str) -> Option<String> {
     if idx < 0 {
         return None;
     }
-    for j in (idx as usize + 1)..lines.len() {
+    let start_search = if section.is_empty() { 0 } else { idx as usize + 1 };
+    for j in start_search..lines.len() {
         let stripped = lines[j].trim();
         if stripped.starts_with('[') && stripped.ends_with(']') {
             break;
@@ -133,74 +139,74 @@ impl MakoConfig {
     // ------------------------------------------------------------ Getters
 
     pub fn get_font() -> String {
-        get_key("default", "font", "JetBrainsMono Nerd Font:size=11").unwrap()
+        get_key("", "font", "JetBrains Mono:size=11").unwrap()
     }
 
     pub fn get_background_color() -> String {
-        get_key("default", "background-color", "#1e1e2e").unwrap()
+        get_key("", "background-color", "#1e1e2e").unwrap()
     }
 
     pub fn get_text_color() -> String {
-        get_key("default", "text-color", "#cdd6f4").unwrap()
+        get_key("", "text-color", "#cdd6f4").unwrap()
     }
 
     pub fn get_border_color() -> String {
-        get_key("default", "border-color", "#38bdf8").unwrap()
+        get_key("", "border-color", "#38bdf8").unwrap()
     }
 
     pub fn get_border_size() -> i64 {
-        get_key_int("default", "border-size", 2)
+        get_key_int("", "border-size", 2)
     }
 
     pub fn get_border_radius() -> i64 {
-        get_key_int("default", "border-radius", 8)
+        get_key_int("", "border-radius", 8)
     }
 
     pub fn get_padding() -> String {
-        get_key("default", "padding", "12,16").unwrap()
+        get_key("", "padding", "12,16").unwrap()
     }
 
     pub fn get_margin() -> i64 {
-        get_key_int("default", "margin", 8)
+        get_key_int("", "margin", 8)
     }
 
     pub fn get_default_timeout() -> i64 {
-        get_key_int("default", "default-timeout", 5000)
+        get_key_int("", "default-timeout", 5000)
     }
 
     pub fn get_width() -> i64 {
-        get_key_int("default", "width", 380)
+        get_key_int("", "width", 380)
     }
 
     pub fn get_anchor() -> String {
-        get_key("default", "anchor", "top-right").unwrap()
+        get_key("", "anchor", "top-right").unwrap()
     }
 
     pub fn get_markup() -> bool {
-        get_key_bool("default", "markup", true)
+        get_key_bool("", "markup", true)
     }
 
     pub fn get_actions() -> bool {
-        get_key_bool("default", "actions", true)
+        get_key_bool("", "actions", true)
     }
 
     pub fn get_icons() -> bool {
-        get_key_bool("default", "icons", true)
+        get_key_bool("", "icons", true)
     }
 
     pub fn get_history() -> bool {
-        get_key_bool("default", "history", true)
+        get_key_bool("", "history", true)
     }
 
     pub fn get_max_icon_size() -> i64 {
-        get_key_int("default", "max-icon-size", 48)
+        get_key_int("", "max-icon-size", 48)
     }
 
     // ------------------------------------------------------------- Setters
 
     pub fn set_font(font: &str) {
         let mut lines = read_lines();
-        set_key(&mut lines, "default", "font", font);
+        set_key(&mut lines, "", "font", font);
         write_atomic(&lines);
     }
 
@@ -213,19 +219,19 @@ impl MakoConfig {
     ) {
         let mut lines = read_lines();
         if let Some(v) = background_color {
-            set_key(&mut lines, "default", "background-color", v);
+            set_key(&mut lines, "", "background-color", v);
         }
         if let Some(v) = text_color {
-            set_key(&mut lines, "default", "text-color", v);
+            set_key(&mut lines, "", "text-color", v);
         }
         if let Some(v) = border_color {
-            set_key(&mut lines, "default", "border-color", v);
+            set_key(&mut lines, "", "border-color", v);
         }
         if let Some(v) = border_size {
-            set_key(&mut lines, "default", "border-size", &v.to_string());
+            set_key(&mut lines, "", "border-size", &v.to_string());
         }
         if let Some(v) = border_radius {
-            set_key(&mut lines, "default", "border-radius", &v.to_string());
+            set_key(&mut lines, "", "border-radius", &v.to_string());
         }
         write_atomic(&lines);
     }
@@ -238,23 +244,23 @@ impl MakoConfig {
     ) {
         let mut lines = read_lines();
         if let Some(v) = padding {
-            set_key(&mut lines, "default", "padding", v);
+            set_key(&mut lines, "", "padding", v);
         }
         if let Some(v) = margin {
-            set_key(&mut lines, "default", "margin", &v.to_string());
+            set_key(&mut lines, "", "margin", &v.to_string());
         }
         if let Some(v) = default_timeout {
-            set_key(&mut lines, "default", "default-timeout", &v.to_string());
+            set_key(&mut lines, "", "default-timeout", &v.to_string());
         }
         if let Some(v) = width {
-            set_key(&mut lines, "default", "width", &v.to_string());
+            set_key(&mut lines, "", "width", &v.to_string());
         }
         write_atomic(&lines);
     }
 
     pub fn set_anchor(anchor: &str) {
         let mut lines = read_lines();
-        set_key(&mut lines, "default", "anchor", anchor);
+        set_key(&mut lines, "", "anchor", anchor);
         write_atomic(&lines);
     }
 
@@ -267,19 +273,19 @@ impl MakoConfig {
     ) {
         let mut lines = read_lines();
         if let Some(v) = markup {
-            set_key(&mut lines, "default", "markup", if v { "true" } else { "false" });
+            set_key(&mut lines, "", "markup", if v { "true" } else { "false" });
         }
         if let Some(v) = actions {
-            set_key(&mut lines, "default", "actions", if v { "true" } else { "false" });
+            set_key(&mut lines, "", "actions", if v { "true" } else { "false" });
         }
         if let Some(v) = icons {
-            set_key(&mut lines, "default", "icons", if v { "true" } else { "false" });
+            set_key(&mut lines, "", "icons", if v { "true" } else { "false" });
         }
         if let Some(v) = history {
-            set_key(&mut lines, "default", "history", if v { "true" } else { "false" });
+            set_key(&mut lines, "", "history", if v { "true" } else { "false" });
         }
         if let Some(v) = max_icon_size {
-            set_key(&mut lines, "default", "max-icon-size", &v.to_string());
+            set_key(&mut lines, "", "max-icon-size", &v.to_string());
         }
         write_atomic(&lines);
     }
@@ -287,7 +293,7 @@ impl MakoConfig {
     #[allow(dead_code)] // portado por paridad; sin uso en las páginas actuales
     pub fn set_color(key: &str, hex_color: &str) {
         let mut lines = read_lines();
-        set_key(&mut lines, "default", key, hex_color);
+        set_key(&mut lines, "", key, hex_color);
         write_atomic(&lines);
     }
 
@@ -298,5 +304,21 @@ impl MakoConfig {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .spawn();
+    }
+
+    pub fn apply_pywal(colors: &serde_json::Map<String, serde_json::Value>, special: &serde_json::Map<String, serde_json::Value>) {
+        let mut lines = read_lines();
+        
+        if let Some(bg) = special.get("background").and_then(|v| v.as_str()) {
+            set_key(&mut lines, "", "background-color", bg);
+        }
+        if let Some(fg) = special.get("foreground").and_then(|v| v.as_str()) {
+            set_key(&mut lines, "", "text-color", fg);
+        }
+        if let Some(c1) = colors.get("color1").and_then(|v| v.as_str()) {
+            set_key(&mut lines, "", "border-color", c1);
+        }
+        write_atomic(&lines);
+        Self::reload();
     }
 }

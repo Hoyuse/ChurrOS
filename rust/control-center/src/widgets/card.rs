@@ -10,6 +10,7 @@ pub struct Card {
     pub button: gtk::Button,
     image: gtk::Image,
     pub subtitle: gtk::Label,
+    pub detail: gtk::Label,
 }
 
 impl Card {
@@ -26,7 +27,7 @@ impl Card {
         let image = gtk::Image::from_file(assets::icon_path(icon));
         image.set_pixel_size(34);
 
-        let labels = gtk::Box::new(gtk::Orientation::Vertical, 4);
+        let labels = gtk::Box::new(gtk::Orientation::Vertical, 2);
         labels.set_valign(gtk::Align::Center);
 
         let title_label = gtk::Label::new(Some(title));
@@ -36,9 +37,17 @@ impl Card {
         let subtitle_label = gtk::Label::new(Some(subtitle));
         subtitle_label.set_xalign(0.0);
         subtitle_label.add_css_class("card-subtitle");
+        subtitle_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+
+        let detail_label = gtk::Label::new(None);
+        detail_label.set_xalign(0.0);
+        detail_label.add_css_class("card-detail");
+        detail_label.set_visible(false);
+        detail_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
 
         labels.append(&title_label);
         labels.append(&subtitle_label);
+        labels.append(&detail_label);
 
         content.append(&image);
         content.append(&labels);
@@ -51,6 +60,7 @@ impl Card {
             button,
             image,
             subtitle: subtitle_label,
+            detail: detail_label,
         }
     }
 
@@ -60,6 +70,18 @@ impl Card {
         }
         if let Some(icon) = icon {
             self.image.set_from_file(Some(assets::icon_path(icon)));
+        }
+    }
+
+    pub fn set_detail(&self, detail: Option<&str>) {
+        match detail {
+            Some(d) if !d.is_empty() => {
+                self.detail.set_label(d);
+                self.detail.set_visible(true);
+            }
+            _ => {
+                self.detail.set_visible(false);
+            }
         }
     }
 }

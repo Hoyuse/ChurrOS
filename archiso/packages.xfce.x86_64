@@ -58,7 +58,9 @@ openssh
 openvpn
 partclone
 parted
+pciutils
 pptpclient
+procps-ng
 pv
 qemu-guest-agent
 refind
@@ -109,6 +111,7 @@ xorg-xinit
 xorg-xrandr
 xorg-xset
 xorg-xsetroot
+xf86-input-libinput
 xclip
 picom
 
@@ -188,7 +191,6 @@ playerctl
 pamixer
 
 # Rust toolchain & libraries
-rust
 gtk4
 libadwaita
 python
@@ -198,7 +200,8 @@ gobject-introspection
 # Fonts
 ttf-dejavu
 noto-fonts
-ttf-jetbrains-mono-nerd
+ttf-jetbrains-mono
+ttf-nerd-fonts-symbols-mono
 otf-font-awesome
 
 # User Apps

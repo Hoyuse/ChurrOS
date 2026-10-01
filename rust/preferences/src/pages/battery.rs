@@ -3,7 +3,6 @@
 // (equivalente a pages/battery.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use crate::services::power::PowerService;
 use crate::widgets::group::Group;

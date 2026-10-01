@@ -38,7 +38,7 @@ Perfil de ArchISO usado para construir la ISO Live.
 
 Incluye:
 
-- `packages.x86_64` — lista de paquetes
+- `packages.x86_64`, `packages.xfce.x86_64`, `packages.kde.x86_64` — una lista de paquetes por edición
 - `profiledef.sh` — metadatos, bootmodes (`bios.syslinux` + `uefi.grub`) y permisos
 - `airootfs/` — overlay del sistema Live (skel, servicios, assets)
 - `grub/` y `syslinux/` — cargadores de la ISO
@@ -58,6 +58,7 @@ Workspace Cargo de las apps oficiales (gtk4-rs + libadwaita):
 | `preferences` | `churros-settings` | sí |
 | `control-center` | `churros-control-center` | sí |
 | `popups` | `churros-popup` | sí |
+| `churros-tour` | `churros-tour` | sí |
 | `services` | librería `churros_services` | no (la usan las demás) |
 
 `scripts/build-rust.sh` (lo invoca `./churros build`) compila en release y copia los binarios con `deploy = true` a `archiso/airootfs/usr/bin/`. Esos binarios no se versionan. Los assets de runtime viven en `archiso/airootfs/usr/share/churros/<app>/`.

@@ -32,12 +32,20 @@ set_or_insert() {
 set_or_insert VERSION_ID "$ver" ID
 set_or_insert VERSION "\"${ver}\"" VERSION_ID
 
-if [ "$edition" = "xfce" ]; then
-    set_or_insert VARIANT "\"XFCE Edition\"" VERSION
-    set_or_insert VARIANT_ID "\"xfce\"" VARIANT
-    set_or_insert PRETTY_NAME "\"ChurrOS XFCE ${ver}\"" NAME
-else
-    set_or_insert VARIANT "\"Niri Edition\"" VERSION
-    set_or_insert VARIANT_ID "\"niri\"" VARIANT
-    set_or_insert PRETTY_NAME "\"ChurrOS ${ver}\"" NAME
-fi
+case "$edition" in
+    xfce)
+        set_or_insert VARIANT "\"XFCE Edition\"" VERSION
+        set_or_insert VARIANT_ID "\"xfce\"" VARIANT
+        set_or_insert PRETTY_NAME "\"ChurrOS XFCE ${ver}\"" NAME
+        ;;
+    kde)
+        set_or_insert VARIANT "\"KDE Plasma Edition\"" VERSION
+        set_or_insert VARIANT_ID "\"kde\"" VARIANT
+        set_or_insert PRETTY_NAME "\"ChurrOS KDE ${ver}\"" NAME
+        ;;
+    *)
+        set_or_insert VARIANT "\"Niri Edition\"" VERSION
+        set_or_insert VARIANT_ID "\"niri\"" VARIANT
+        set_or_insert PRETTY_NAME "\"ChurrOS ${ver}\"" NAME
+        ;;
+esac

@@ -291,7 +291,6 @@ impl KeyboardService {
             }
             if in_binds && stripped == "}" {
                 insert_pos = Some(out_lines.len() - 1);
-                in_binds = false;
                 break;
             }
         }

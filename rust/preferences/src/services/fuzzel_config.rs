@@ -106,7 +106,7 @@ impl FuzzelConfig {
     // ------------------------------------------------------------ Getters
 
     pub fn get_font() -> String {
-        get_key("main", "font", "JetBrainsMono Nerd Font:size=13")
+        get_key("main", "font", "JetBrains Mono:size=13")
     }
 
     pub fn get_icon_theme() -> String {
@@ -183,5 +183,30 @@ impl FuzzelConfig {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .spawn();
+    }
+
+    pub fn apply_pywal(colors: &serde_json::Map<String, serde_json::Value>, special: &serde_json::Map<String, serde_json::Value>) {
+        let mut lines = read_lines();
+        let to_rgba = |s: &str, alpha: &str| format!("{}{alpha}", s.trim_start_matches('#'));
+        
+        if let Some(bg) = special.get("background").and_then(|v| v.as_str()) {
+            // slightly transparent background 88 (~53%)
+            set_key(&mut lines, "colors", "background", &to_rgba(bg, "88"));
+        }
+        if let Some(fg) = special.get("foreground").and_then(|v| v.as_str()) {
+            set_key(&mut lines, "colors", "text", &to_rgba(fg, "ff"));
+            set_key(&mut lines, "colors", "input", &to_rgba(fg, "ff"));
+        }
+        if let Some(c1) = colors.get("color1").and_then(|v| v.as_str()) {
+            set_key(&mut lines, "colors", "match", &to_rgba(c1, "ff"));
+            set_key(&mut lines, "colors", "selection-match", &to_rgba(c1, "ff"));
+        }
+        if let Some(c2) = colors.get("color2").and_then(|v| v.as_str()) {
+            // slightly transparent selection 33 (~20%)
+            set_key(&mut lines, "colors", "selection", &to_rgba(c2, "33"));
+            set_key(&mut lines, "colors", "border", &to_rgba(c2, "aa"));
+        }
+        write_atomic(&lines);
+        // Fuzzel lee la configuracion en cada lanzamiento, no necesita reload activo
     }
 }

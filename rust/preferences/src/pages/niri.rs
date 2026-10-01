@@ -3,7 +3,6 @@
 // (equivalente a pages/niri.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -73,8 +72,9 @@ fn schedule(state: &NiriStateRef, scheduler: &Rc<RefCell<Scheduler>>) {
             state.blur_saturation.get_value(),
         );
 
-        // NOTA: el Python original no persiste las duraciones de animacion
-        // (sliders window-open / workspace-switch) — paridad replicada.
+        NiriConfig::set_animation_duration("window-open", state.window_open.get_value() as i64);
+        NiriConfig::set_animation_duration("workspace-switch", state.workspace_switch.get_value() as i64);
+
         NiriConfig::reload();
 
         glib::ControlFlow::Break

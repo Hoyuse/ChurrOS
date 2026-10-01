@@ -274,3 +274,150 @@ pub fn toggle() {
         enable();
     }
 }
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct ActiveWifiInfo {
+    pub connected: bool,
+    pub ssid: String,
+    pub signal: u8,
+    pub speed: String,
+    pub device: String,
+}
+
+pub fn get_active() -> ActiveWifiInfo {
+    let mut wifi_device = String::new();
+    if let Ok(entries) = std::fs::read_dir("/sys/class/net") {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.join("wireless").is_dir() {
+                wifi_device = entry.file_name().to_string_lossy().to_string();
+                break;
+            }
+        }
+    }
+
+    if wifi_device.is_empty() {
+        wifi_device = "wlan0".to_string();
+    }
+
+    // 1. Try `iw dev <dev> link` first (fastest, ~4ms)
+    if crate::which("iw") {
+        if let Some((0, out, _)) = crate::run(&["iw", "dev", &wifi_device, "link"], 1000) {
+            if !out.contains("Not connected") && out.contains("SSID:") {
+                let mut ssid = String::new();
+                let mut signal = 0u8;
+                let mut speed = String::new();
+
+                for line in out.lines() {
+                    let line = line.trim();
+                    if let Some(rest) = line.strip_prefix("SSID: ") {
+                        ssid = rest.to_string();
+                    } else if let Some(rest) = line.strip_prefix("signal: ") {
+                        if let Some(dbm_str) = rest.split_whitespace().next() {
+                            if let Ok(dbm) = dbm_str.parse::<i32>() {
+                                let pct = if dbm <= -100 {
+                                    0
+                                } else if dbm >= -50 {
+                                    100
+                                } else {
+                                    2 * (dbm + 100)
+                                };
+                                signal = pct as u8;
+                            }
+                        }
+                    } else if line.contains("bitrate:") {
+                        if speed.is_empty() || line.starts_with("tx bitrate:") {
+                            if let Some(idx) = line.find("bitrate:") {
+                                let rest = line[idx + 8..].trim();
+                                let parts: Vec<&str> = rest.split_whitespace().collect();
+                                if parts.len() >= 2 {
+                                    speed = format!("{} {}", parts[0], parts[1]);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if !ssid.is_empty() {
+                    return ActiveWifiInfo {
+                        connected: true,
+                        ssid,
+                        signal,
+                        speed,
+                        device: wifi_device,
+                    };
+                }
+            }
+        }
+    }
+
+    // 2. Fallback to nmcli fast wifi query
+    if let Some((0, out, _)) = crate::run(
+        &[
+            "nmcli",
+            "-t",
+            "-f",
+            "IN-USE,SSID,SIGNAL,RATE,DEVICE",
+            "device",
+            "wifi",
+            "list",
+            "--rescan",
+            "no",
+        ],
+        1500,
+    ) {
+        for line in out.lines() {
+            if line.starts_with('*') || line.starts_with("sí:") || line.starts_with("yes:") {
+                let fields = parse_escaped(line);
+                let ssid = fields.get(1).map(|s| unescape(s)).unwrap_or_default();
+                let signal = fields
+                    .get(2)
+                    .and_then(|s| s.parse::<u8>().ok())
+                    .unwrap_or(0);
+                let speed = fields.get(3).map(|s| unescape(s)).unwrap_or_default();
+                let dev = fields.get(4).cloned().unwrap_or_else(|| wifi_device.clone());
+                return ActiveWifiInfo {
+                    connected: true,
+                    ssid,
+                    signal,
+                    speed,
+                    device: dev,
+                };
+            }
+        }
+    }
+
+    ActiveWifiInfo::default()
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct NetThroughput {
+    pub rx_bytes: u64,
+    pub tx_bytes: u64,
+}
+
+pub fn read_interface_bytes(device: &str) -> Option<NetThroughput> {
+    let content = std::fs::read_to_string("/proc/net/dev").ok()?;
+    for line in content.lines() {
+        if let Some((iface, stats)) = line.split_once(':') {
+            if iface.trim() == device {
+                let parts: Vec<&str> = stats.split_whitespace().collect();
+                let rx_bytes = parts.get(0)?.parse::<u64>().ok()?;
+                let tx_bytes = parts.get(8)?.parse::<u64>().ok()?;
+                return Some(NetThroughput { rx_bytes, tx_bytes });
+            }
+        }
+    }
+    None
+}
+
+pub fn format_bytes_rate(bytes_per_sec: u64) -> String {
+    if bytes_per_sec >= 1_000_000 {
+        format!("{:.1} MB/s", bytes_per_sec as f64 / 1_000_000.0)
+    } else if bytes_per_sec >= 1_000 {
+        format!("{:.0} KB/s", bytes_per_sec as f64 / 1_000.0)
+    } else {
+        format!("{} B/s", bytes_per_sec)
+    }
+}
+

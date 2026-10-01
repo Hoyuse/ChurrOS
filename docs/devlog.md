@@ -1,5 +1,52 @@
 # Devlog
 
+## 2026-10-01 — Tercera edición, auditoría de seguridad y apps
+
+Trabajo integrado en `main`, todavía sin número de versión.
+
+**Ediciones**
+
+- **KDE Plasma**: tercera edición de escritorio, con su propia lista de paquetes (`archiso/packages.kde.x86_64`) y sesión Wayland nativa. Detalle en [`docs/desktop-config.md`](desktop-config.md).
+
+**Seguridad**
+
+- La regla de polkit pasa a ser una allowlist estricta: se autoriza por ruta absoluta exacta, nunca por basename ni comodín, y se rechazan las opciones que convierten una utilidad en vector de escalada (`--hookdir`, `--config`, `--dbpath`, `--root`).
+- `churros-pkexec` deja de estar autorizado: reenvía argumentos libres a `pkexec` y anularía la allowlist entera.
+- El actualizador fija la URL de descarga a `https://download.churroslinux.org/churros/` y solo admite otro espejo con `CHURROS_UPDATE_ALLOW_MIRROR=1` y base `https`. El JSON de actualizaciones se parsea sin `unwrap`.
+- El instalador deja de arrastrar la configuración SSH del Live: `shellprocess@post-install` borra `/etc/ssh/sshd_config.d/10-archiso.conf` y las claves de host.
+- `churros-welcome` lanza las acciones sin shell: pasa el `Exec` del `.desktop` como `argv` a `execvp` y solo si el binario está en su lista de permitidos.
+- Nuevo documento [`docs/privileged-execution.md`](privileged-execution.md): modelo, allowlist y checklist para añadir helpers.
+
+**Apps**
+
+- `churros-welcome`: `AdwToolbarView` con `AdwClamp`, tarjeta de información del sistema y 17 tests sobre los parsers que leen `/proc` y `/etc/os-release`.
+- `MAINTAINERS`: cada área del repositorio tiene una persona responsable.
+
+**Construcción**
+
+- `rust` y `cargo` salen de la ISO de niri y de XFCE: solo hacen falta en el host, durante la construcción.
+- La fuente Nerd Font se sustituye por `JetBrains Mono` + `Symbols Nerd Font Mono`, que es lo que usan los iconos.
+
+**Correcciones**
+
+- `procps-ng` y `pciutils` en la ISO de niri y XFCE: los invocaba el código que faltaba.
+- El tour se limpia al terminar la instalación y no aparece en el sistema instalado.
+
+---
+
+## 2026-09-23 — ChurrOS 1.2
+
+Release pública **v1.2**. Optimizaciones de rendimiento, rediseño de UI y mejoras de conectividad y audio:
+
+- **Control Center ultrarrápido**: Carga instantánea de estado de red, bluetooth y audio mediante lecturas paralelas en hilos en segundo plano (<20ms).
+- **Wi-Fi en tiempo real**: Monitoreo dinámico de tasa de transferencia (tasa de enlace actual y velocidad de tráfico en Mbps / KB/s en vivo vía `/proc/net/dev`).
+- **Control de volumen con respuesta inmediata**: Feedback visual a 0ms en sliders de volumen y supresión de sincronización retrasada de WirePlumber/PipeWire.
+- **Popup de audio dedicado y módulo Waybar**: Nuevo popup de barra deslizante de volumen tipo Liquid Glass con iconos dinámicos y soporte para rueda de ratón en Waybar.
+- **Estilo de tarjetas en panel de control**: Fondo sólido opaco (`#161a22`) en tarjetas y selectores para máxima legibilidad, manteniendo transparencia glassmorphism en los bordes y entre opciones.
+- **Actualización de versión 1.2**: Alineadas versiones internas en Calamares (`branding.desc`), crates de Rust (`Cargo.toml` a 1.2.0) y `/etc/churros-version`.
+
+---
+
 ## 2026-08-17 — ChurrOS 0.7
 
 Release pública **v0.7**. ISO `ChurrOS-2026.08.17-x86_64-v0.7.iso` y torrent en download.churroslinux.org.
@@ -405,4 +452,64 @@ ThemeService y AccentService tienen **hooks pywal** — cuando pywal está activ
   - Configurado `/etc/pam.d/greetd` con `system-local-login` para solicitar y validar la contraseña del usuario.
   - Script post-instalación `/usr/share/churros/scripts/configure-greeter-locale` para sincronizar automáticamente el saludo (`greeting_msg`) y formato de fecha según el idioma seleccionado en Calamares.
   - Integración completa con el checkbox de autologin de Calamares y compatibilidad con `churros-settings` (sección *Usuarios y Login*).
+
+---
+
+## 2026-09-22 — Pre-flight Checks de Build, Saneamiento de Rust Workspace y Diagnósticos KVM en CLI
+
+### Pre-flight Checks Tempranos en Build y Doctor
+- **`scripts/cli/build.sh`**:
+  - Implementada comprobación pre-flight antes del paso 0 que valida la presencia de dependencias críticas en el host (`mkarchiso`, `mksquashfs`, `xorriso`, `grub-mkstandalone`, `mkfs.fat`, `mcopy`, `mmd`). Si falta alguna herramienta requerida para generar la imagen UEFI, el script aborta en menos de 1 segundo indicando el paquete faltante exacto y el comando de instalación, en lugar de pasar minutos compilando Rust para fallar al final.
+- **`scripts/cli/doctor.sh`**:
+  - Añadida verificación de herramientas de arranque UEFI (`grub`, `dosfstools`, `mtools`).
+  - Mapeo de cada comando al nombre del paquete Arch correspondiente (`pkgconf`, `gettext`, `libisoburn`, `squashfs-tools`, etc.).
+  - **Instalación automática/interactiva**: Cuando detecta herramientas faltantes, propone su instalación con `sudo pacman -S --needed ...` y permite confirmar interactivamente con `[S/n]` o automáticamente mediante la bandera `--install` / `-y`.
+
+### Diagnósticos de Virtualización Hardware KVM
+- **`scripts/cli/doctor.sh` y `scripts/cli/run.sh`**:
+  - Comprobación del dispositivo `/dev/kvm`, permisos del usuario actual y detección de virtualización deshabilitada en la BIOS/UEFI (`Intel Virtualization Technology` / `SVM`).
+  - `run.sh` emite advertencias claras si KVM no está habilitado y configura un fallback seguro por emulación de software (`-cpu max`, 2 hilos) para evitar que QEMU falle silenciosamente.
+
+### Saneamiento del Workspace de Rust (0 warnings)
+- Limpieza integral de 56 advertencias de compilación en `preferences`, `churros-welcome`, `control-center` y `popups`:
+  - Eliminación de imports redundantes (`gtk::prelude::*`) en 17 archivos.
+  - Corrección de variables mutables innecesarias y código muerto.
+  - Reemplazo de métodos deprecados de GTK4 (`load_from_data` → `load_from_string`).
+
+### Higiene del Repositorio y Limpieza
+- Actualizado `.gitignore` y `scripts/cli/clean.sh` para gestionar y limpiar los archivos temporales de `archiso/airootfs/` en caso de compilaciones interrumpidas.
+- Corregido aviso de ShellCheck en `scripts/cli/check.sh`.
+
+### Optimización y Carga Perezosa en Panel de Configuración (`churros-settings`)
+- **Arquitectura Lazy-Loading en `window.rs`**:
+  - En lugar de construir vorazmente las 34 páginas y subpáginas durante el arranque, se registran contenedores `gtk::Box` ligeros y se almacena la fábrica constructora en un mapa `builders`.
+  - Solo se construye en el arranque la página inicial activa (`system` o la última visitada). Todas las subpáginas y páginas secundarias se instancian bajo demanda la primera vez que se seleccionan y se conservan cacheadas en memoria.
+  - Esto reduce el tiempo de apertura de la aplicación en aproximadamente un 90% (de más de 1 segundo a unos ~100 ms).
+- **Aceleración de Consultas del Sistema y Caché**:
+  - `applications.rs`: Conteo de paquetes optimizado leyendo directamente las carpetas de `/var/lib/pacman/local` en <1 ms en lugar de lanzar el subproceso `pacman -Q` (~130 ms).
+  - `system.rs`: Caché en memoria de proceso vía `OnceLock` para `cpu`, `gpu` (evitando re-ejecutar `lspci`), `kernel` y `hostname`.
+  - `theme.rs`: Evitada la ejecución repetitiva de `gsettings` y migración de temas en cada arranque mediante un flag en caché.
+  - `style.css`: Corregida la sintaxis duplicada de offsets en `box-shadow` (`0 0 20px var(--accent-glow)`) que provocaba avisos de parseo CSS en GTK4.
+
+### Solución a Crash de Sesión X11 (XFCE) en Greetd
+- **`churros-xfce-session`**: Se ha creado un script contenedor en `/usr/bin/churros-xfce-session` que se encarga de lanzar de manera correcta el entorno XFCE desde el Display Manager (Regreet/Greetd). Este contenedor ejecuta `startx /usr/bin/startxfce4` de forma condicional si no se detecta el entorno de visualización, logrando que el servidor Xorg asigne apropiadamente el TTY mediante `systemd-logind` y se resuelva el crasheo que devolvía al usuario a la pantalla de login.
+- Integración en `desktop.sh`: Se ha automatizado la inyección en `/usr/share/xsessions/xfce.desktop` para usar este wrapper en entornos X11.
+
+### Autostart Condicional de ChurrOS Tour
+- Para el entorno **Niri**, se ha incluido un `spawn-sh-at-startup` en `config.kdl` que invoca `churros-tour` condicionalmente solo si existe el archivo `~/.config/autostart/churros-tour.desktop`.
+- Para el entorno **XFCE**, este mecanismo ya funciona de forma nativa a través de los directorios de autostart del estándar XDG. 
+- Se ha expuesto `churros-tour` en `/usr/share/applications/churros-tour.desktop` para que sea visible en cualquier lanzador o menú, y se ha limpiado su binario de desarrollo compilado que había entrado en caché del repositorio.
+
+### Corrección de Cursor de Ratón en Entorno XFCE (Hardware Real)
+- **El problema:** Al acceder a XFCE desde una instalación física, el ratón no aparecía ni respondía. Esto se debe a que `xorg-server` requiere un módulo adaptador (`xf86-input-libinput`) para interpretar eventos de hardware de entrada provenientes de `libinput`, lo cual es vital al iniciar fuera de un gestor de pantalla compuesto como GDM.
+- **La solución:** Se ha añadido el paquete `xf86-input-libinput` a la lista de paquetes requeridos (`packages.xfce.x86_64`), permitiendo que Xorg detecte correctamente los periféricos en hardware físico.
+
+### Falsa detección de Wayland en XFCE (Error de labwc)
+- **El problema:** En las últimas versiones, el script `startxfce4` comprueba la existencia de la variable `WAYLAND_DISPLAY`. Greetd/Regreet dejaban un residuo de esta variable en la sesión tras cerrar `cage` (su propio entorno Wayland). Como resultado, XFCE creía que debía arrancar una sesión nativa en Wayland y pedía a gritos el compositor `labwc`, abortando el arranque de Xorg.
+- **La solución:** Se ha inyectado un `unset WAYLAND_DISPLAY` en `churros-xfce-session` para limpiar el entorno residual heredado del greeter y forzar siempre un entorno X11 robusto para XFCE. (Nota: los errores de `libseat` mostrados en log son inofensivos; simplemente indican el *fallback* seguro a `systemd-logind`).
+
+### Solución a Crash de Xorg (Recursive xinit)
+- **El problema:** Tras corregir el error del DRM con `sleep 1`, persistía una pantalla negra que devolvía a Greetd. Al ejecutar `unset DISPLAY` globalmente al inicio del wrapper, se borraba la variable `$DISPLAY` inyectada por Xorg en la sesión cliente. Como resultado, `startxfce4` creía que no había un servidor gráfico activo y lanzaba `xinit` por segunda vez dentro del propio `xinit`, colapsando inmediatamente.
+- **La solución:** Se ha reubicado el `unset DISPLAY` y `unset WAYLAND_DISPLAY` para que solo afecten al proceso padre (Greetd) y no al proceso hijo (la sesión X11 iniciada con `--xinit`). De esta forma, `startxfce4` reconoce `$DISPLAY=:0` correctamente.
+
 

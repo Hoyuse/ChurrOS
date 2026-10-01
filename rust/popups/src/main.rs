@@ -18,7 +18,7 @@ use std::process::exit;
 
 use gtk::prelude::*;
 
-const POPUPS: [&str; 6] = ["network", "audio", "bluetooth", "power", "brightness", "battery"];
+const POPUPS: [&str; 7] = ["network", "audio", "volume", "bluetooth", "power", "brightness", "battery"];
 const PIDDIR: &str = "/tmp/churros";
 
 fn pid_file() -> PathBuf {
@@ -111,7 +111,7 @@ fn launch(name: &str) -> i32 {
 
 fn build_window(app: &gtk::Application, name: &str) -> popup::PopupWindow {
     match name {
-        "audio" => audio::build(app),
+        "audio" | "volume" => audio::build(app),
         "battery" => battery::build(app),
         "bluetooth" => bluetooth::build(app),
         "brightness" => brightness::build(app),
@@ -126,7 +126,7 @@ fn main() {
 
     if !POPUPS.contains(&name.as_str()) {
         eprintln!("churros-popup: popup desconocido '{name}'");
-        eprintln!("Usage: churros-popup {{network|audio|bluetooth|power|brightness|battery}}");
+        eprintln!("Usage: churros-popup {{network|audio|volume|bluetooth|power|brightness|battery}}");
         exit(64);
     }
 

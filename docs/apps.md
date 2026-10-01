@@ -32,10 +32,20 @@ Pantalla de bienvenida al iniciar la sesión Live.
 ## Purpose
 
 - Dar la bienvenida al usuario.
-- Mostrar resumen de información del hardware del sistema (CPU, RAM, Kernel, SO, Arquitectura, Hostname).
+- Mostrar resumen de información del sistema: CPU, RAM (usada de total con porcentaje), espacio de `/`, uptime, Kernel, SO, Arquitectura y Hostname.
 - Ofrecer accesos rápidos a instalación con Calamares, GitHub y comunidad.
 
 El footer muestra `Linux • <Entorno> • ChurrOS <Versión>` detectado dinámicamente con `churros_services::version::desktop_name()` y `churros_services::version::distro()`.
+
+## Traducciones
+
+La interfaz de las apps Rust va en castellano, escrita directamente en el código. El catálogo de gettext en `po/` sigue apuntando a la interfaz en Python anterior (`preferences/pages/*.py`, `popups/*/widgets/*.py`), que ya no está en el repositorio: es decir, **las traducciones no se aplican a nada de lo que el usuario ve hoy**.
+
+`./churros check` valida la sintaxis de los `.po`, no que sirvan para la interfaz actual, y lo dice en pantalla. Conectar gettext (o `i18n-embed`) a las apps Rust es trabajo pendiente, no una función que esté activa a medio hacer.
+
+## Valores por defecto
+
+`/usr/share/churros/defaults/` es una copia de `etc/skel/.config/` y "Restaurar valores por defecto" la copia sobre `~/.config/`. Las dos tienen que estar sincronizadas: si divergen, restaurar da una configuración distinta de la de una instalación nueva. `./churros check` lo verifica fichero a fichero.
 
 ## Stack
 
@@ -45,9 +55,11 @@ El footer muestra `Linux • <Entorno> • ChurrOS <Versión>` detectado dinámi
 ## Window
 
 - Tamaño predeterminado: 900×680 (redimensionable, tamaño mínimo 480×400)
-- Barra de título `AdwHeaderBar` integrada con controles de ventana (cerrar, maximizar, minimizar)
-- Layout vertical responsivo con `ScrolledWindow` de desplazamiento automático
+- `AdwToolbarView` como contenedor: la `AdwHeaderBar` va arriba y la toolbar view gestiona los controles de ventana
+- El contenido va dentro de un `AdwClamp` (máximo 840 px) sobre un `ScrolledWindow`, para que en pantallas anchas las cards queden centradas y no se repartan de lado a lado
+- Layout vertical responsivo con desplazamiento automático
 - En Niri se maximiza automáticamente; en XFCE se abre en ventana centrada con decoraciones completas
+- El título son dos labels (`.title-plain` y `.title-accent`), no markup Pango: el color de acento sale de `--accent` (`~/.config/churros/accent.css`, pywal o churros-settings) y no de un valor fijo en el código
 - CSS: `/usr/share/churros/styles/churros.css` + `assets/style.css`
 
 ## Structure
@@ -72,12 +84,22 @@ rust/churros-welcome/
 
 | Tarjeta / Icono | Título | Descripción / Acción |
 |-----------------|--------|----------------------|
-| `computer-symbolic` | Información | Muestra CPU, RAM total, Kernel, SO, Arquitectura y Hostname |
+| `computer-symbolic` | Información | CPU, RAM (usada de total con porcentaje), espacio libre de `/`, uptime, Kernel, SO, Arquitectura y Hostname |
 | `install.svg` | Install ChurrOS | Lanza el instalador `calamares.desktop` |
 | `github.svg` | GitHub | Abre el repositorio oficial |
 | `community.svg` | Comunidad | Abre el enlace a la comunidad de ChurrOS |
 
-Hasta 4 columnas en pantallas anchas; se reorganiza automáticamente a 2 o 1 columna en ventanas reducidas.
+Son cuatro tarjetas. Con el `AdwClamp` de 840 px entran dos por fila (cada tarjeta pide 280 px más separación), así que el reparto real es 2×2 en ventana grande y una columna al estrecharse. `max_children_per_line` es 4 para que pueda aprovechar más espacio si el clamp cambia.
+
+La tarjeta de información no es un botón: es un `GtkBox`, y por eso no se eleva al pasar el ratón (el hover solo se aplica a `.action-card`).
+
+## Tests
+
+`system_info.rs` separa el acceso a `/proc` de la lógica: los parsers son funciones puras (`parse_cpu`, `parse_memory`, `parse_uptime`, `parse_os_release`, `format_uptime`, `format_filesystem`) y hay tests para cada una, incluidos los casos en los que el kernel no publica `MemAvailable` y la variante de CPU sin `model name` de aarch64.
+
+```bash
+cargo test -p churros-welcome
+```
 
 ## Desktop Entry
 

@@ -9,6 +9,7 @@ use serde_json::{json, Value};
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::Duration;
 
 use crate::services::waybar::WaybarService;
 use crate::widgets::color_picker::ColorPickerRow;
@@ -66,6 +67,37 @@ struct WaybarState {
 
 type WaybarStateRef = Rc<RefCell<WaybarState>>;
 
+struct Scheduler {
+    pending: bool,
+}
+
+fn schedule(state: &WaybarStateRef, scheduler: &Rc<RefCell<Scheduler>>) {
+    if scheduler.borrow().pending {
+        return;
+    }
+    scheduler.borrow_mut().pending = true;
+
+    let st = Rc::clone(state);
+    let s = Rc::clone(scheduler);
+    glib::timeout_add_local(Duration::from_millis(400), move || {
+        s.borrow_mut().pending = false;
+        save_and_reload(&st);
+        glib::ControlFlow::Break
+    });
+}
+
+fn cb_str(state: &WaybarStateRef, scheduler: &Rc<RefCell<Scheduler>>) -> Box<dyn Fn(&str)> {
+    let st = Rc::clone(state);
+    let s = Rc::clone(scheduler);
+    Box::new(move |_| schedule(&st, &s))
+}
+
+fn cb_f64(state: &WaybarStateRef, scheduler: &Rc<RefCell<Scheduler>>) -> Box<dyn Fn(f64)> {
+    let st = Rc::clone(state);
+    let s = Rc::clone(scheduler);
+    Box::new(move |_| schedule(&st, &s))
+}
+
 pub fn build(navigator: gtk::Stack) -> Page {
     let page = Page::new(
         Some(navigator.clone()),
@@ -83,7 +115,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
         height: SliderRow::new("", None, None, 20.0, 80.0, 1.0, 30.0, None),
         spacing: SliderRow::new("", None, None, 0.0, 16.0, 1.0, 0.0, None),
         font_size: SliderRow::new("", None, None, 10.0, 24.0, 1.0, 14.0, None),
-        font_family: ComboRow::new("", &["JetBrainsMono Nerd Font"], None, None, None, None),
+        font_family: ComboRow::new("", &["JetBrains Mono"], None, None, None, None),
         bg: ColorPickerRow::new("", "#2a1612", None, None),
         fg: ColorPickerRow::new("", "#c9c4c3", None, None),
         accent: ColorPickerRow::new("", "#DE8636", None, None),
@@ -121,6 +153,8 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
     // ---------- Posicion y tamano ----------
     let mut layout_group = Group::new("Posicion y tamano");
 
+    let scheduler: Rc<RefCell<Scheduler>> = Rc::new(RefCell::new(Scheduler { pending: false }));
+
     {
         let mut st = state.borrow_mut();
         st.layer = ComboRow::new(
@@ -129,9 +163,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             values["layer"].as_str(),
             None,
             None,
-            // NOTA: el Python llama a self._on_change(...), metodo que NO
-            // existe en WaybarPage (bug del Python: AttributeError en vivo).
-            Some(Box::new(|_| {})),
+            Some(cb_str(state, &scheduler)),
         );
         st.position = ComboRow::new(
             "Posicion",
@@ -139,17 +171,17 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             values["position"].as_str(),
             None,
             None,
-            Some(Box::new(|_| {})),
+            Some(cb_str(state, &scheduler)),
         );
         st.height = SliderRow::new(
-            "Altura",
+            "Tamaño (Grosor)",
             None,
             None,
             20.0,
             80.0,
             1.0,
             values["height"].as_f64().unwrap_or(30.0),
-            Some(Box::new(|_| {})),
+            Some(cb_f64(state, &scheduler)),
         );
         st.spacing = SliderRow::new(
             "Espaciado",
@@ -159,7 +191,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             16.0,
             1.0,
             values["spacing"].as_f64().unwrap_or(0.0),
-            Some(Box::new(|_| {})),
+            Some(cb_f64(state, &scheduler)),
         );
     }
     {
@@ -184,10 +216,9 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             24.0,
             1.0,
             values["font-size"].as_f64().unwrap_or(14.0),
-            Some(Box::new(|_| {})),
+            Some(cb_f64(state, &scheduler)),
         );
         let font_families = [
-            "JetBrainsMono Nerd Font",
             "JetBrains Mono",
             "Inter",
             "Cantarell",
@@ -202,7 +233,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             Some(current_family),
             None,
             None,
-            Some(Box::new(|_| {})),
+            Some(cb_str(state, &scheduler)),
         );
     }
     {
@@ -220,19 +251,19 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
         st.bg = ColorPickerRow::new(
             "Fondo",
             values["background"].as_str().unwrap_or("#2a1612"),
-            Some(Box::new(|_| {})),
+            Some(cb_str(state, &scheduler)),
             None,
         );
         st.fg = ColorPickerRow::new(
             "Texto",
             values["foreground"].as_str().unwrap_or("#c9c4c3"),
-            Some(Box::new(|_| {})),
+            Some(cb_str(state, &scheduler)),
             None,
         );
         st.accent = ColorPickerRow::new(
             "Acento",
             values["accent"].as_str().unwrap_or("#DE8636"),
-            Some(Box::new(|_| {})),
+            Some(cb_str(state, &scheduler)),
             None,
         );
         st.bg_alpha = SliderRow::new(
@@ -243,7 +274,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
             1.0,
             0.05,
             values["background-alpha"].as_f64().unwrap_or(0.9),
-            Some(Box::new(|_| {})),
+            Some(cb_f64(state, &scheduler)),
         );
     }
     {
@@ -256,7 +287,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
     content.append(colors_group.widget());
 
     // ---------- Modulos ----------
-    rebuild_modules(state);
+    rebuild_modules(state, &scheduler);
 
     {
         let st = state.borrow();
@@ -291,7 +322,7 @@ fn populate(content: &gtk::Box, state: &WaybarStateRef) {
 
 /// Mueve UNA instancia a la siguiente posicion (left -> center -> right -> left).
 /// Por nombre se perdían todos los `custom/sep` de golpe.
-fn cycle_module(state: &WaybarStateRef, pos: usize, idx: usize) {
+fn cycle_module(state: &WaybarStateRef, scheduler: &Rc<RefCell<Scheduler>>, pos: usize, idx: usize) {
     {
         let mut st = state.borrow_mut();
         if pos >= st.module_states.len() || idx >= st.module_states[pos].len() {
@@ -301,11 +332,12 @@ fn cycle_module(state: &WaybarStateRef, pos: usize, idx: usize) {
         let nxt = (pos + 1) % MODULE_POSITIONS.len();
         st.module_states[nxt].push(module);
     }
-    rebuild_modules(state);
+    rebuild_modules(state, scheduler);
+    schedule(state, scheduler);
 }
 
 /// Quita UNA instancia de su posicion.
-fn remove_module(state: &WaybarStateRef, pos: usize, idx: usize) {
+fn remove_module(state: &WaybarStateRef, scheduler: &Rc<RefCell<Scheduler>>, pos: usize, idx: usize) {
     {
         let mut st = state.borrow_mut();
         if pos >= st.module_states.len() || idx >= st.module_states[pos].len() {
@@ -313,11 +345,12 @@ fn remove_module(state: &WaybarStateRef, pos: usize, idx: usize) {
         }
         st.module_states[pos].remove(idx);
     }
-    rebuild_modules(state);
+    rebuild_modules(state, scheduler);
+    schedule(state, scheduler);
 }
 
 /// Reconstruye las filas de modulos (equivalente a _rebuild_modules).
-fn rebuild_modules(state: &WaybarStateRef) {
+fn rebuild_modules(state: &WaybarStateRef, scheduler: &Rc<RefCell<Scheduler>>) {
     let st = state.borrow();
 
     let mut group = st.modules_group.borrow_mut();
@@ -329,20 +362,22 @@ fn rebuild_modules(state: &WaybarStateRef) {
             let subtitle = format!("{position} — clic para mover, clic der. para quitar");
 
             let st_cycle = Rc::clone(state);
+            let s_cycle = Rc::clone(scheduler);
             let row = Row::new(
                 module,
                 Some(&subtitle),
                 Some("waybar.svg"),
                 None,
                 None,
-                Some(Box::new(move |_| cycle_module(&st_cycle, i, j))),
+                Some(Box::new(move |_| cycle_module(&st_cycle, &s_cycle, i, j))),
             );
 
             let gesture = gtk::GestureClick::new();
             gesture.set_button(3);
             let st_remove = Rc::clone(state);
+            let s_remove = Rc::clone(scheduler);
             gesture.connect_pressed(move |_g, _n, _x, _y| {
-                remove_module(&st_remove, i, j);
+                remove_module(&st_remove, &s_remove, i, j);
             });
             row.widget().add_controller(gesture);
 
@@ -361,7 +396,7 @@ fn save_and_reload(state: &WaybarStateRef) {
         "spacing": st.spacing.get_value() as i64,
         "height": st.height.get_value() as i64,
         "font-size": st.font_size.get_value() as i64,
-        "font-family": st.font_family.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "JetBrainsMono Nerd Font".into()),
+        "font-family": st.font_family.value().filter(|s| !s.is_empty()).unwrap_or_else(|| "JetBrains Mono".into()),
         "background": st.bg.get_value(),
         "foreground": st.fg.get_value(),
         "accent": st.accent.get_value(),

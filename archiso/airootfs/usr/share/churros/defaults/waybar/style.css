@@ -7,7 +7,7 @@
   border: none;
   border-radius: 0;
   min-height: 0;
-  font-family: 'JetBrainsMono Nerd Font';
+  font-family: 'JetBrains Mono', 'Symbols Nerd Font Mono';
   font-size: 14px;
   border: 0px solid alpha(@foreground, 0.6)
 }
@@ -93,7 +93,7 @@ tooltip {
 }
 
 #custom-power {
-  margin-left: 8.75px;
+  margin: 0 8.75px;
   color: alpha(@foreground, 0.9);
 }
 

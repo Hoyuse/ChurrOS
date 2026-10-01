@@ -37,7 +37,7 @@ El objetivo es generar imágenes ISO reproducibles, mantener un flujo sencillo y
 - Scripts de compilación auxiliares en `scripts/`:
   - `build-rust.sh`: Compila en release todos los crates de `rust/` con `deploy = true` y los instala en el airootfs.
   - `build-calamares.sh`: Compila el instalador Calamares desde AUR con parches locales y soporte de Python.
-  - `build-aur.sh`: Compila paquetes AUR necesarios (`python-pywal`, `waypaper`, `yay`).
+  - `build-aur.sh`: Compila paquetes AUR necesarios (`python-pywal`, `yay`, `wlogout`).
   - `build-bazaar.sh`: Compila la tienda de aplicaciones Bazaar resolviendo conflictos de dependencias con libdex.
   - `build-grub-theme.sh`: Genera fuentes `.pf2` y recursos gráficos para el tema de GRUB.
   - `build-i18n.sh`: Compila catálogos gettext de `po/*.po` a `.mo` en `archiso/airootfs/usr/share/locale/`.
@@ -47,11 +47,11 @@ El objetivo es generar imágenes ISO reproducibles, mantener un flujo sencillo y
 
 # Flujo de compilación
 
-`./churros build [--edition <niri|xfce>]` hace, en este orden:
+`./churros build [--edition <niri|xfce|kde>]` hace, en este orden:
 
 ## 0. Selección de edición y paquetes
 
-- Si se especifica `--edition xfce`: selecciona `archiso/packages.xfce.x86_64`, configura `/etc/churros-edition` con `xfce` y ajusta el autologin de `greetd` a `startxfce4`.
+- Si se especifica una edición que no sea `niri`: selecciona `archiso/packages.<edición>.x86_64`, configura `/etc/churros-edition` y ajusta el autologin de `greetd` al lanzador de sesión de esa edición (`startxfce4` para xfce, `startplasma-wayland` para kde).
 - Si se especifica `--edition niri` (por defecto): utiliza `archiso/packages.x86_64` (Waybar, Niri, foot, Fuzzel, Mako) y el autologin a sesión Niri.
 
 ## 1. Branding y tema GRUB
@@ -60,7 +60,7 @@ Copia `branding/customize_airootfs.sh` y `branding/files/` al airootfs. Estampa 
 
 ## 2. Paquetes locales
 
-Si no están, construye Calamares y los extras AUR (`python-pywal`, `waypaper`, `yay`) en `archiso/packages/`. Si hay paquete de Calamares, `installer/apply-calamares.sh` despliega la config y se copian los `.pkg.tar.zst` a `airootfs/root/packages/`.
+Si no están, construye Calamares y los extras AUR (`python-pywal`, `yay`, `wlogout`) en `archiso/packages/`. Si hay paquete de Calamares, `installer/apply-calamares.sh` despliega la config y se copian los `.pkg.tar.zst` a `airootfs/root/packages/`.
 
 ## 3. Apps Rust
 
@@ -198,4 +198,13 @@ Mejoras previstas:
 - Generación de checksums desde la CLI.
 - Comando `./churros release`.
 
-`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v1.0 se publica a mano en download.churroslinux.org (ISO + torrent).
+`./churros check` y el workflow de GitHub Actions ya cubren la verificación estática. El release v1.2 se publica a mano en download.churroslinux.org (ISO + torrent).
+
+## CI
+
+| Workflow | Dónde corre | Qué hace |
+|----------|-------------|----------|
+| `ci.yml` | `ubuntu-latest` | `./churros check` y `cargo test -p churros-services` (rápido, sin GTK) |
+| `rust.yml` | contenedor `archlinux:latest` | Compila el workspace completo (`--all-targets`), ejecuta sus tests y pasa clippy |
+
+Las apps GTK no se compilan en `ubuntu-latest`: gtk4-rs 0.11 exige GTK ≥ 4.22 y libadwaita-rs 0.9 exige libadwaita ≥ 1.9, versiones que Ubuntu no alcanza. `rust.yml` corre dentro de una imagen Arch, que es el mismo entorno donde se construye la ISO.

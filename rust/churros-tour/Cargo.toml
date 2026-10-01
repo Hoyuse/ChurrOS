@@ -1,0 +1,16 @@
+[package]
+name = "churros-tour"
+version = "1.2.0"
+edition = "2024"
+
+[package.metadata.churros]
+# Port completo: build-rust.sh despliega el binario en la ISO.
+deploy = true
+
+[dependencies]
+adw = { version = "0.9.2", package = "libadwaita" }
+churros-services = { path = "../services" }
+gio = "0.22.8"
+glib = "0.22.8"
+gtk = { version = "0.11.4", package = "gtk4", features = ["v4_22"] }
+libc = "0.2"

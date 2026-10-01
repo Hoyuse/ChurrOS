@@ -6,12 +6,32 @@
 use gtk::prelude::*;
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::pages;
 use crate::services::settings;
 use crate::services::theme::ThemeService;
 use crate::widgets::sidebar::Sidebar;
+
+type PageBuilder = Box<dyn FnOnce(gtk::Stack) -> crate::widgets::page::Page>;
+
+fn ensure_page_built(
+    id: &str,
+    builders: &Rc<RefCell<HashMap<String, PageBuilder>>>,
+    navigator: &gtk::Stack,
+) {
+    let builder_opt = builders.borrow_mut().remove(id);
+    if let Some(builder) = builder_opt {
+        crate::logging::log(&format!("[lazy] construyendo página: {id}"));
+        let page = builder(navigator.clone());
+        if let Some(child) = navigator.child_by_name(id) {
+            if let Some(container) = child.downcast_ref::<gtk::Box>() {
+                container.append(page.widget());
+            }
+        }
+    }
+}
 
 pub struct PreferencesWindow {
     pub window: gtk::ApplicationWindow,
@@ -22,6 +42,7 @@ pub struct PreferencesWindow {
     history: Rc<RefCell<Vec<String>>>,
     narrow_threshold: i32,
     is_narrow: Rc<RefCell<bool>>,
+    builders: Rc<RefCell<HashMap<String, PageBuilder>>>,
     // Mantener la referencia viva: si se dropea, GLib destruye el objeto y
     // el handler de color-scheme deja de disparar.
     #[allow(dead_code)]
@@ -120,6 +141,8 @@ impl PreferencesWindow {
 
         let history: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
         let is_narrow: Rc<RefCell<bool>> = Rc::new(RefCell::new(false));
+        let builders: Rc<RefCell<HashMap<String, PageBuilder>>> =
+            Rc::new(RefCell::new(HashMap::new()));
 
         let mut win = Self {
             window,
@@ -130,6 +153,7 @@ impl PreferencesWindow {
             history,
             narrow_threshold: 760,
             is_narrow,
+            builders,
             gtk_settings,
         };
 
@@ -139,7 +163,11 @@ impl PreferencesWindow {
         win.wire_responsive();
 
         // Página inicial: última visitada o system
-        let last_page = settings::get_string("preferences.last_page", "system");
+        let mut last_page = settings::get_string("preferences.last_page", "system");
+        if win.navigator.child_by_name(&last_page).is_none() {
+            last_page = "system".to_string();
+        }
+        ensure_page_built(&last_page, &win.builders, &win.navigator);
         win.navigator.set_visible_child_name(&last_page);
         win.sidebar.borrow().select(&last_page);
         win
@@ -262,10 +290,13 @@ impl PreferencesWindow {
         &mut self,
         id: &str,
         _parent_id: &str,
-        builder: impl FnOnce(gtk::Stack) -> crate::widgets::page::Page,
+        builder: impl FnOnce(gtk::Stack) -> crate::widgets::page::Page + 'static,
     ) {
-        let page = builder(self.navigator.clone());
-        self.navigator.add_named(page.widget(), Some(id));
+        let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        container.set_hexpand(true);
+        container.set_vexpand(true);
+        self.navigator.add_named(&container, Some(id));
+        self.builders.borrow_mut().insert(id.to_string(), Box::new(builder));
     }
 
     fn register_main_page(
@@ -273,11 +304,14 @@ impl PreferencesWindow {
         id: &str,
         icon: &str,
         title: &str,
-        builder: impl FnOnce(gtk::Stack) -> crate::widgets::page::Page,
+        builder: impl FnOnce(gtk::Stack) -> crate::widgets::page::Page + 'static,
     ) {
-        let page = builder(self.navigator.clone());
-        self.navigator.add_named(page.widget(), Some(id));
+        let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        container.set_hexpand(true);
+        container.set_vexpand(true);
+        self.navigator.add_named(&container, Some(id));
         self.sidebar.borrow_mut().register_page(id, icon, title);
+        self.builders.borrow_mut().insert(id.to_string(), Box::new(builder));
     }
 
     fn wire_sidebar(&mut self) {
@@ -287,7 +321,9 @@ impl PreferencesWindow {
         let sidebar_revealer = self.sidebar_revealer.clone();
         let is_narrow = Rc::clone(&self.is_narrow);
         let sidebar_select = Rc::clone(&self.sidebar);
+        let builders_for_sidebar = Rc::clone(&self.builders);
         self.sidebar.borrow().connect_page_selected(move |page| {
+            ensure_page_built(page, &builders_for_sidebar, &navigator);
             settings::set("preferences.last_page", serde_json::json!(page));
             sidebar_select.borrow().select(page);
 
@@ -304,11 +340,13 @@ impl PreferencesWindow {
             }
         });
 
-        // Navegación (back / stack) -> sincronizar sidebar
+        // Navegación (back / stack) -> sincronizar sidebar y lazy build
         let sidebar2 = Rc::clone(&self.sidebar);
+        let builders_for_nav = Rc::clone(&self.builders);
         self.navigator
             .connect_visible_child_name_notify(move |stack| {
                 if let Some(name) = stack.visible_child_name() {
+                    ensure_page_built(&name, &builders_for_nav, stack);
                     sidebar2.borrow().select(&name.to_string());
                 }
             });

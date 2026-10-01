@@ -9,8 +9,26 @@ use crate::services::settings;
 pub struct ApplicationsService;
 
 impl ApplicationsService {
-    /// Número de paquetes instalados (pacman -Q), como string.
+    /// Número de paquetes instalados, como string.
+    /// Lee directamente `/var/lib/pacman/local` (<1ms) en lugar de invocar `pacman -Q` (~130ms),
+    /// con fallback a `pacman -Q` si la ruta no fuera legible.
     pub fn count() -> String {
+        if let Ok(entries) = std::fs::read_dir("/var/lib/pacman/local") {
+            let count = entries
+                .flatten()
+                .filter(|entry| {
+                    if let Ok(file_type) = entry.file_type() {
+                        file_type.is_dir() && entry.file_name() != "ALPM_DB_VERSION"
+                    } else {
+                        false
+                    }
+                })
+                .count();
+            if count > 0 {
+                return count.to_string();
+            }
+        }
+
         match Command::new("pacman").arg("-Q").output() {
             Ok(out) => {
                 let text = String::from_utf8_lossy(&out.stdout);

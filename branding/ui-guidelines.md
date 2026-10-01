@@ -49,7 +49,8 @@ No usar efectos excesivos.
 
 Oficialmente usaríamos:
 
-- `JetBrains Mono Nerd Font`
+- `JetBrains Mono` (texto)
+- `Symbols Nerd Font Mono` (iconos)
 
 Y como respaldo:
 

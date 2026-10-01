@@ -20,14 +20,39 @@ while [[ $# -gt 0 ]]; do
 done
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
-if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ]; then
-    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce)" >&2
+if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ]; then
+    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde)" >&2
     exit 1
 fi
 
 PACKAGES_BACKED_UP=0
+unmount_work_submounts() {
+    local target_dir="${1:-work}"
+    if [ -d "$target_dir" ]; then
+        local abs_target
+        abs_target=$(cd "$target_dir" 2>/dev/null && pwd)
+        if [ -n "$abs_target" ]; then
+            local mounts
+            if command -v findmnt >/dev/null 2>&1; then
+                mounts=$(findmnt -lno TARGET 2>/dev/null | grep "^$abs_target/" | sort -r || true)
+            else
+                mounts=$(awk -v p="$abs_target" '$2 ~ "^"p"/" {print $2}' /proc/mounts 2>/dev/null | sort -r || true)
+            fi
+            if [ -n "$mounts" ]; then
+                echo "  [cleanup] Desmontando sistemas de archivos residuales en $target_dir..."
+                while IFS= read -r mnt; do
+                    if [ -n "$mnt" ]; then
+                        sudo umount -l "$mnt" 2>/dev/null || true
+                    fi
+                done <<< "$mounts"
+            fi
+        fi
+    fi
+}
+
 cleanup_temp() {
     echo "[cleanup] Removing temporary build files..."
+    unmount_work_submounts work
     if [ "$HOST_REPO_SYMLINK" -eq 1 ]; then
         echo "[cleanup] Removing host /root/packages symlink..."
         sudo rm -f /root/packages 2>/dev/null || true
@@ -46,6 +71,7 @@ cleanup_temp() {
     rm -f archiso/airootfs/usr/bin/churros-settings 2>/dev/null || true
     rm -f archiso/airootfs/usr/bin/churros-popup 2>/dev/null || true
     rm -f archiso/airootfs/usr/bin/churros-control-center 2>/dev/null || true
+    rm -f archiso/airootfs/usr/bin/churros-tour 2>/dev/null || true
     # GRUB theme copiado al airootfs para que esté disponible en el sistema instalado
     rm -rf archiso/airootfs/usr/share/churros/grub-theme 2>/dev/null || true
 }
@@ -58,15 +84,47 @@ echo "      Edition: ${EDITION^^}"
 echo "======================================"
 echo
 
+# Pre-flight: validar dependencias esenciales del host antes de compilar
+missing_deps=()
+for tool in mkarchiso mksquashfs xorriso; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        missing_deps+=("$tool")
+    fi
+done
+
+if ! command -v grub-mkstandalone >/dev/null 2>&1; then
+    missing_deps+=("grub (comando grub-mkstandalone requerido para uefi.grub)")
+fi
+
+if ! command -v mkfs.fat >/dev/null 2>&1; then
+    missing_deps+=("dosfstools (comando mkfs.fat)")
+fi
+
+if ! command -v mcopy >/dev/null 2>&1 || ! command -v mmd >/dev/null 2>&1; then
+    missing_deps+=("mtools (comandos mcopy y mmd)")
+fi
+
+if [ "${#missing_deps[@]}" -gt 0 ]; then
+    echo "Error: Faltan dependencias en el host para compilar la ISO con mkarchiso:" >&2
+    for dep in "${missing_deps[@]}"; do
+        echo "  - $dep" >&2
+    done
+    echo >&2
+    echo "Instálalas con:" >&2
+    echo "  sudo pacman -S --needed archiso grub dosfstools mtools squashfs-tools libisoburn" >&2
+    exit 1
+fi
+
 # 0. Configurar paquetes según la edición
-if [ "$EDITION" = "xfce" ]; then
-    echo "[0/5] Selecting XFCE packages..."
-    if [ -f archiso/packages.xfce.x86_64 ]; then
+if [ "$EDITION" != "niri" ]; then
+    PKG_LIST="archiso/packages.${EDITION}.x86_64"
+    echo "[0/5] Selecting ${EDITION} packages..."
+    if [ -f "$PKG_LIST" ]; then
         cp archiso/packages.x86_64 archiso/packages.x86_64.orig
         PACKAGES_BACKED_UP=1
-        cp archiso/packages.xfce.x86_64 archiso/packages.x86_64
+        cp "$PKG_LIST" archiso/packages.x86_64
     else
-        echo "Error: archiso/packages.xfce.x86_64 not found!" >&2
+        echo "Error: $PKG_LIST not found!" >&2
         exit 1
     fi
 fi
@@ -75,10 +133,17 @@ fi
 mkdir -p archiso/airootfs/etc
 echo "$EDITION" > archiso/airootfs/etc/churros-edition
 
-# Configurar greetd autologin para la sesión Live
+# Configurar greetd autologin para la sesión Live.
+# SESSION_CMD es el punto de entrada al escritorio de cada edición.
 mkdir -p archiso/airootfs/etc/greetd
-if [ "$EDITION" = "xfce" ]; then
-    cat > archiso/airootfs/etc/greetd/config.toml << 'EOF'
+
+case "$EDITION" in
+    xfce) SESSION_CMD="startxfce4" ;;
+    kde)  SESSION_CMD="startplasma-wayland" ;;
+    *)    SESSION_CMD="niri" ;;
+esac
+
+cat > archiso/airootfs/etc/greetd/config.toml << EOF
 [terminal]
 vt = 7
 
@@ -87,23 +152,9 @@ command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 c
 user = "greeter"
 
 [initial_session]
-command = "startxfce4"
+command = "$SESSION_CMD"
 user = "churros"
 EOF
-else
-    cat > archiso/airootfs/etc/greetd/config.toml << 'EOF'
-[terminal]
-vt = 7
-
-[default_session]
-command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
-user = "greeter"
-
-[initial_session]
-command = "niri"
-user = "churros"
-EOF
-fi
 
 echo "[1/5] Preparing branding..."
 
@@ -146,8 +197,9 @@ CALAMARES_PKG=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | h
 PYWAL_PKG=$(ls archiso/packages/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 YAY_PKG=$(ls archiso/packages/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 BAZAAR_PKG=$(ls archiso/packages/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+WLOGOUT_PKG=$(ls archiso/packages/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 
-if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ]; then
+if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ]; then
     echo "  AUR extras not found — building..."
     bash scripts/build-aur.sh
 fi
@@ -176,7 +228,9 @@ bash scripts/build-rust.sh;
 
 echo "[4/5] Cleaning previous build...";
 
+unmount_work_submounts work
 if mountpoint -q work 2>/dev/null; then
+    echo "  work is mounted (tmpfs) — cleaning contents..."
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
 else
     sudo rm -rf work
@@ -209,10 +263,11 @@ sudo chown -R "$USER:$USER" work out 2>/dev/null || true
 
 echo "[5/5] Cleaning build artifacts..."
 
+unmount_work_submounts work
 if mountpoint -q work 2>/dev/null; then
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
 else
-    rm -rf work 2>/dev/null || true
+    sudo rm -rf work 2>/dev/null || true
 fi
 
 echo

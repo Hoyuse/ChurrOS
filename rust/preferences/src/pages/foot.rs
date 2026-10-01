@@ -3,7 +3,6 @@
 // (equivalente a pages/foot.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -17,10 +16,8 @@ use crate::widgets::row::Row;
 use crate::widgets::slider_row::SliderRow;
 use crate::widgets::switch_row::SwitchRow;
 
-const FONT_FAMILIES: [&str; 7] = [
-    "JetBrainsMono Nerd Font",
+const FONT_FAMILIES: [&str; 5] = [
     "JetBrains Mono",
-    "FiraCode Nerd Font",
     "Inter",
     "Cantarell",
     "Hack",

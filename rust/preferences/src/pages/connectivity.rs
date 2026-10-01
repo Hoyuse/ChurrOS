@@ -3,10 +3,11 @@
 // (equivalente a pages/connectivity.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use gtk::prelude::*;
 
 use crate::services::connectivity::ConnectivityService;
 use crate::widgets::group::Group;

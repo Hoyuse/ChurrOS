@@ -56,7 +56,7 @@ pub fn defaults() -> Value {
         "spacing": 0,
         "height": 30,
         "font-size": 14,
-        "font-family": "JetBrainsMono Nerd Font",
+        "font-family": "JetBrains Mono",
         "background": "#2a1612",
         "foreground": "#c9c4c3",
         "accent": "#DE8636",
@@ -439,10 +439,21 @@ impl WaybarService {
             .get("spacing")
             .and_then(|v| v.as_i64())
             .unwrap_or(d["spacing"].as_i64().unwrap()));
-        cfg["height"] = json!(values
+            
+        let size_val = json!(values
             .get("height")
             .and_then(|v| v.as_i64())
             .unwrap_or(d["height"].as_i64().unwrap()));
+            
+        if let Some(obj) = cfg.as_object_mut() {
+            if position == "left" || position == "right" {
+                obj.insert("width".to_string(), size_val);
+                obj.remove("height");
+            } else {
+                obj.insert("height".to_string(), size_val);
+                obj.remove("width");
+            }
+        }
 
         for key in ["modules-left", "modules-center", "modules-right"] {
             if let Some(modules) = values.get(key) {

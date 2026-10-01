@@ -120,10 +120,21 @@ sudo modprobe kvm_intel   # o kvm_amd para AMD
 # Comprobar que el dispositivo existe
 ls -la /dev/kvm
 
-# Añadir tu usuario al grupo kvm
+# Añadir tu usuario al grupo kvm si no tienes permisos de lectura/escritura
 sudo usermod -aG kvm $USER
 # Cierra sesión y vuelve a entrar
 ```
+
+### "Virtualization (VT-x/AMD-V) is DISABLED in BIOS/UEFI"
+
+Si `./churros doctor` o `./churros run` indican que la virtualización está desactivada:
+1. Reinicia tu equipo y entra en la configuración de la BIOS/UEFI (normalmente pulsando `F2`, `F12`, `Del` o `Esc` al encender).
+2. Busca la sección de configuración de CPU o Seguridad (`Advanced`, `CPU Configuration` o `System Configuration`).
+3. Activa la opción de virtualización:
+   - Para procesadores Intel: **Intel Virtualization Technology** (VT-x) o **Intel VMX**.
+   - Para procesadores AMD: **SVM Mode** (Secure Virtual Machine) o **AMD-V**.
+4. Guarda los cambios (`F10`) y reinicia. Al volver a entrar, `/dev/kvm` estará disponible.
+
 
 ## "OVMF_CODE.4m.fd not found"
 

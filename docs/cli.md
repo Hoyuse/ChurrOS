@@ -46,19 +46,21 @@ Construye una nueva imagen ISO de ChurrOS.
 ```bash
 ./churros build
 ./churros build --edition xfce
+./churros build --edition kde
 ./churros build --edition niri
 ```
 
 Opciones:
-- `--edition <niri|xfce>` (o `-e`): Selecciona el entorno de escritorio de la ISO (por defecto: `niri`).
+- `--edition <niri|xfce|kde>` (o `-e`): Selecciona el entorno de escritorio de la ISO (por defecto: `niri`).
   - `niri`: Compositor Wayland con tiling dinámico horizontal (Waybar, foot, Fuzzel, Mako).
   - `xfce`: Entorno de escritorio clásico X11 (XFCE 4, panel ChurrOS, xfwm4, xfce4-terminal).
 
 Este comando realiza automáticamente:
 
+- Comprobación pre-flight de dependencias críticas del host (grub, dosfstools, mtools, mkarchiso) antes de compilar para evitar fallos tardíos.
 - Configuración de paquetes y dotfiles según la edición seleccionada.
 - Copia de branding y tema GRUB al airootfs.
-- Construcción de paquetes AUR locales si faltan (Calamares, python-pywal, waypaper, yay).
+- Construcción de paquetes AUR locales si faltan (Calamares, python-pywal, yay, wlogout).
 - Compilación de las apps Rust (`scripts/build-rust.sh`) y despliegue en `usr/bin/`.
 - Limpieza del directorio temporal.
 - Ejecución de ArchISO.
@@ -85,6 +87,10 @@ Flags opcionales (detalle en `docs/vm.md`):
 - `--fresh` — resetea `vm/OVMF_VARS.fd` para arrancar desde el CD-ROM.
 - `--clean` — borra el disco de la VM y las variables EFI antes de arrancar.
 
+Comportamiento de aceleración:
+- Si `/dev/kvm` está disponible, usa `-machine q35,accel=kvm` y 4 cores.
+- Si KVM no está disponible o la virtualización está desactivada en la BIOS, emite una advertencia explicativa con instrucciones de solución y utiliza fallback por software con `-cpu max` y 2 cores.
+
 ---
 
 ## clean
@@ -95,11 +101,12 @@ Elimina todos los archivos temporales generados durante la compilación.
 ./churros clean
 ```
 
-Directorios eliminados:
+Directorios y archivos eliminados:
 
 ```text
 work/
 out/
+archiso/airootfs/ (artefactos temporales de build)
 ```
 
 No elimina ningún archivo del código fuente.
@@ -134,11 +141,18 @@ Es el mismo comando que ejecuta el CI en cada Pull Request (ver `.github/workflo
 
 ## doctor
 
-Comprueba que las herramientas del entorno de desarrollo estén instaladas (`mkarchiso`, `qemu-system-x86_64`, `xorriso`, etc.).
+Comprueba que las herramientas del entorno de desarrollo estén instaladas (`mkarchiso`, `qemu-system-x86_64`, `xorriso`, `grub`, `dosfstools`, `mtools`, etc.) y verifica la aceleración por hardware KVM.
 
 ```bash
 ./churros doctor
+./churros doctor --install    # o -i / -y: instala automáticamente dependencias faltantes
 ```
+
+Características:
+- Identifica el nombre del paquete exacto que provee cada comando faltante.
+- Si faltan paquetes, propone el comando `sudo pacman -S --needed ...` y pregunta interactivamente al usuario si desea instalarlos de inmediato (`[S/n]`).
+- Diagnostica si el usuario carece de permisos sobre `/dev/kvm` o si la virtualización (`Intel VT-x` o `AMD SVM`) está deshabilitada en la BIOS/UEFI.
+
 
 ---
 
@@ -152,11 +166,12 @@ Abre las apps propias de ChurrOS en el host, sin construir la ISO ni QEMU.
 ./churros apps welcome
 ./churros apps settings
 ./churros apps control-center
+./churros apps tour
 ./churros apps popup audio
 ./churros apps calamares
 ```
 
-Los targets GTK (`welcome`, `settings`, `control-center`, `popup`) se compilan desde `rust/`. Hace falta sesión gráfica y gtk4/libadwaita. Por defecto corren en modo preview: `HOME` es un directorio temporal y los comandos que cambian el sistema (volumen, red, energía, gsettings, pkill) no se ejecutan. Aparecen como `[churros-dev] blocked:` en stderr. `--live-host` desactiva ese aislamiento.
+Los targets GTK (`welcome`, `settings`, `control-center`, `tour`, `popup`) se compilan desde `rust/`. Hace falta sesión gráfica y gtk4/libadwaita. Por defecto corren en modo preview: `HOME` es un directorio temporal y los comandos que cambian el sistema (volumen, red, energía, gsettings, pkill) no se ejecutan. Aparecen como `[churros-dev] blocked:` en stderr. `--live-host` desactiva ese aislamiento.
 
 `calamares` copia la config del repo a un directorio temporal y lanza el instalador con `-c` sobre ese overlay: no escribe `/etc/calamares`, no usa `sudo`, no pide contraseña, no abre la página de particiones (eso dispara Polkit/KPMCore contra discos reales) y no aplica teclado ni zona horaria a esta sesión. El paso de instalar es un `sleep` (para ver el slideshow) y la página final no ofrece reiniciar. El overlay incluye `qml/` del paquete extraído. `--live-host` está prohibido con este target.
 

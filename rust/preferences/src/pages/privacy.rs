@@ -3,7 +3,6 @@
 // (equivalente a pages/privacy.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use crate::services::privacy::PrivacyService;
 use crate::widgets::group::Group;

@@ -10,7 +10,7 @@ La hoja de ruta puede cambiar conforme evolucione la distribución.
 
 # Estado actual
 
-La versión publicada es **v1.0**. ChurrOS sigue en etapa temprana: hay ISO, escritorio, instalador, apps oficiales, actualizador y rollback, pero aún queda camino a una 1.1.
+La versión publicada es **v1.2**. ChurrOS sigue en etapa temprana: hay ISO, tres ediciones de escritorio (Niri, XFCE y KDE Plasma), instalador, apps oficiales, actualizador y rollback.
 
 El objetivo principal es consolidar esa base (identidad de arranque y repositorio propio) antes de ampliar el alcance.
 
@@ -62,7 +62,7 @@ Construir una experiencia de escritorio moderna.
 - [x] Waybar.
 - [x] foot.
 - [x] Fuzzel.
-- [ ] Wlogout.
+- [x] Wlogout.
 - [x] Notificaciones (mako).
 - [x] Centro de control (churros-control-center).
 - [x] Tema oficial.
@@ -93,7 +93,7 @@ Crear herramientas propias.
 ## Objetivos
 
 - [ ] Repositorio oficial.
-- [ ] Paquetes propios (en desarrollo — Calamares, yay, waypaper y python-pywal se construyen en local).
+- [ ] Paquetes propios (en desarrollo — Calamares, yay, wlogout y python-pywal se construyen en local).
 - [x] ChurrOS CLI.
 - [x] Actualizador (pacman, Flatpak y utilidades de ChurrOS).
 - [x] Rollback con snapshots btrfs (`churros-snapshot` + hook de pacman).
@@ -101,6 +101,7 @@ Crear herramientas propias.
 - [x] Herramienta de configuración (`churros-settings`, Rust).
 - [x] Centro de control (`churros-control-center`, Rust).
 - [x] Popups integrados (`churros-popup`: audio, bluetooth, battery, brightness, network, power).
+- [x] Tour de bienvenida (`churros-tour`, Rust), que se limpia al instalar.
 
 ---
 
@@ -110,9 +111,9 @@ Publicar la primera versión estable.
 
 ## Objetivos
 
-- [x] Versión 1.0.
+- [x] Versión 1.2.
 - [ ] Sitio web.
-- [x] GitHub Releases (v0.6). La ISO actual (**v1.0**) se publica en download.churroslinux.org.
+- [x] GitHub Releases (v0.6). La ISO actual (**v1.2**) se publica en download.churroslinux.org.
 - [ ] Wiki oficial.
 - [ ] Manual de usuario.
 - [ ] Comunidad.
@@ -121,7 +122,7 @@ Publicar la primera versión estable.
 
 # Objetivos a largo plazo
 
-Después de la versión 1.0, ChurrOS buscará convertirse en una distribución Linux completa con identidad propia.
+Después de la versión 1.2, ChurrOS buscará convertirse en una distribución Linux completa con identidad propia.
 
 Algunos objetivos futuros incluyen:
 

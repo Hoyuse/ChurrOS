@@ -22,7 +22,7 @@ scripts/
 │
 ├── build-rust.sh              # Compila crates de rust/ -> archiso/airootfs/usr/bin/
 ├── build-calamares.sh         # Compila Calamares .pkg.tar.zst desde AUR
-├── build-aur.sh               # Compila paquetes AUR (python-pywal, waypaper, yay)
+├── build-aur.sh               # Compila paquetes AUR (python-pywal, yay, wlogout)
 ├── build-bazaar.sh            # Compila la tienda de apps Bazaar
 ├── build-grub-theme.sh        # Genera fuentes .pf2 y assets de GRUB
 ├── build-i18n.sh              # Compila catálogos gettext (po/*.po -> .mo)
@@ -37,7 +37,7 @@ scripts/
 | :--- | :--- | :--- |
 | **`build-rust.sh`** | Compila en release los crates de `rust/` con `deploy = true`. | Binarios en `archiso/airootfs/usr/bin/` |
 | **`build-calamares.sh`** | Compila Calamares con parches locales y libpython acorde al sistema. | `archiso/packages/calamares-*.pkg.tar.zst` |
-| **`build-aur.sh`** | Construye dependencias de AUR necesarias para el Live y el sistema instalado. | `archiso/packages/{python-pywal,waypaper,yay}-*.pkg.tar.zst` |
+| **`build-aur.sh`** | Construye dependencias de AUR necesarias para el Live y el sistema instalado. | `archiso/packages/{python-pywal,yay,wlogout}-*.pkg.tar.zst` |
 | **`build-bazaar.sh`** | Compila Bazaar resolviendo conflictos con libdex del repositorio. | `archiso/packages/bazaar-*.pkg.tar.zst` |
 | **`build-grub-theme.sh`** | Convierte fuentes TTF a formato de mapa de bits de GRUB (`.pf2`). | `branding/grub-theme/*.pf2` |
 | **`build-i18n.sh`** | Compila archivos `.po` de localización con `msgfmt`. | `archiso/airootfs/usr/share/locale/*/LC_MESSAGES/churros.mo` |

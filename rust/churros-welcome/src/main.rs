@@ -4,6 +4,8 @@ mod assets;
 mod cards;
 mod footer;
 mod header;
+mod system_card;
+mod system_info;
 
 use gtk::prelude::*;
 use adw::prelude::*;
@@ -45,7 +47,7 @@ fn load_css() {
     if local.is_file() {
         provider.load_from_path(&local);
     } else {
-        provider.load_from_data(include_str!("../assets/style.css"));
+        provider.load_from_string(include_str!("../assets/style.css"));
     }
     if let Some(display) = gtk::gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
@@ -60,7 +62,7 @@ fn load_css() {
     let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
-        provider.load_from_data(&css);
+        provider.load_from_string(&css);
         if let Some(display) = gtk::gdk::Display::default() {
             gtk::style_context_add_provider_for_display(
                 &display,
@@ -77,17 +79,14 @@ fn activate(app: &adw::Application) {
     let window = adw::ApplicationWindow::builder()
         .application(app)
         .title("ChurrOS Welcome")
+        .default_width(900)
+        .default_height(680)
         .build();
 
     window.add_css_class("welcome");
-    window.set_default_size(900, 680);
     window.set_size_request(480, 400);
-    window.set_resizable(true);
-    window.set_decorated(true);
 
     let header_bar = adw::HeaderBar::new();
-    header_bar.set_show_end_title_buttons(true);
-    header_bar.set_show_start_title_buttons(true);
     header_bar.add_css_class("flat");
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 24);
@@ -96,27 +95,34 @@ fn activate(app: &adw::Application) {
     content.set_margin_start(24);
     content.set_margin_end(24);
 
-    content.set_halign(gtk::Align::Center);
-    content.set_valign(gtk::Align::Start);
-    content.set_hexpand(true);
-    content.set_vexpand(true);
-
     content.append(&header::build());
     content.append(&cards::build());
     content.append(&footer::build());
 
+    // Ancho máximo del contenido: en pantallas anchas las cards se quedan
+    // centradas en vez de repartirse de lado a lado. Antes dependía de
+    // hexpand/vexpand en el ScrolledWindow, que no es como se dimensiona un
+    // ScrolledWindow (mide a su hijo), así que en pantallas grandes el
+    // contenido se pegaba a los bordes.
+    let clamp = adw::Clamp::new();
+    clamp.set_maximum_size(840);
+    clamp.set_tightening_threshold(760);
+    clamp.set_child(Some(&content));
+
     let scroller = gtk::ScrolledWindow::new();
     scroller.set_policy(gtk::PolicyType::Automatic, gtk::PolicyType::Automatic);
-    scroller.set_child(Some(&content));
-    scroller.set_hexpand(true);
     scroller.set_vexpand(true);
+    scroller.set_child(Some(&clamp));
     scroller.add_css_class("content-scroller");
 
-    let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    main_box.append(&header_bar);
-    main_box.append(&scroller);
+    // ToolbarView es lo que espera libadwaita: la HeaderBar se ancla arriba y
+    // los botones de ventana los gestiona la propia toolbar view, en vez de
+    // un Box vertical con la barra pegada al ScrolledWindow.
+    let toolbar_view = adw::ToolbarView::new();
+    toolbar_view.add_top_bar(&header_bar);
+    toolbar_view.set_content(Some(&scroller));
 
-    window.set_content(Some(&main_box));
+    window.set_content(Some(&toolbar_view));
 
     window.present();
 }

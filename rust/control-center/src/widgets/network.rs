@@ -30,21 +30,64 @@ impl NetworkCard {
 
     pub fn apply_info(&self, info: &SystemInfo) {
         if info.ethernet_connected {
-            let subtitle = format!("Ethernet{}", 
-                if !info.ethernet_name.is_empty() { format!(" • {}", info.ethernet_name) } else { String::new() });
+            let subtitle = if !info.ethernet_name.is_empty() {
+                info.ethernet_name.clone()
+            } else {
+                "Ethernet".to_string()
+            };
+            let speed_str = if let Some(sp) = info.ethernet_speed {
+                format!("{sp} Mbit/s")
+            } else if !info.network_rate_down.is_empty() {
+                format!("⇣ {}", info.network_rate_down)
+            } else {
+                String::new()
+            };
             self.card.set_state(Some(&subtitle), Some("ethernet.svg"));
+            self.card.set_detail(Some(&speed_str));
+            let tooltip = format!(
+                "Ethernet: {}\nVelocidad: {}",
+                subtitle,
+                if speed_str.is_empty() { "Conectado" } else { &speed_str }
+            );
+            self.card.button.set_tooltip_text(Some(&tooltip));
             return;
         }
 
         if !info.wifi_connected && info.wifi_strength == 0 && info.wifi_name.is_empty() {
             self.card.set_state(Some("Unavailable"), Some("wifi.svg"));
+            self.card.set_detail(None);
+            self.card.button.set_tooltip_text(Some("Red no disponible"));
             return;
         }
 
         if info.wifi_connected {
             self.card.set_state(Some(&info.wifi_name), Some("wifi.svg"));
+
+            let mut speed_detail = String::new();
+            if !info.wifi_speed.is_empty() {
+                speed_detail.push_str(&info.wifi_speed);
+            }
+            if !info.network_rate_down.is_empty() {
+                if !speed_detail.is_empty() {
+                    speed_detail.push_str(" • ");
+                }
+                speed_detail.push_str(&info.network_rate_down);
+            }
+
+            self.card.set_detail(Some(&speed_detail));
+
+            let tooltip = format!(
+                "Wi-Fi: {}\nVelocidad de enlace: {}\nTráfico: {}\nSeñal: {}%",
+                info.wifi_name,
+                if info.wifi_speed.is_empty() { "—" } else { &info.wifi_speed },
+                if info.network_rate_down.is_empty() { "—" } else { &info.network_rate_down },
+                info.wifi_strength
+            );
+            self.card.button.set_tooltip_text(Some(&tooltip));
         } else {
             self.card.set_state(Some("Disconnected"), Some("wifi.svg"));
+            self.card.set_detail(None);
+            self.card.button.set_tooltip_text(Some("Desconectado"));
         }
     }
 }

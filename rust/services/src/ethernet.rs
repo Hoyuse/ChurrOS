@@ -63,11 +63,11 @@ pub fn get() -> EthernetInfo {
 }
 
 pub fn speed(device: &str) -> Option<u32> {
-    let (code, out) = run_stdout(&["cat", &format!("/sys/class/net/{device}/speed")])?;
-    if code != 0 {
-        return None;
-    }
-    out.trim().parse::<u32>().ok()
+    std::fs::read_to_string(format!("/sys/class/net/{device}/speed"))
+        .ok()?
+        .trim()
+        .parse::<u32>()
+        .ok()
 }
 
 pub fn ip(device: &str) -> Option<String> {

@@ -104,7 +104,7 @@ impl FootConfig {
     // ------------------------------------------------------------ Getters
 
     pub fn get_font() -> String {
-        get_key("main", "font", "JetBrainsMono Nerd Font:size=10")
+        get_key("main", "font", "JetBrains Mono:size=10")
     }
 
     pub fn get_pad() -> String {
@@ -192,5 +192,36 @@ impl FootConfig {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .spawn();
+    }
+
+    pub fn apply_pywal(colors: &serde_json::Map<String, serde_json::Value>, special: &serde_json::Map<String, serde_json::Value>) {
+        let mut lines = read_lines();
+        
+        if let Some(bg) = special.get("background").and_then(|v| v.as_str()) {
+            let bg = bg.trim_start_matches('#');
+            set_key(&mut lines, "colors-dark", "background", bg);
+            set_key(&mut lines, "colors-light", "background", bg);
+        }
+        if let Some(fg) = special.get("foreground").and_then(|v| v.as_str()) {
+            let fg = fg.trim_start_matches('#');
+            set_key(&mut lines, "colors-dark", "foreground", fg);
+            set_key(&mut lines, "colors-light", "foreground", fg);
+        }
+        for i in 0..8 {
+            if let Some(c) = colors.get(&format!("color{i}")).and_then(|v| v.as_str()) {
+                let c = c.trim_start_matches('#');
+                set_key(&mut lines, "colors-dark", &format!("regular{i}"), c);
+                set_key(&mut lines, "colors-light", &format!("regular{i}"), c);
+            }
+        }
+        for i in 8..16 {
+            if let Some(c) = colors.get(&format!("color{i}")).and_then(|v| v.as_str()) {
+                let c = c.trim_start_matches('#');
+                set_key(&mut lines, "colors-dark", &format!("bright{}", i - 8), c);
+                set_key(&mut lines, "colors-light", &format!("bright{}", i - 8), c);
+            }
+        }
+        write_atomic(&lines);
+        Self::reload();
     }
 }

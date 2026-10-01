@@ -217,6 +217,11 @@ pub struct ThemeService;
 impl ThemeService {
     /// Corregir leftovers de Adwaita-dark y claves obsoletas *antes* de gtk_init.
     pub fn migrate_before_gtk() {
+        let stamp = cache_dir().join("migrated-adwaita");
+        if stamp.exists() {
+            return;
+        }
+
         migrate_adwaita_dark_ini(&gtk_ini("gtk-3.0"));
         migrate_adwaita_dark_ini(&gtk_ini("gtk-4.0"));
         clean_gtk4_ini(&gtk_ini("gtk-4.0"));
@@ -232,6 +237,9 @@ impl ThemeService {
                     .output();
             }
         }
+
+        let _ = fs::create_dir_all(cache_dir());
+        let _ = fs::write(&stamp, "1");
     }
 
     pub fn is_dark() -> bool {

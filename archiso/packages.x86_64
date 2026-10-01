@@ -59,7 +59,9 @@ openssh
 openvpn
 partclone
 parted
+pciutils
 pptpclient
+procps-ng
 pv
 qemu-guest-agent
 refind
@@ -165,7 +167,6 @@ wireplumber
 grim
 slurp
 wl-clipboard
-rust
 
 ttf-dejavu
 noto-fonts
@@ -176,7 +177,8 @@ libadwaita
 gobject-introspection
 awww
 ddcutil
-ttf-jetbrains-mono-nerd
+ttf-jetbrains-mono
+ttf-nerd-fonts-symbols-mono
 otf-font-awesome
 firefox
 pavucontrol
@@ -184,6 +186,7 @@ network-manager-applet
 swaybg
 fuzzel
 mako
+wlogout
 wlsunset
 playerctl
 pamixer

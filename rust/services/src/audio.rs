@@ -98,6 +98,10 @@ pub fn get_input_volume() -> u8 {
     get_default_volume(SOURCE).0
 }
 
+pub fn get_volume_status() -> (u8, bool) {
+    get_default_volume(SINK)
+}
+
 pub fn is_muted() -> bool {
     get_default_volume(SINK).1
 }

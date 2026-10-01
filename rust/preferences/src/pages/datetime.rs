@@ -12,7 +12,6 @@ use crate::services::datetime::DatetimeService;
 use crate::widgets::group::Group;
 use crate::widgets::page::Page;
 use crate::widgets::row::Row;
-use crate::widgets::switch_row::SwitchRow;
 
 struct TzUi {
     entry: gtk::SearchEntry,

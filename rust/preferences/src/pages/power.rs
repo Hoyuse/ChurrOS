@@ -3,7 +3,6 @@
 // (equivalente a pages/power.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use crate::widgets::group::Group;
 use crate::widgets::navigation_row;

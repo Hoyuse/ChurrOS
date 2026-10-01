@@ -69,6 +69,64 @@ fn find_desktop_file(app_id: &str) -> Option<PathBuf> {
     None
 }
 
+/// Tokeniza una línea `Exec=` de un .desktop al estilo de la especificación:
+/// comillas dobles y barras invertidas escapan, las comillas simples no son
+/// especiales. Devuelve None si queda una comilla sin cerrar.
+///
+/// Se usa en lugar de `sh -c`: pasar la línea a un shell convierte cualquier
+/// .desktop escrito por el usuario (basta con crear
+/// ~/.local/share/applications/calamares.desktop) en ejecución de órdenes.
+fn tokenize_exec(line: &str) -> Option<Vec<String>> {
+    let mut out: Vec<String> = Vec::new();
+    let mut cur = String::new();
+    let mut has_token = false;
+    let mut in_quotes = false;
+    let mut escaped = false;
+
+    for ch in line.chars() {
+        if escaped {
+            cur.push(ch);
+            escaped = false;
+            has_token = true;
+            continue;
+        }
+        match ch {
+            '\\' if !in_quotes => escaped = true,
+            '"' => {
+                in_quotes = !in_quotes;
+                has_token = true;
+            }
+            c if c.is_whitespace() && !in_quotes => {
+                if has_token {
+                    out.push(std::mem::take(&mut cur));
+                    has_token = false;
+                }
+            }
+            c => {
+                cur.push(c);
+                has_token = true;
+            }
+        }
+    }
+
+    if escaped || in_quotes {
+        return None;
+    }
+    if has_token {
+        out.push(cur);
+    }
+    if out.is_empty() {
+        None
+    } else {
+        Some(out)
+    }
+}
+
+/// Programas que el welcome app puede lanzar. El lanzador del instalador es
+/// una superficie privilegiada: no se ejecuta cualquier .desktop que aparezca
+/// en el XDG_DATA_HOME del usuario.
+const ALLOWED_LAUNCHERS: &[&str] = &["/usr/local/bin/calamares", "/usr/bin/calamares"];
+
 fn desktop_exec(app_id: &str) -> Option<String> {
     let path = find_desktop_file(app_id)?;
     let content = std::fs::read_to_string(path).ok()?;
@@ -113,14 +171,22 @@ fn launch_installer(parent: &gtk::Button) {
         return;
     }
 
-    match desktop_exec("calamares.desktop") {
-        Some(exec) => {
-            let launched = Command::new("sh")
-                .arg("-c")
-                .arg(&exec)
-                .spawn()
-                .map(|_| ())
-                .is_ok();
+    match desktop_exec("calamares.desktop").as_deref().and_then(tokenize_exec) {
+        Some(argv) => {
+            let launched = if ALLOWED_LAUNCHERS.contains(&argv[0].as_str()) {
+                // Sin shell: el Exec se pasa como argv a execvp.
+                Command::new(&argv[0])
+                    .args(&argv[1..])
+                    .spawn()
+                    .map(|_| ())
+                    .is_ok()
+            } else {
+                eprintln!(
+                    "[welcome] launcher no permitido: {}",
+                    argv.first().map(|s| s.as_str()).unwrap_or("")
+                );
+                false
+            };
 
             if !launched {
                 show_alert(parent);
@@ -140,5 +206,62 @@ fn show_alert(parent: &gtk::Button) {
         dialog.show(Some(&root));
     } else {
         dialog.show(None::<&gtk::Window>);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::tokenize_exec;
+
+    #[test]
+    fn tokenizes_plain_command() {
+        assert_eq!(
+            tokenize_exec("/usr/local/bin/calamares"),
+            Some(vec!["/usr/local/bin/calamares".to_string()])
+        );
+    }
+
+    #[test]
+    fn keeps_quoted_argument_together() {
+        assert_eq!(
+            tokenize_exec("\"/usr/local/bin/calamares\" --plain"),
+            Some(vec![
+                "/usr/local/bin/calamares".to_string(),
+                "--plain".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn honours_backslash_escapes() {
+        assert_eq!(
+            tokenize_exec("/usr/local/bin/calamares a\\ b"),
+            Some(vec![
+                "/usr/local/bin/calamares".to_string(),
+                "a b".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn rejects_unterminated_quote() {
+        assert_eq!(tokenize_exec("/usr/local/bin/calamares \"unclosed"), None);
+    }
+
+    #[test]
+    fn does_not_split_on_shell_metacharacters() {
+        // Antes esto pasaba por `sh -c` y era ejecución de órdenes.
+        assert_eq!(
+            tokenize_exec("/usr/local/bin/calamares; id"),
+            Some(vec![
+                "/usr/local/bin/calamares;".to_string(),
+                "id".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn rejects_empty() {
+        assert_eq!(tokenize_exec("   "), None);
     }
 }

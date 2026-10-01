@@ -3,7 +3,6 @@
 // (equivalente a pages/input.py)
 // ==========================================
 
-use gtk::prelude::*;
 
 use std::process::Command;
 

@@ -12,7 +12,7 @@ cd "$REPO_ROOT"
 CARGO_MANIFEST="$REPO_ROOT/rust/Cargo.toml"
 CALAMARES_SRC="$REPO_ROOT/installer/calamares"
 PREVIEW_DIR="$CALAMARES_SRC/preview"
-POPUPS=(network audio bluetooth power brightness battery)
+POPUPS=(network audio volume bluetooth power brightness battery)
 
 LIVE_HOST=0
 TMP_DIRS=()
@@ -64,8 +64,8 @@ show_help() {
 Usage:
   ./churros apps
   ./churros apps doctor
-  ./churros apps welcome|settings|control-center|calamares
-  ./churros apps popup <audio|network|bluetooth|brightness|battery|power>
+  ./churros apps welcome|settings|control-center|tour|calamares
+  ./churros apps popup <audio|volume|network|bluetooth|brightness|battery|power>
 
 Open ChurrOS apps on this machine without building the ISO.
 
@@ -217,6 +217,7 @@ prepare_calamares_stubs() {
 crate_bin_name() {
     case "$1" in
         churros-welcome) printf '%s\n' churros-welcome ;;
+        churros-tour) printf '%s\n' churros-tour ;;
         churros-settings) printf '%s\n' churros-settings ;;
         churros-control-center) printf '%s\n' churros-control-center ;;
         churros-popup) printf '%s\n' churros-popup ;;
@@ -257,6 +258,7 @@ run_gtk_crate() {
         XDG_DATA_HOME="$DEV_HOME/.local/share" \
         XDG_STATE_HOME="$DEV_HOME/.local/state" \
         XDG_CACHE_HOME="$DEV_HOME/.cache" \
+        CHURROS_TOUR_PREVIEW=1 \
         PATH="$DEV_BIN:$PATH" \
         "$bin" "$@"
 }
@@ -480,6 +482,9 @@ case "${TARGET:-}" in
         ;;
     welcome)
         run_gtk_crate churros-welcome "${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"}"
+        ;;
+    tour)
+        run_gtk_crate churros-tour "${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"}"
         ;;
     settings)
         run_gtk_crate churros-settings "${TARGET_ARGS[@]+"${TARGET_ARGS[@]}"}"

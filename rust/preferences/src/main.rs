@@ -3,6 +3,9 @@
 // (equivalente a main.py)
 // ==========================================
 
+#![allow(dead_code)]
+#![allow(deprecated)]
+
 mod assets;
 mod logging;
 mod pages;
@@ -58,7 +61,7 @@ fn load_css() {
     if local.is_file() {
         provider.load_from_path(&local);
     } else {
-        provider.load_from_data(include_str!("../assets/style.css"));
+        provider.load_from_string(include_str!("../assets/style.css"));
     }
     if let Some(display) = gdk::Display::default() {
         gtk::style_context_add_provider_for_display(
