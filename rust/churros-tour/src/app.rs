@@ -1,5 +1,4 @@
 use adw::prelude::*;
-use gtk::prelude::*;
 
 use crate::pages;
 

@@ -7,7 +7,6 @@ use std::time::Duration;
 
 use adw::prelude::*;
 use glib::ControlFlow;
-use gtk::prelude::*;
 
 thread_local! {
     static SELECTED_PACKAGES: RefCell<HashSet<String>> = RefCell::new(HashSet::new());

@@ -1,5 +1,4 @@
 use adw::prelude::*;
-use gtk::prelude::*;
 
 pub fn build() -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 10);
@@ -48,6 +47,21 @@ pub fn build() -> gtk::Box {
             ],
         )
     };
+
+    let title_label = gtk::Label::new(Some(title));
+    title_label.add_css_class("page-title");
+    title_label.set_halign(gtk::Align::Center);
+
+    let subtitle = gtk::Label::new(Some(description));
+    subtitle.add_css_class("page-subtitle");
+    subtitle.set_halign(gtk::Align::Center);
+    subtitle.set_wrap(true);
+    subtitle.set_justify(gtk::Justification::Center);
+
+    let listbox = gtk::ListBox::new();
+    listbox.add_css_class("boxed-list");
+    listbox.set_margin_start(32);
+    listbox.set_margin_end(32);
 
     for (keys, action) in shortcuts {
         let row = adw::ActionRow::builder()
