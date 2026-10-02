@@ -57,6 +57,37 @@ EOF
         ln -sf /usr/share/churros/wallpapers/default.png "$wp_dir/contents/images_dark/5120x2880.png" 2>/dev/null || true
         ln -sf /usr/share/churros/wallpapers/default.png "$wp_dir/contents/screenshot.png" 2>/dev/null || true
     done
+
+    # Asegurar que el botón de inicio de Plasma (Kickoff) use el logo de ChurrOS
+    mkdir -p /usr/share/icons/hicolor/scalable/apps /usr/share/icons/hicolor/scalable/places
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/places/start-here-kde.svg 2>/dev/null || true
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/places/start-here.svg 2>/dev/null || true
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/places/distributor-logo.svg 2>/dev/null || true
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/apps/start-here-kde.svg 2>/dev/null || true
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/apps/start-here.svg 2>/dev/null || true
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/apps/distributor-logo.svg 2>/dev/null || true
+    ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg /usr/share/icons/hicolor/scalable/apps/distributor-logo-arch.svg 2>/dev/null || true
+
+    for icondir in /usr/share/icons/breeze* /usr/share/icons/Papirus*; do
+        if [ -d "$icondir" ]; then
+            for icon_name in start-here-kde start-here distributor-logo distributor-logo-arch distributor-logo-archlinux; do
+                find "$icondir" -type f \( -name "${icon_name}.svg" -o -name "${icon_name}.png" \) -exec ln -sf /usr/share/icons/hicolor/scalable/apps/churros-logo.svg {} + 2>/dev/null || true
+            done
+        fi
+    done
+
+    # Configurar icono y favoritos de ChurrOS en los templates de layout de Plasma
+    for ljs in /usr/share/plasma/shells/org.kde.plasma.desktop/contents/layout.js /usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents/layout.js; do
+        if [ -f "$ljs" ]; then
+            sed -i 's|panel\.addWidget("org\.kde\.plasma\.kickoff")|kickoff = panel.addWidget("org.kde.plasma.kickoff"); kickoff.currentConfigGroup = ["General"]; kickoff.writeConfig("icon", "churros-logo"); kickoff.writeConfig("useCustomButtonImage", "true"); kickoff.writeConfig("customButtonImage", "/usr/share/icons/hicolor/scalable/apps/churros-logo.svg")|g' "$ljs" 2>/dev/null || true
+        fi
+    done
+
+    # Reemplazar la aplicación de configuración de KDE (systemsettings) por churros-settings
+    if [ -f /usr/bin/systemsettings ] && [ ! -L /usr/bin/systemsettings ]; then
+        mv /usr/bin/systemsettings /usr/bin/systemsettings.kde-orig 2>/dev/null || true
+        ln -sf /usr/bin/churros-settings /usr/bin/systemsettings
+    fi
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri

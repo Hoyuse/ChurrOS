@@ -61,6 +61,11 @@ bash /root/scripts/services.sh
 # shellprocess@pacman-init de Calamares. Y un `pacman -Sy` en pleno build solo
 # descarga bases de datos que nadie consulta durante la construcción.
 
+# Ensure multilib is enabled in live environment pacman.conf
+if [ -f /etc/pacman.conf ] && grep -q '^#\[multilib\]' /etc/pacman.conf; then
+    sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
+fi
+
 echo "Configuring desktop..."
 bash /root/scripts/desktop.sh
 

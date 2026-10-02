@@ -138,7 +138,7 @@ pub fn activate(app: &adw::Application) {
             "customization" => {
                 // Here we should trigger the installation logic in the install page
                 stack_for_next.set_visible_child_name("install");
-                pages::install::start_installation();
+                pages::install::start_installation(window_clone.clone());
             },
             "install" => {
                 // Handle autostart logic

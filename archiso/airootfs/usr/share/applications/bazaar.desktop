@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Bazaar
+GenericName=Tienda de Aplicaciones
+Comment=Explora e instala aplicaciones
+Exec=bazaar
+Icon=io.github.kolunmi.Bazaar
+Terminal=false
+Categories=System;PackageManager;
+StartupNotify=true

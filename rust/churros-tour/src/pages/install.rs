@@ -81,7 +81,34 @@ fn detect_drivers() -> Vec<String> {
     drivers
 }
 
-pub fn start_installation() {
+fn detect_terminal() -> (String, Vec<String>) {
+    let ed = churros_services::version::edition();
+    if ed == "kde" && which_exists("konsole") {
+        return ("konsole".to_string(), vec!["--hide-menubar".to_string(), "-e".to_string()]);
+    } else if (ed == "xfce" || ed == "server") && which_exists("xfce4-terminal") {
+        return ("xfce4-terminal".to_string(), vec!["--hide-menubar".to_string(), "-x".to_string()]);
+    }
+
+    if which_exists("foot") {
+        ("foot".to_string(), vec!["-a".to_string(), "churros-installer".to_string(), "-W".to_string(), "80x24".to_string(), "-e".to_string()])
+    } else if which_exists("konsole") {
+        ("konsole".to_string(), vec!["--hide-menubar".to_string(), "-e".to_string()])
+    } else if which_exists("xfce4-terminal") {
+        ("xfce4-terminal".to_string(), vec!["--hide-menubar".to_string(), "-x".to_string()])
+    } else {
+        ("xterm".to_string(), vec!["-e".to_string()])
+    }
+}
+
+fn which_exists(bin: &str) -> bool {
+    Command::new("which")
+        .arg(bin)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+pub fn start_installation(window: adw::ApplicationWindow) {
     let mut pkgs: Vec<String> = SELECTED_PACKAGES.with(|set| {
         set.borrow().iter().cloned().collect()
     });
@@ -92,7 +119,7 @@ pub fn start_installation() {
     if pkgs.is_empty() {
         STATUS_LABEL.with(|l| {
             if let Some(lbl) = l.borrow().as_ref() {
-                lbl.set_label("No seleccionaste paquetes. ¡Todo listo!");
+                lbl.set_label("No seleccionaste paquetes. ¡Todo listo! Cerrando...");
             }
         });
         PROGRESS_BAR.with(|p| {
@@ -100,33 +127,32 @@ pub fn start_installation() {
                 bar.set_fraction(1.0);
             }
         });
+        handle_autostart(false);
+        let w = window.clone();
+        gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(1000), move || {
+            w.close();
+        });
         return;
     }
 
     STATUS_LABEL.with(|l| {
         if let Some(lbl) = l.borrow().as_ref() {
-            lbl.set_label("Por favor, sigue las instrucciones en la terminal emergente...");
+            lbl.set_label("Instalando paquetes seleccionados...");
         }
     });
 
-    // We start foot terminal running the yay installation.
-    // This allows the user to see the process, enter passwords and diagnose issues.
     let pkgs_str = pkgs.join(" ");
     let sh_cmd = format!(
-        "yay -Sy --needed --noconfirm {}; echo '\n[ChurrOS] Proceso terminado. Presiona Enter para cerrar.'; read", 
+        "yay -Sy --needed --noconfirm {}; STATUS=$?; if [ $STATUS -eq 0 ]; then echo '\n[ChurrOS] ¡Instalación completada con éxito!'; sleep 2; else echo '\n[ChurrOS] Ocurrió un error. Presiona Enter para cerrar.'; read; fi", 
         pkgs_str
     );
 
-    let args = vec![
-        "foot".to_string(),
-        "-a".to_string(),
-        "churros-installer".to_string(), // App ID to set float rules if any
-        "-W".to_string(), "80x24".to_string(),
-        "-e".to_string(),
-        "sh".to_string(),
-        "-c".to_string(),
-        sh_cmd,
-    ];
+    let (term_bin, mut term_flags) = detect_terminal();
+    let mut args = vec![term_bin];
+    args.append(&mut term_flags);
+    args.push("sh".to_string());
+    args.push("-c".to_string());
+    args.push(sh_cmd);
 
     let os_args: Vec<&std::ffi::OsStr> = args.iter().map(|s| std::ffi::OsStr::new(s)).collect();
 
@@ -155,6 +181,7 @@ pub fn start_installation() {
         gtk::glib::ControlFlow::Continue
     });
 
+    let window_clone = window.clone();
     subprocess.wait_async(
         gio::Cancellable::NONE,
         move |_res| {
@@ -167,8 +194,15 @@ pub fn start_installation() {
             });
             STATUS_LABEL.with(|l| {
                 if let Some(lbl) = l.borrow().as_ref() {
-                    lbl.set_label("¡Instalación completada!");
+                    lbl.set_label("¡Instalación completada! Cerrando ChurrOS Tour...");
                 }
+            });
+
+            handle_autostart(false);
+
+            let w = window_clone.clone();
+            gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(800), move || {
+                w.close();
             });
         }
     );
