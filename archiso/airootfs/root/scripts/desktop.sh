@@ -88,6 +88,21 @@ EOF
         mv /usr/bin/systemsettings /usr/bin/systemsettings.kde-orig 2>/dev/null || true
         ln -sf /usr/bin/churros-settings /usr/bin/systemsettings
     fi
+
+    # Ocultar las entradas de escritorio de systemsettings y discover de KDE
+    for ss_desktop in /usr/share/applications/*systemsettings*.desktop /usr/share/applications/*discover*.desktop; do
+        if [ -f "$ss_desktop" ]; then
+            sed -i '/^Exec=/c\Exec=churros-settings' "$ss_desktop" 2>/dev/null || true
+            sed -i '/^NoDisplay=/d; /^Hidden=/d' "$ss_desktop" 2>/dev/null || true
+            echo "NoDisplay=true" >> "$ss_desktop"
+            echo "Hidden=true" >> "$ss_desktop"
+        fi
+    done
+
+    # Symlink para compatibilidad de bazaar.desktop con io.github.kolunmi.Bazaar.desktop
+    if [ -f /usr/share/applications/io.github.kolunmi.Bazaar.desktop ]; then
+        ln -sf /usr/share/applications/io.github.kolunmi.Bazaar.desktop /usr/share/applications/bazaar.desktop 2>/dev/null || true
+    fi
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri
