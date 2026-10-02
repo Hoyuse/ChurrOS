@@ -45,11 +45,18 @@ XDG_SESSION_TYPE=wayland
 DESKTOP_SESSION=plasma
 EOF
 
-    # Plasma arranca con su propio lanzador (startplasma-wayland); lo unico que
-    # hace falta es dejar el fondo de ChurrOS entre los predeterminados para
-    # que aparezca en la primera sesion.
+    # Plasma arranca con su propio lanzador (startplasma-wayland).
+    # Asegurar que el fondo de ChurrOS se aplique como fondo predeterminado en Plasma.
     mkdir -p /usr/share/backgrounds/xdg
     cp -f /usr/share/churros/wallpapers/default.png /usr/share/backgrounds/xdg/churros.png
+
+    # Enlazar sobre los fondos predeterminados de Plasma (Next / Breeze)
+    for wp_dir in /usr/share/wallpapers/Next /usr/share/wallpapers/Breeze; do
+        mkdir -p "$wp_dir/contents/images" "$wp_dir/contents/images_dark" 2>/dev/null || true
+        ln -sf /usr/share/churros/wallpapers/default.png "$wp_dir/contents/images/5120x2880.png" 2>/dev/null || true
+        ln -sf /usr/share/churros/wallpapers/default.png "$wp_dir/contents/images_dark/5120x2880.png" 2>/dev/null || true
+        ln -sf /usr/share/churros/wallpapers/default.png "$wp_dir/contents/screenshot.png" 2>/dev/null || true
+    done
 else
     cat > "$SESSION_FILE" << 'EOF'
 XDG_CURRENT_DESKTOP=niri

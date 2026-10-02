@@ -284,10 +284,11 @@ El comando de sesión queda escrito en `/etc/greetd/environments` por `configure
 
 La capa de shell de Niri no se instala en esta edición: `niri`, Waybar, foot, Fuzzel, Mako, swaybg, grim/slurp y swaylock/swayidle se sustituyen por los equivalentes de Plasma (KRunner, paneles de Plasma, Konsole, notificaciones de Plasma, capturas con Spectacle y kscreenlocker).
 
-## Limitaciones conocidas
+## Personalización e Integración con ChurrOS
 
-- `churros-apply-wallpaper` no funciona bajo Plasma: usa `swww`/`awww`, que dependen de *layer-shell* de wlroots y KWin no lo implementa. El fondo de ChurrOS sí se instala entre los predeterminados de Plasma.
-- Las páginas de `churros-settings` que editan `waybar`, `foot`, `fuzzel` o `mako` no tienen efecto en esta edición.
+- **Fondo de pantalla:** `churros-apply-wallpaper` y el selector de fondos de `churros-settings` aplican fondos en vivo vía `plasma-apply-wallpaperimage`. Además, el fondo predeterminado de ChurrOS se enlaza como fondo del sistema en Plasma.
+- **Branding y Tema:** ChurrOS Dark (`ChurroOSDark.colors`) con acento naranja (#F97316), iconos Papirus-Dark, fuentes Inter y cursor Adwaita se sincronizan automáticamente con Plasma 6 y sus apps GTK/Qt.
+- **Ajustes adaptados:** `churros-settings` detecta la edición KDE y oculta dinámicamente las páginas y opciones exclusivas de Niri/Waybar/Foot/Fuzzel/Mako, integrando accesos directos a las Preferencias del Sistema de KDE (KCM) para pantalla, teclado, ratón, bloqueo y luz nocturna.
 
 ## Estructura de configuración (xfconf y GTK)
 

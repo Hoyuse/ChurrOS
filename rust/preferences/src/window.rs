@@ -221,8 +221,8 @@ impl PreferencesWindow {
             self.register_subpage("mako", "appearance", |n| pages::mako::build(n));
         }
         self.register_subpage("wallpaper", "appearance", |n| pages::wallpaper::build(n));
-        self.register_subpage("night-light", "appearance", |n| pages::night_light::build(n));
         if is_niri {
+            self.register_subpage("night-light", "appearance", |n| pages::night_light::build(n));
             self.register_subpage("lock-screen", "appearance", |n| pages::lock_screen::build(n));
             self.register_subpage("window-rules", "appearance", |n| pages::window_rules::build(n));
         }
@@ -261,9 +261,9 @@ impl PreferencesWindow {
             }
             s.register_subpage(
                 "wallpaper", "appearance", "Fondo", "Cambiar el fondo de pantalla", Some("wallpaper.svg"));
-            s.register_subpage(
-                "night-light", "appearance", "Luz nocturna", "Temperatura de color y filtro de luz azul", Some("night_light.svg"));
             if is_niri {
+                s.register_subpage(
+                    "night-light", "appearance", "Luz nocturna", "Temperatura de color y filtro de luz azul", Some("night_light.svg"));
                 s.register_subpage(
                     "lock-screen", "appearance", "Pantalla de bloqueo", "swaylock + swayidle: estilo y bloqueo automatico", Some("lock_screen.svg"));
             }

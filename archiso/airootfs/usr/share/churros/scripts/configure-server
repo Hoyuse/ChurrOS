@@ -74,7 +74,8 @@ systemctl enable sshd.service >> "$LOG" 2>&1 || true
 systemctl enable chronyd.service >> "$LOG" 2>&1 || true
 systemctl enable NetworkManager.service >> "$LOG" 2>&1 || true
 systemctl enable ufw.service >> "$LOG" 2>&1 || true
-log "sshd, chronyd, NetworkManager y ufw habilitados"
+systemctl enable churros-update.timer >> "$LOG" 2>&1 || true
+log "sshd, chronyd, NetworkManager, ufw y churros-update.timer habilitados"
 
 # --------------------------------------------------------- 4. restos de config
 
