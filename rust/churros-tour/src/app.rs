@@ -104,7 +104,6 @@ pub fn activate(app: &adw::Application) {
 
     back_btn.set_sensitive(false);
 
-    let stack_clone = stack.clone();
     let back_btn_clone = back_btn.clone();
     let next_btn_clone = next_btn.clone();
     let autostart_check_clone = autostart_check.clone();

@@ -1,11 +1,13 @@
-use adw::prelude::*;
-use gtk::prelude::*;
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::process::Command;
+use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
-use glib::clone;
 use std::path::PathBuf;
+use std::process::Command;
+use std::rc::Rc;
+use std::time::Duration;
+
+use adw::prelude::*;
+use glib::ControlFlow;
+use gtk::prelude::*;
 
 thread_local! {
     static SELECTED_PACKAGES: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
@@ -129,8 +131,9 @@ pub fn start_installation(window: adw::ApplicationWindow) {
         });
         handle_autostart(false);
         let w = window.clone();
-        gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(1000), move || {
+        glib::timeout_add_local(Duration::from_millis(1000), move || {
             w.close();
+            ControlFlow::Break
         });
         return;
     }
@@ -171,21 +174,28 @@ pub fn start_installation(window: adw::ApplicationWindow) {
         }
     };
 
+    let is_running = Rc::new(Cell::new(true));
+    let is_running_pulse = is_running.clone();
+
     // Start a pulsing animation
-    let tick_id = gtk::glib::timeout_add_local(std::time::Duration::from_millis(100), || {
+    glib::timeout_add_local(Duration::from_millis(100), move || {
+        if !is_running_pulse.get() {
+            return ControlFlow::Break;
+        }
         PROGRESS_BAR.with(|p| {
             if let Some(bar) = p.borrow().as_ref() {
                 bar.pulse();
             }
         });
-        gtk::glib::ControlFlow::Continue
+        ControlFlow::Continue
     });
 
     let window_clone = window.clone();
+    let is_running_finish = is_running.clone();
     subprocess.wait_async(
         gio::Cancellable::NONE,
         move |_res| {
-            tick_id.remove(); // Stop pulsing
+            is_running_finish.set(false); // Stop pulsing
 
             PROGRESS_BAR.with(|p| {
                 if let Some(bar) = p.borrow().as_ref() {
@@ -201,8 +211,9 @@ pub fn start_installation(window: adw::ApplicationWindow) {
             handle_autostart(false);
 
             let w = window_clone.clone();
-            gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(800), move || {
+            glib::timeout_add_local(Duration::from_millis(800), move || {
                 w.close();
+                ControlFlow::Break
             });
         }
     );

@@ -1,6 +1,5 @@
 use adw::prelude::*;
 use gtk::prelude::*;
-use std::env;
 
 pub fn build() -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 10);
