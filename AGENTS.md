@@ -6,6 +6,7 @@
 ./churros build              # Build ISO (default: niri edition)
 ./churros build --edition xfce # Build ISO with XFCE edition
 ./churros build --edition kde   # Build ISO with KDE Plasma edition
+./churros build --edition server # Build ISO with the headless server edition
 ./churros run                # Build (if needed) and launch QEMU
 ./churros run --nokvm        # Force software emulation (no /dev/kvm)
 ./churros run --fresh        # Reset OVMF_VARS.fd so UEFI boots from CD-ROM instead of an existing install

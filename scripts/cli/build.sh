@@ -20,8 +20,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
-if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ]; then
-    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde)" >&2
+if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ] && [ "$EDITION" != "server" ]; then
+    echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde, server)" >&2
     exit 1
 fi
 
@@ -137,10 +137,19 @@ echo "$EDITION" > archiso/airootfs/etc/churros-edition
 # SESSION_CMD es el punto de entrada al escritorio de cada edición.
 mkdir -p archiso/airootfs/etc/greetd
 
+# La edición server arranca en XFCE porque su único escritorio está en la ISO
+# para poder ejecutar el instalador gráfico; el sistema instalado lo quita
+# después configure-server.
+# Cada edición tiene su brazo explícito: si mañana se añade una y se olvida
+# este case, el build se para aquí en vez de generar una ISO que instala mal.
 case "$EDITION" in
-    xfce) SESSION_CMD="startxfce4" ;;
-    kde)  SESSION_CMD="startplasma-wayland" ;;
-    *)    SESSION_CMD="niri" ;;
+    niri)                SESSION_CMD="niri" ;;
+    xfce|server)         SESSION_CMD="startxfce4" ;;
+    kde)                 SESSION_CMD="startplasma-wayland" ;;
+    *)
+        echo "Error: sin comando de sesión definido para la edición '$EDITION'" >&2
+        exit 1
+        ;;
 esac
 
 cat > archiso/airootfs/etc/greetd/config.toml << EOF
@@ -213,6 +222,21 @@ if [ -n "$CALAMARES_PKG" ]; then
     echo "  Integrating Calamares installer..."
 
     bash installer/apply-calamares.sh
+
+    # El slideshow del instalador se despliega con un marcador @EDITION@: el
+    # texto que ve la persona depende de la edición que esta instalando.
+    case "$EDITION" in
+        xfce)   EDITION_NAME="XFCE" ;;
+        kde)    EDITION_NAME="KDE Plasma" ;;
+        server) EDITION_NAME="Servidor" ;;
+        *)      EDITION_NAME="Niri" ;;
+    esac
+
+    SHOW_QML="archiso/airootfs/etc/calamares/branding/churros/show.qml"
+    if [ -f "$SHOW_QML" ]; then
+        sed -i "s/@EDITION@/$EDITION_NAME/g" "$SHOW_QML"
+        echo "  Installer slideshow edition: $EDITION_NAME"
+    fi
 
     mkdir -p archiso/airootfs/root/packages
     cp archiso/packages/*.pkg.tar.zst archiso/airootfs/root/packages/
