@@ -17,10 +17,10 @@ window.background {
 window.welcome,
 window.background.churros-glass,
 .welcome {
-    background-color: rgba(13, 16, 22, 0.78);
+    background-color: var(--bg-window, rgba(13, 16, 22, 0.78));
     background-image: none;
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.14));
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
                 0 1px 0 rgba(255, 255, 255, 0.18) inset,
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
@@ -225,4 +225,66 @@ button.suggested-action:active {
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45),
                 0 1px 0 rgba(255, 255, 255, 0.14) inset;
 }
+
+/* ── Light Mode Overrides ──────────────────────────────── */
+
+window.light,
+window.light.welcome,
+window.light.background.churros-glass,
+window.light .welcome {
+    background-color: var(--bg-window, rgba(245, 247, 250, 0.78));
+    color: #1a1e24;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12),
+                0 1px 0 rgba(255, 255, 255, 0.80) inset;
+}
+
+window.light .title-plain {
+    color: #111827;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.60);
+}
+
+window.light .subtitle {
+    color: #374151;
+    text-shadow: none;
+}
+
+window.light button.action-card,
+window.light .action-card,
+window.light .system-card {
+    background-color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06),
+                0 1px 0 rgba(255, 255, 255, 0.90) inset;
+}
+
+window.light button.action-card:hover,
+window.light .action-card:hover {
+    background-color: rgba(255, 255, 255, 0.92);
+    border-color: var(--accent, #F97316);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10),
+                var(--accent-glow, 0 0 20px rgba(249, 115, 22, 0.15)),
+                0 1px 0 rgba(255, 255, 255, 1.0) inset;
+}
+
+window.light .card-title {
+    color: #111827;
+}
+
+window.light .card-description {
+    color: #4b5563;
+}
+
+window.light .footer {
+    color: #6b7280;
+}
+
+window.light .system-key {
+    color: #1f2937;
+}
+
+window.light .system-value {
+    color: #4b5563;
+}
+
 

@@ -69,6 +69,48 @@ fn load_css() {
     }
 }
 
+thread_local! {
+    static THEME_SETTINGS: std::cell::RefCell<Option<gio::Settings>> = const { std::cell::RefCell::new(None) };
+}
+
+fn apply_theme(window: &gtk::ApplicationWindow) {
+    let is_dark = churros_services::theme::is_dark();
+    if is_dark {
+        window.remove_css_class("light");
+    } else {
+        window.add_css_class("light");
+    }
+    #[allow(deprecated)]
+    if let Some(settings) = gtk::Settings::default() {
+        settings.set_gtk_application_prefer_dark_theme(is_dark);
+    }
+    window.queue_draw();
+}
+
+fn setup_theme(window: &gtk::ApplicationWindow) {
+    apply_theme(window);
+
+    let w = window.clone();
+    let settings = gio::SettingsSchemaSource::default().and_then(|schema_source| {
+        let schema = schema_source.lookup("org.gnome.desktop.interface", false)?;
+        let settings =
+            gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None::<&str>);
+        settings.connect_changed(Some("color-scheme"), move |_, _| {
+            let w = w.clone();
+            glib::idle_add_local_once(move || apply_theme(&w));
+        });
+        Some(settings)
+    });
+    THEME_SETTINGS.with(|cell| *cell.borrow_mut() = settings);
+
+    let w_active = window.clone();
+    window.connect_is_active_notify(move |win| {
+        if win.is_active() {
+            apply_theme(&w_active);
+        }
+    });
+}
+
 fn activate(app: &gtk::Application) {
     load_css();
 
@@ -82,6 +124,7 @@ fn activate(app: &gtk::Application) {
     window.add_css_class("welcome");
     window.add_css_class("churros-glass");
     window.set_size_request(480, 400);
+    setup_theme(&window);
 
     let header_bar = gtk::HeaderBar::new();
     header_bar.add_css_class("flat");

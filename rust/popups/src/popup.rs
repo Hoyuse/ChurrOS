@@ -104,10 +104,51 @@ impl Header {
     }
 }
 
+fn apply_theme(window: &gtk::ApplicationWindow) {
+    let is_dark = churros_services::theme::is_dark();
+    if is_dark {
+        window.remove_css_class("light");
+    } else {
+        window.add_css_class("light");
+    }
+    #[allow(deprecated)]
+    if let Some(settings) = gtk::Settings::default() {
+        settings.set_gtk_application_prefer_dark_theme(is_dark);
+    }
+    window.queue_draw();
+}
+
+fn setup_theme(window: &gtk::ApplicationWindow) -> Option<gio::Settings> {
+    apply_theme(window);
+
+    let w = window.clone();
+    let settings = gio::SettingsSchemaSource::default().and_then(|schema_source| {
+        let schema = schema_source.lookup("org.gnome.desktop.interface", false)?;
+        let settings =
+            gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None::<&str>);
+        settings.connect_changed(Some("color-scheme"), move |_, _| {
+            let w = w.clone();
+            glib::idle_add_local_once(move || apply_theme(&w));
+        });
+        Some(settings)
+    });
+
+    let w_active = window.clone();
+    window.connect_is_active_notify(move |win| {
+        if win.is_active() {
+            apply_theme(&w_active);
+        }
+    });
+
+    settings
+}
+
 /// Ventana base del popup (port de common/popup.py).
 pub struct PopupWindow {
     pub window: gtk::ApplicationWindow,
     pub content: gtk::Box,
+    #[allow(dead_code)]
+    theme_settings: Option<gio::Settings>,
 }
 
 impl PopupWindow {
@@ -123,6 +164,8 @@ impl PopupWindow {
             .decorated(false)
             .css_classes(["popup", "churros-glass"])
             .build();
+
+        let theme_settings = setup_theme(&window);
 
         let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         main_box.add_css_class("popup-content");
@@ -149,7 +192,11 @@ impl PopupWindow {
         ));
         window.add_controller(controller);
 
-        Self { window, content }
+        Self {
+            window,
+            content,
+            theme_settings,
+        }
     }
 
     pub fn add(&self, widget: &impl IsA<gtk::Widget>) {

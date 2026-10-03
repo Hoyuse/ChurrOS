@@ -11,6 +11,7 @@ pub mod dev;
 pub mod ethernet;
 pub mod jsonc;
 pub mod power;
+pub mod theme;
 pub mod version;
 pub mod waybar_style;
 pub mod wifi;
