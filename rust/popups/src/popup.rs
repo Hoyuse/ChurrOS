@@ -25,10 +25,9 @@ fn assets_root() -> PathBuf {
 /// Carga el CSS compartido de ChurrOS (si existe), el común de popups y el
 /// propio del popup (equivalente a popup.py + load_*_css de cada ventana).
 pub fn load_css(own: &str) {
-    let Some(display) = gtk::gdk::Display::default() else {
-        return;
-    };
+    let display = gtk::gdk::Display::default().expect("Failed to get default display");
 
+    // CSS compartido (misma prioridad que Preferences)
     let shared = "/usr/share/churros/styles/churros.css";
     let dev_shared = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -51,6 +50,7 @@ pub fn load_css(own: &str) {
         );
     }
 
+    // CSS local (misma prioridad que Preferences)
     for css in ["common.css", own] {
         let path = assets_root().join(css);
         if path.is_file() {
@@ -59,11 +59,12 @@ pub fn load_css(own: &str) {
             gtk::style_context_add_provider_for_display(
                 &display,
                 &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1, // Cambiado de USER+1 a APPLICATION+1
             );
         }
     }
 
+    // Accent CSS (misma prioridad que Preferences)
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     let accent_path = PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
@@ -120,8 +121,13 @@ impl PopupWindow {
             .default_height(400)
             .resizable(false)
             .decorated(false)
-            .css_classes(["popup"])
+            .css_classes(["popup", "churros-glass"])
             .build();
+
+        // Asegurar que la ventana puede tener transparencia
+        if let Some(surface) = window.surface() {
+            surface.set_opaque_region(None);
+        }
 
         let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         main_box.add_css_class("popup-content");

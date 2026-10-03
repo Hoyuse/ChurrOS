@@ -3,6 +3,9 @@ use gtk::prelude::*;
 use crate::pages;
 
 fn load_css() {
+    let display = gtk::gdk::Display::default().expect("Failed to get default display");
+
+    // CSS compartido (misma prioridad que Preferences)
     let shared = "/usr/share/churros/styles/churros.css";
     let dev_shared = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -18,15 +21,14 @@ fn load_css() {
     if let Some(path) = shared_path {
         let provider = gtk::CssProvider::new();
         provider.load_from_path(path);
-        if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-            );
-        }
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 
+    // CSS local (misma prioridad que Preferences)
     let local = crate::assets::css_path();
     let provider = gtk::CssProvider::new();
     if local.is_file() {
@@ -34,26 +36,23 @@ fn load_css() {
     } else {
         provider.load_from_string(include_str!("../assets/style.css"));
     }
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
-        );
-    }
+    gtk::style_context_add_provider_for_display(
+        &display,
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1, // Cambiado de USER+1 a APPLICATION+1
+    );
 
+    // Accent CSS (misma prioridad que Preferences)
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
         provider.load_from_string(&css);
-        if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_USER,
-            );
-        }
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_USER,
+        );
     }
 }
 
@@ -73,6 +72,12 @@ pub fn activate(app: &gtk::Application) {
 
     window.add_css_class("welcome");
     window.add_css_class("tour");
+    window.add_css_class("churros-glass");
+
+    // Asegurar que la ventana puede tener transparencia
+    if let Some(surface) = window.surface() {
+        surface.set_opaque_region(None);
+    }
 
     let stack = gtk::Stack::new();
     stack.set_transition_type(gtk::StackTransitionType::SlideLeftRight);
@@ -164,6 +169,7 @@ pub fn activate(app: &gtk::Application) {
     });
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    content.add_css_class("tour-content");
     content.append(&stack);
     content.append(&action_bar);
 

@@ -16,6 +16,9 @@ fn load_css() {
     // contenido previo del provider, así que compartir provider perdería
     // el churros.css (el style.css de welcome es autocontenido, pero el
     // CSS compartido aporta tokens/paleta a la ISO).
+    let display = gtk::gdk::Display::default().expect("Failed to get default display");
+
+    // CSS compartido (misma prioridad que Preferences)
     let shared = "/usr/share/churros/styles/churros.css";
     let dev_shared = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -31,16 +34,14 @@ fn load_css() {
     if let Some(path) = shared_path {
         let provider = gtk::CssProvider::new();
         provider.load_from_path(path);
-        if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-            );
-        }
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 
-    // CSS local de la app (pisa al compartido y a stylesheets del sistema)
+    // CSS local (misma prioridad que Preferences)
     let local = assets::css_path();
     let provider = gtk::CssProvider::new();
     if local.is_file() {
@@ -48,27 +49,23 @@ fn load_css() {
     } else {
         provider.load_from_string(include_str!("../assets/style.css"));
     }
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
-        );
-    }
+    gtk::style_context_add_provider_for_display(
+        &display,
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1, // Cambiado de USER+1 a APPLICATION+1
+    );
 
-    // Colores dinámicos (accent.css de pywal o preferencias)
+    // Colores dinámicos (accent.css de pywal o preferencias) - misma prioridad que Preferences
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
         provider.load_from_string(&css);
-        if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_USER,
-            );
-        }
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_USER,
+        );
     }
 }
 
@@ -83,7 +80,13 @@ fn activate(app: &gtk::Application) {
         .build();
 
     window.add_css_class("welcome");
+    window.add_css_class("churros-glass");
     window.set_size_request(480, 400);
+
+    // Asegurar que la ventana puede tener transparencia
+    if let Some(surface) = window.surface() {
+        surface.set_opaque_region(None);
+    }
 
     let header_bar = gtk::HeaderBar::new();
     header_bar.add_css_class("flat");
@@ -96,6 +99,7 @@ fn activate(app: &gtk::Application) {
     content.set_margin_end(24);
     content.set_halign(gtk::Align::Center);
     content.add_css_class("welcome-content");
+    content.add_css_class("welcome-root");
 
     content.append(&header::build());
     content.append(&cards::build());
@@ -106,6 +110,7 @@ fn activate(app: &gtk::Application) {
     scroller.set_vexpand(true);
     scroller.set_child(Some(&content));
     scroller.add_css_class("content-scroller");
+    scroller.add_css_class("welcome-scroller");
 
     window.set_child(Some(&scroller));
 

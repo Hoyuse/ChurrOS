@@ -68,7 +68,14 @@ impl ControlCenterWindow {
         window.set_default_size(430, 650);
         window.set_resizable(false);
         window.set_decorated(false);
+
+        // Asegurar que la ventana puede tener transparencia
+        if let Some(surface) = window.surface() {
+            surface.set_opaque_region(None);
+        }
+
         window.add_css_class("control-center");
+        window.add_css_class("churros-glass");
 
         let network = NetworkCard::new(&window);
         let bluetooth = BluetoothCard::new(&window);
@@ -100,6 +107,7 @@ impl ControlCenterWindow {
         root.set_margin_bottom(20);
         root.set_margin_start(20);
         root.set_margin_end(20);
+        root.add_css_class("control-center-root");
 
         root.append(&Self::build_header(&window));
 
@@ -107,6 +115,7 @@ impl ControlCenterWindow {
         grid.set_column_homogeneous(true);
         grid.set_row_spacing(16);
         grid.set_column_spacing(16);
+        grid.add_css_class("control-center-grid");
 
         grid.attach(network.button(), 0, 0, 1, 1);
         grid.attach(bluetooth.button(), 1, 0, 1, 1);
@@ -121,6 +130,7 @@ impl ControlCenterWindow {
         scroller.set_child(Some(&root));
         scroller.set_hexpand(true);
         scroller.set_vexpand(true);
+        scroller.add_css_class("control-center-scroller");
 
         window.set_child(Some(&scroller));
 

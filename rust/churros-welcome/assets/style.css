@@ -15,13 +15,17 @@ window.background {
 }
 
 window.welcome,
+window.background.churros-glass,
 .welcome {
     background-color: rgba(13, 16, 22, 0.65);
+    background-image: none;
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
                 0 1px 0 rgba(255, 255, 255, 0.18) inset,
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
+    /* Asegurar que el widget raíz permite transparencia */
+    opacity: 1.0;
 }
 
 headerbar {
@@ -39,11 +43,20 @@ headerbar windowhandle {
     max-width: 840px;
 }
 
+/* Ensure all container elements have transparent backgrounds */
+window.welcome,
+window.background.churros-glass,
+.welcome,
+.welcome-root,
+.welcome-scroller,
 flowbox,
-flowboxchild {
+flowboxchild,
+scroller,
+scrolledwindow,
+scrolledwindow > viewport,
+.content-scroller {
     background-color: transparent;
-    padding: 0;
-    margin: 0;
+    background: transparent;
 }
 
 flowboxchild,
@@ -55,13 +68,6 @@ flowboxchild:focus {
     background: transparent !important;
     outline: none !important;
     box-shadow: none !important;
-}
-
-scroller,
-scrolledwindow,
-scrolledwindow > viewport,
-.content-scroller {
-    background-color: transparent;
 }
 
 .logo {
@@ -221,5 +227,4 @@ button.suggested-action:active {
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45),
                 0 1px 0 rgba(255, 255, 255, 0.14) inset;
 }
-
 
