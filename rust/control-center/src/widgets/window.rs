@@ -69,11 +69,6 @@ impl ControlCenterWindow {
         window.set_resizable(false);
         window.set_decorated(false);
 
-        // Asegurar que la ventana puede tener transparencia
-        if let Some(surface) = window.surface() {
-            surface.set_opaque_region(None);
-        }
-
         window.add_css_class("control-center");
         window.add_css_class("churros-glass");
 

@@ -74,11 +74,6 @@ pub fn activate(app: &gtk::Application) {
     window.add_css_class("tour");
     window.add_css_class("churros-glass");
 
-    // Asegurar que la ventana puede tener transparencia
-    if let Some(surface) = window.surface() {
-        surface.set_opaque_region(None);
-    }
-
     let stack = gtk::Stack::new();
     stack.set_transition_type(gtk::StackTransitionType::SlideLeftRight);
     stack.set_transition_duration(250);

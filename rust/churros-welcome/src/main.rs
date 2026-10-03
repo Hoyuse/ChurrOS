@@ -83,11 +83,6 @@ fn activate(app: &gtk::Application) {
     window.add_css_class("churros-glass");
     window.set_size_request(480, 400);
 
-    // Asegurar que la ventana puede tener transparencia
-    if let Some(surface) = window.surface() {
-        surface.set_opaque_region(None);
-    }
-
     let header_bar = gtk::HeaderBar::new();
     header_bar.add_css_class("flat");
     window.set_titlebar(Some(&header_bar));

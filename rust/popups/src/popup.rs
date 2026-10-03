@@ -124,11 +124,6 @@ impl PopupWindow {
             .css_classes(["popup", "churros-glass"])
             .build();
 
-        // Asegurar que la ventana puede tener transparencia
-        if let Some(surface) = window.surface() {
-            surface.set_opaque_region(None);
-        }
-
         let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         main_box.add_css_class("popup-content");
         window.set_child(Some(&main_box));

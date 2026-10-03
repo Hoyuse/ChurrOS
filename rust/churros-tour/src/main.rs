@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 mod app;
 mod pages;
 mod assets;
