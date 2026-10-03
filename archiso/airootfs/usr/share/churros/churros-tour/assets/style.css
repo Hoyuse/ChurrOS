@@ -41,10 +41,7 @@ headerbar windowhandle {
     background-color: transparent;
 }
 
-/* Ensure all container elements have transparent backgrounds */
-window.tour,
-window.background.churros-glass,
-.tour,
+/* Ensure container elements have transparent backgrounds without resetting the window */
 .tour-content,
 flowbox,
 flowboxchild,

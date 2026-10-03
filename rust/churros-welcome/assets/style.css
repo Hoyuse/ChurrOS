@@ -17,15 +17,13 @@ window.background {
 window.welcome,
 window.background.churros-glass,
 .welcome {
-    background-color: rgba(13, 16, 22, 0.65);
+    background-color: rgba(13, 16, 22, 0.78);
     background-image: none;
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
                 0 1px 0 rgba(255, 255, 255, 0.18) inset,
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
-    /* Asegurar que el widget raíz permite transparencia */
-    opacity: 1.0;
 }
 
 headerbar {
@@ -43,10 +41,7 @@ headerbar windowhandle {
     max-width: 840px;
 }
 
-/* Ensure all container elements have transparent backgrounds */
-window.welcome,
-window.background.churros-glass,
-.welcome,
+/* Ensure container elements have transparent backgrounds without resetting the window */
 .welcome-root,
 .welcome-scroller,
 flowbox,
@@ -78,25 +73,28 @@ flowboxchild:focus {
     font-size: 52px;
     font-weight: 800;
     letter-spacing: -0.04em;
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.60);
 }
 
 /* Colores del título. --accent lo define ~/.config/churros/accent.css
    (pywal o churros-settings), con el naranja de marca como valor por
    defecto. Antes el marcado Pango fijaba blanco y #ff8c00 en el código. */
 .title-plain {
-    color: #f5f5f5;
+    color: #ffffff;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.60);
 }
 
 .title-accent {
     color: var(--accent, #F97316);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.40);
 }
 
 .subtitle {
-    color: rgba(255, 255, 255, 0.70);
+    color: rgba(255, 255, 255, 0.90);
     font-size: 15px;
     margin-bottom: 16px;
     line-height: 1.6;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.70);
 }
 
 /* ── Cards (liquid glass) ─────────────────────────────── */
@@ -104,10 +102,10 @@ flowboxchild:focus {
 button.action-card,
 .action-card,
 .system-card {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(22, 27, 36, 0.65);
     background-image: none;
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     min-width: 280px;
     min-height: 340px;
     padding: 22px;
@@ -115,15 +113,15 @@ button.action-card,
                 background-color 200ms ease,
                 border-color 200ms ease,
                 box-shadow 200ms ease;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.30),
-                0 1px 0 rgba(255, 255, 255, 0.14) inset;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.40),
+                0 1px 0 rgba(255, 255, 255, 0.12) inset;
 }
 
 /* Solo las tarjetas accionables se elevan al pasar el ratón: la de
    información es un GtkBox, no un botón, y no hace nada al pulsarla. */
 button.action-card:hover,
 .action-card:hover {
-    background-color: rgba(255, 255, 255, 0.10);
+    background-color: rgba(32, 40, 54, 0.80);
     border-color: var(--accent, rgba(249, 115, 22, 0.50));
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.40),
                 var(--accent-glow, 0 0 24px rgba(249, 115, 22, 0.22)),
@@ -133,7 +131,7 @@ button.action-card:hover,
 
 button.action-card:active,
 .action-card:active {
-    background-color: var(--accent-bg-hover, rgba(249, 115, 22, 0.18));
+    background-color: var(--accent-bg-hover, rgba(249, 115, 22, 0.25));
     transform: translateY(0);
 }
 

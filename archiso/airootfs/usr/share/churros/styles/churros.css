@@ -95,7 +95,7 @@ windowhandle {
     nodo de ventana realmente dibuje el color con alpha que espera Niri.
 */
 window.background.churros-glass {
-    background-color: rgba(13, 16, 22, 0.65);
+    background-color: rgba(13, 16, 22, 0.78);
     background-image: none;
 }
 
