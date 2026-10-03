@@ -53,6 +53,7 @@ window-rule {
 window-rule {
     match app-id="foot"
     opacity 0.8
+    draw-border-with-background false
     background-effect {
         blur true
     }
@@ -97,6 +98,7 @@ window-rule {
     match app-id=r#"^org\.churros\.popup"#
     open-floating true
     opacity 0.9
+    draw-border-with-background false
     background-effect {
         blur true
     }
@@ -108,6 +110,7 @@ window-rule {
     match app-id="org.churros.controlcenter"
     open-floating true
     opacity 0.9
+    draw-border-with-background false
     background-effect {
         blur true
     }
@@ -118,6 +121,7 @@ window-rule {
 window-rule {
     match app-id="org.churros.preferences"
     opacity 0.9
+    draw-border-with-background false
     background-effect {
         blur true
     }
@@ -128,6 +132,7 @@ window-rule {
 window-rule {
     match app-id="org.churros.welcome"
     opacity 0.9
+    draw-border-with-background false
     background-effect {
         blur true
     }
@@ -139,6 +144,7 @@ window-rule {
     match app-id="org.churros.tour"
     open-floating true
     opacity 0.9
+    draw-border-with-background false
     background-effect {
         blur true
     }
