@@ -19,15 +19,13 @@ window.tour,
 window.background.churros-glass,
 .welcome,
 .tour {
-    background-color: rgba(13, 16, 22, 0.65);
+    background-color: var(--bg-window, rgba(13, 16, 22, 0.78));
     background-image: none;
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.14));
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.50),
                 0 1px 0 rgba(255, 255, 255, 0.18) inset,
                 0 0 20px rgba(255, 255, 255, 0.02) inset;
-    /* Asegurar que el widget raíz permite transparencia */
-    opacity: 1.0;
 }
 
 headerbar {
@@ -310,4 +308,55 @@ expander.category-expander:hover {
     font-size: 11px;
     color: rgba(255, 255, 255, 0.50);
 }
+
+/* ── Light Mode Overrides ──────────────────────────────── */
+
+window.light,
+window.light.tour,
+window.light.welcome,
+window.light.background.churros-glass,
+window.light .tour {
+    background-color: var(--bg-window, rgba(245, 247, 250, 0.78));
+    color: #1a1e24;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12),
+                0 1px 0 rgba(255, 255, 255, 0.80) inset;
+}
+
+window.light .title,
+window.light .title-plain,
+window.light .page-title {
+    color: #111827;
+    text-shadow: none;
+}
+
+window.light .subtitle,
+window.light .page-subtitle,
+window.light .description {
+    color: #4b5563;
+    text-shadow: none;
+}
+
+window.light .card,
+window.light .shortcut-row,
+window.light .step-card {
+    background-color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #111827;
+}
+
+window.light .shortcut-key {
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    color: #111827;
+}
+
+window.light .pkg-title {
+    color: #111827;
+}
+
+window.light .pkg-id {
+    color: #6b7280;
+}
+
 
