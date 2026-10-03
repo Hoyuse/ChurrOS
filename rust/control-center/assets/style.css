@@ -12,6 +12,7 @@ window.background {
     background-color: transparent;
 }
 
+window.control-center,
 .control-center {
     background-color: rgba(13, 16, 22, 0.35);
     border-radius: 22px;

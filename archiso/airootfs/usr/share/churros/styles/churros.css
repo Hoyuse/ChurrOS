@@ -91,10 +91,13 @@ windowhandle {
 window.preferences,
 window.welcome,
 window.controlcenter,
+window.control-center,
 window.popup,
+window.tour,
 .preferences,
 .welcome,
 .control-center,
+.tour,
 .popup {
     background-color: var(--bg-window);
     border-radius: 18px;
@@ -117,7 +120,9 @@ window.fullscreen,
 .preferences.maximized,
 .preferences.fullscreen,
 .welcome.maximized,
-.welcome.fullscreen {
+.welcome.fullscreen,
+.tour.maximized,
+.tour.fullscreen {
     background: var(--bg-window);
     background-color: var(--bg-window);
     border-radius: 0;

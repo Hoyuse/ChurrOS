@@ -1,4 +1,4 @@
-use adw::prelude::*;
+use gtk::prelude::*;
 
 pub fn build() -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 10);
@@ -62,12 +62,32 @@ pub fn build() -> gtk::Box {
     listbox.add_css_class("boxed-list");
     listbox.set_margin_start(32);
     listbox.set_margin_end(32);
+    listbox.set_selection_mode(gtk::SelectionMode::None);
 
     for (keys, action) in shortcuts {
-        let row = adw::ActionRow::builder()
-            .title(action)
-            .subtitle(keys)
-            .build();
+        let row = gtk::ListBoxRow::new();
+        row.set_activatable(false);
+        row.set_selectable(false);
+        row.add_css_class("shortcut-row");
+
+        let row_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
+        row_box.set_margin_top(8);
+        row_box.set_margin_bottom(8);
+        row_box.set_margin_start(16);
+        row_box.set_margin_end(16);
+
+        let action_lbl = gtk::Label::new(Some(action));
+        action_lbl.set_halign(gtk::Align::Start);
+        action_lbl.set_hexpand(true);
+        action_lbl.add_css_class("shortcut-action");
+
+        let keys_lbl = gtk::Label::new(Some(keys));
+        keys_lbl.set_halign(gtk::Align::End);
+        keys_lbl.add_css_class("shortcut-keys");
+
+        row_box.append(&action_lbl);
+        row_box.append(&keys_lbl);
+        row.set_child(Some(&row_box));
         listbox.append(&row);
     }
 

@@ -7,8 +7,7 @@
 @define-color view_bg_color transparent;
 
 window,
-window.background,
-adwapplicationwindow {
+window.background {
     background-color: transparent;
     color: #f5f5f5;
     min-width: 320px;
@@ -16,7 +15,9 @@ adwapplicationwindow {
 }
 
 window.welcome,
-.welcome {
+window.tour,
+.welcome,
+.tour {
     background-color: rgba(13, 16, 22, 0.65);
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -233,6 +234,79 @@ button.suggested-action:active {
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45),
                 0 1px 0 rgba(255, 255, 255, 0.14) inset;
+}
+
+/* ── Shortcuts Styling ─────────────────────────────────── */
+
+.shortcut-row {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.shortcut-action {
+    color: #f5f5f5;
+    font-size: 14px;
+}
+
+.shortcut-keys {
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent, #F97316);
+}
+
+/* ── Customization Expanders ───────────────────────────── */
+
+expander.category-expander {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 12px;
+    transition: background 150ms ease;
+}
+
+expander.category-expander:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.expander-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: #ffffff;
+}
+
+.expander-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.sub-list {
+    background: transparent;
+    margin-top: 6px;
+}
+
+.pkg-row {
+    background: transparent;
+    border-radius: 8px;
+    transition: background 150ms ease;
+}
+
+.pkg-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.pkg-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #f5f5f5;
+}
+
+.pkg-id {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.50);
 }
 
 

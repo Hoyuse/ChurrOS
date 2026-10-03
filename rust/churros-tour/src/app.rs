@@ -1,4 +1,4 @@
-use adw::prelude::*;
+use gtk::prelude::*;
 
 use crate::pages;
 
@@ -38,7 +38,7 @@ fn load_css() {
         gtk::style_context_add_provider_for_display(
             &display,
             &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
         );
     }
 
@@ -57,11 +57,13 @@ fn load_css() {
     }
 }
 
-pub fn activate(app: &adw::Application) {
-    adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
+pub fn activate(app: &gtk::Application) {
+    if let Some(settings) = gtk::Settings::default() {
+        settings.set_gtk_application_prefer_dark_theme(true);
+    }
     load_css();
 
-    let window = adw::ApplicationWindow::builder()
+    let window = gtk::ApplicationWindow::builder()
         .application(app)
         .title("ChurrOS Tour")
         .default_width(900)
@@ -70,8 +72,11 @@ pub fn activate(app: &adw::Application) {
         .build();
 
     window.add_css_class("welcome");
+    window.add_css_class("tour");
 
-    let stack = adw::ViewStack::new();
+    let stack = gtk::Stack::new();
+    stack.set_transition_type(gtk::StackTransitionType::SlideLeftRight);
+    stack.set_transition_duration(250);
     stack.set_vexpand(true);
 
     let welcome = pages::welcome::build();
@@ -79,10 +84,10 @@ pub fn activate(app: &adw::Application) {
     let customization = pages::customization::build();
     let install = pages::install::build();
 
-    stack.add_titled(&welcome, Some("welcome"), "Bienvenida");
-    stack.add_titled(&shortcuts, Some("shortcuts"), "Atajos");
-    stack.add_titled(&customization, Some("customization"), "Personalización");
-    stack.add_titled(&install, Some("install"), "Instalación");
+    stack.add_named(&welcome, Some("welcome"));
+    stack.add_named(&shortcuts, Some("shortcuts"));
+    stack.add_named(&customization, Some("customization"));
+    stack.add_named(&install, Some("install"));
 
     let action_bar = gtk::ActionBar::new();
     
@@ -108,7 +113,7 @@ pub fn activate(app: &adw::Application) {
     let autostart_check_clone = autostart_check.clone();
 
     // Logic to update buttons when page changes
-    stack.connect_visible_child_notify(move |s| {
+    stack.connect_visible_child_name_notify(move |s| {
         if let Some(child) = s.visible_child_name() {
             let name = child.as_str();
             
@@ -162,6 +167,6 @@ pub fn activate(app: &adw::Application) {
     content.append(&stack);
     content.append(&action_bar);
 
-    window.set_content(Some(&content));
+    window.set_child(Some(&content));
     window.present();
 }

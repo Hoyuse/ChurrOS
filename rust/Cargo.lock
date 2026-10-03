@@ -115,7 +115,6 @@ dependencies = [
  "gio",
  "glib",
  "gtk4",
- "libadwaita",
  "libc",
 ]
 
@@ -127,7 +126,6 @@ dependencies = [
  "gio",
  "glib",
  "gtk4",
- "libadwaita",
  "libc",
 ]
 

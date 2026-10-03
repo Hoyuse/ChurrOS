@@ -65,7 +65,7 @@ fn load_css() {
     gtk::style_context_add_provider_for_display(
         &display,
         &provider,
-        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+        gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
     );
 
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());

@@ -1,4 +1,4 @@
-use adw::prelude::*;
+use gtk::prelude::*;
 
 use crate::pages::install;
 
@@ -21,11 +21,9 @@ pub fn build() -> gtk::Box {
     scrolled_window.set_min_content_height(400); // Give it some height
     scrolled_window.set_vexpand(true);
     
-    let listbox = gtk::ListBox::new();
-    listbox.add_css_class("boxed-list");
-    listbox.set_margin_start(32);
-    listbox.set_margin_end(32);
-    listbox.set_selection_mode(gtk::SelectionMode::None);
+    let categories_box = gtk::Box::new(gtk::Orientation::Vertical, 10);
+    categories_box.set_margin_start(32);
+    categories_box.set_margin_end(32);
 
     let categories = vec![
         ("Navegadores Web", "Explora internet de forma rápida y segura", vec![
@@ -80,16 +78,38 @@ pub fn build() -> gtk::Box {
     ];
 
     for (name, desc, pkgs) in categories {
-        let expander = adw::ExpanderRow::builder()
-            .title(name)
-            .subtitle(desc)
-            .build();
+        let expander = gtk::Expander::new(None);
+        expander.set_expanded(false);
+        expander.add_css_class("category-expander");
+
+        let header_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
+        header_box.set_margin_top(4);
+        header_box.set_margin_bottom(4);
+        let title_lbl = gtk::Label::new(Some(name));
+        title_lbl.set_halign(gtk::Align::Start);
+        title_lbl.add_css_class("expander-title");
+        let desc_lbl = gtk::Label::new(Some(desc));
+        desc_lbl.set_halign(gtk::Align::Start);
+        desc_lbl.add_css_class("expander-subtitle");
+        header_box.append(&title_lbl);
+        header_box.append(&desc_lbl);
+        expander.set_label_widget(Some(&header_box));
+
+        let sub_list = gtk::ListBox::new();
+        sub_list.set_selection_mode(gtk::SelectionMode::None);
+        sub_list.add_css_class("sub-list");
 
         for (pkg_id, pkg_name) in pkgs {
-            let row = adw::ActionRow::builder()
-                .title(pkg_name)
-                .subtitle(pkg_id)
-                .build();
+            let row = gtk::ListBoxRow::new();
+            row.set_activatable(false);
+            row.set_selectable(false);
+            row.add_css_class("pkg-row");
+
+            let row_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+            row_box.set_margin_top(6);
+            row_box.set_margin_bottom(6);
+            row_box.set_margin_start(12);
+            row_box.set_margin_end(12);
 
             let check_btn = gtk::CheckButton::new();
             check_btn.set_valign(gtk::Align::Center);
@@ -103,14 +123,29 @@ pub fn build() -> gtk::Box {
                 }
             });
 
-            row.add_prefix(&check_btn);
-            expander.add_row(&row);
+            let text_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
+            text_box.set_hexpand(true);
+            let name_lbl = gtk::Label::new(Some(pkg_name));
+            name_lbl.set_halign(gtk::Align::Start);
+            name_lbl.add_css_class("pkg-title");
+            let id_lbl = gtk::Label::new(Some(pkg_id));
+            id_lbl.set_halign(gtk::Align::Start);
+            id_lbl.add_css_class("pkg-id");
+
+            text_box.append(&name_lbl);
+            text_box.append(&id_lbl);
+
+            row_box.append(&check_btn);
+            row_box.append(&text_box);
+            row.set_child(Some(&row_box));
+            sub_list.append(&row);
         }
 
-        listbox.append(&expander);
+        expander.set_child(Some(&sub_list));
+        categories_box.append(&expander);
     }
 
-    scrolled_window.set_child(Some(&listbox));
+    scrolled_window.set_child(Some(&categories_box));
 
     container.append(&title);
     container.append(&subtitle);

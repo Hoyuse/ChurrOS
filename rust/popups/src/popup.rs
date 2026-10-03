@@ -59,7 +59,7 @@ pub fn load_css(own: &str) {
             gtk::style_context_add_provider_for_display(
                 &display,
                 &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+                gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
             );
         }
     }

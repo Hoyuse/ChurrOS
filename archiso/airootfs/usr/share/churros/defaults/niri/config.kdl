@@ -134,6 +134,17 @@ window-rule {
     geometry-corner-radius 18
     clip-to-geometry true
 }
+
+window-rule {
+    match app-id="org.churros.tour"
+    open-floating true
+    opacity 0.9
+    background-effect {
+        blur true
+    }
+    geometry-corner-radius 18
+    clip-to-geometry true
+}
 // [CHURROS-GLASS-END]
 
 // Layer rules

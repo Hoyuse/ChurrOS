@@ -11,4 +11,4 @@ deploy = true
 [dependencies]
 churros-services = { path = "../services" }
 glib = "0.22.8"
-gtk = { version = "0.11.4", package = "gtk4", features = ["v4_22"] }
+gtk = { version = "0.11.4", package = "gtk4", features = ["v4_18"] }

@@ -8,7 +8,6 @@ mod system_card;
 mod system_info;
 
 use gtk::prelude::*;
-use adw::prelude::*;
 
 const APP_ID: &str = "org.churros.welcome";
 
@@ -53,7 +52,7 @@ fn load_css() {
         gtk::style_context_add_provider_for_display(
             &display,
             &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
         );
     }
 
@@ -73,10 +72,10 @@ fn load_css() {
     }
 }
 
-fn activate(app: &adw::Application) {
+fn activate(app: &gtk::Application) {
     load_css();
 
-    let window = adw::ApplicationWindow::builder()
+    let window = gtk::ApplicationWindow::builder()
         .application(app)
         .title("ChurrOS Welcome")
         .default_width(900)
@@ -86,43 +85,29 @@ fn activate(app: &adw::Application) {
     window.add_css_class("welcome");
     window.set_size_request(480, 400);
 
-    let header_bar = adw::HeaderBar::new();
+    let header_bar = gtk::HeaderBar::new();
     header_bar.add_css_class("flat");
+    window.set_titlebar(Some(&header_bar));
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 24);
     content.set_margin_top(20);
     content.set_margin_bottom(30);
     content.set_margin_start(24);
     content.set_margin_end(24);
+    content.set_halign(gtk::Align::Center);
+    content.add_css_class("welcome-content");
 
     content.append(&header::build());
     content.append(&cards::build());
     content.append(&footer::build());
 
-    // Ancho máximo del contenido: en pantallas anchas las cards se quedan
-    // centradas en vez de repartirse de lado a lado. Antes dependía de
-    // hexpand/vexpand en el ScrolledWindow, que no es como se dimensiona un
-    // ScrolledWindow (mide a su hijo), así que en pantallas grandes el
-    // contenido se pegaba a los bordes.
-    let clamp = adw::Clamp::new();
-    clamp.set_maximum_size(840);
-    clamp.set_tightening_threshold(760);
-    clamp.set_child(Some(&content));
-
     let scroller = gtk::ScrolledWindow::new();
     scroller.set_policy(gtk::PolicyType::Automatic, gtk::PolicyType::Automatic);
     scroller.set_vexpand(true);
-    scroller.set_child(Some(&clamp));
+    scroller.set_child(Some(&content));
     scroller.add_css_class("content-scroller");
 
-    // ToolbarView es lo que espera libadwaita: la HeaderBar se ancla arriba y
-    // los botones de ventana los gestiona la propia toolbar view, en vez de
-    // un Box vertical con la barra pegada al ScrolledWindow.
-    let toolbar_view = adw::ToolbarView::new();
-    toolbar_view.add_top_bar(&header_bar);
-    toolbar_view.set_content(Some(&scroller));
-
-    window.set_content(Some(&toolbar_view));
+    window.set_child(Some(&scroller));
 
     window.present();
 }
@@ -141,7 +126,7 @@ fn main() -> glib::ExitCode {
         return glib::ExitCode::SUCCESS;
     }
 
-    let app = adw::Application::builder()
+    let app = gtk::Application::builder()
         .application_id(APP_ID)
         .build();
 
