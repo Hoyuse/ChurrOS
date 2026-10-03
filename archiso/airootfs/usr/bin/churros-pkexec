@@ -16,6 +16,10 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
+if [ "$(id -u)" -eq 0 ]; then
+    exec "$@"
+fi
+
 if command -v pkexec >/dev/null 2>&1; then
 
     pkexec "$@"

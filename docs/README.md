@@ -26,6 +26,8 @@ Esta documentación está dirigida tanto a desarrolladores como a futuros colabo
 - [Login Greeter](login-greeter.md)
 - [Desktop Config](desktop-config.md)
 - [Live Services](live-services.md)
+- [Server](server.md)
+- [Installer](installer.md)
 - [Privileged Execution](privileged-execution.md)
 - [Boot](boot.md)
 - [VM](vm.md)

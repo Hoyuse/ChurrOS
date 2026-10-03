@@ -196,6 +196,22 @@ apply_swaybg() {
     return 1
 }
 
+apply_kde() {
+
+    local path="$1"
+
+    if ! command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
+        return 1
+    fi
+
+    echo "$LOG_PREFIX aplicando fondo en KDE con plasma-apply-wallpaperimage: $path" >&2
+    if plasma-apply-wallpaperimage "$path" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    return 1
+}
+
 apply_xfce() {
 
     local path="$1"
@@ -229,6 +245,13 @@ apply() {
         return 1
     fi
 
+    # Si estamos en sesión KDE o plasmashell está activo
+    if [ "${XDG_CURRENT_DESKTOP:-}" = "KDE" ] || [ "${XDG_SESSION_DESKTOP:-}" = "plasma" ] || pgrep -x plasmashell >/dev/null 2>&1; then
+        if apply_kde "$path"; then
+            return 0
+        fi
+    fi
+
     # Si estamos en sesión XFCE o xfconf-query está activo
     if [ "${XDG_CURRENT_DESKTOP:-}" = "XFCE" ] || pgrep -x xfce4-session >/dev/null 2>&1; then
         if apply_xfce "$path"; then
@@ -250,6 +273,13 @@ apply() {
 
         if apply_awww "$path"; then
             _niri_refresh
+            return 0
+        fi
+    fi
+
+    # Fallback para KDE si los anteriores no aplicaron
+    if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
+        if apply_kde "$path"; then
             return 0
         fi
     fi

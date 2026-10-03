@@ -18,8 +18,11 @@ SESSION_CMD="/usr/bin/churros-niri-session"
 if [ -f /etc/churros-edition ]; then
     EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
     case "$EDITION" in
-        xfce) SESSION_CMD="/usr/bin/startxfce4" ;;
-        kde)  SESSION_CMD="/usr/bin/startplasma-wayland" ;;
+        # En la edición server el sistema instalado no tiene display manager:
+        # configure-server lo quita y deja el arranque en multi-user.
+        server) exit 0 ;;
+        xfce)   SESSION_CMD="/usr/bin/startxfce4" ;;
+        kde)    SESSION_CMD="/usr/bin/startplasma-wayland" ;;
     esac
 fi
 

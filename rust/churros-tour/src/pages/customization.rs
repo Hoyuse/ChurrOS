@@ -1,7 +1,4 @@
 use adw::prelude::*;
-use gtk::prelude::*;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use crate::pages::install;
 

@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+#
+# verify-install — comprueba que la instalación quedó como debía, según la
+# edición, y deja constancia en /var/log/churros-install-verify.log.
+#
+# Se ejecuta desde shellprocess@post-install, después de configure-greetd-session
+# y configure-server. No falla la instalación: avisa. Un instalador que se
+# traga sus propios errores deja al usuario con un sistema que no arranca y
+# ningún sitio donde mirar.
+#
+# Lo que se comprueba por edición:
+#   niri / xfce / kde -> existe el lanzador de sesión y greetd está habilitado
+#   server           -> no hay display manager, el target es multi-user y
+#                        sshd está habilitado
+
+set -uo pipefail
+
+LOG=/var/log/churros-install-verify.log
+FAILURES=0
+
+log() {
+    printf '%s %s\n' "$(date -Is)" "$*" >> "$LOG" 2>/dev/null || true
+}
+
+check() {
+    local what="$1" ok="$2"
+    if [ "$ok" = "yes" ]; then
+        log "OK   $what"
+    else
+        log "AVISO $what"
+        FAILURES=$((FAILURES + 1))
+    fi
+}
+
+unit_enabled() {
+    systemctl is-enabled "$1" >/dev/null 2>&1
+}
+
+EDITION="niri"
+if [ -f /etc/churros-edition ]; then
+    EDITION="$(tr -d '[:space:]' < /etc/churros-edition | tr '[:upper:]' '[:lower:]')"
+fi
+
+log "--- verificación de la instalación (edición: $EDITION) ---"
+
+# ------------------------------------------------- común a todas las ediciones
+
+check "/etc/churros-edition legible" "$([ -r /etc/churros-edition ] && echo yes || echo no)"
+check "usuario root sin contraseña en el Live (limpio)" \
+    "$([ ! -e /etc/sudoers.d/churros ] && echo yes || echo no)"
+check "usuario del Live eliminado" \
+    "$(id churros >/dev/null 2>&1 && echo no || echo yes)"
+check "repo local [churros] fuera de pacman.conf" \
+    "$(grep -q '^\[churros\]$' /etc/pacman.conf && echo no || echo yes)"
+check "artefactos del Live borrados" \
+    "$([ ! -e /root/customize_airootfs.sh ] && [ ! -e /root/packages ] && echo yes || echo no)"
+check "claves SSH del Live eliminadas" \
+    "$(ls /etc/ssh/ssh_host_* >/dev/null 2>&1 && echo no || echo yes)"
+
+# ------------------------------------------------------ por edición
+
+case "$EDITION" in
+    server)
+        check "display manager desactivado" \
+            "$(unit_enabled greetd.service && echo no || echo yes)"
+        check "arranque por consola (multi-user.target)" \
+            "$([ "$(systemctl get-default 2>/dev/null)" = "multi-user.target" ] && echo yes || echo no)"
+        check "sshd habilitado" "$(unit_enabled sshd.service && echo yes || echo no)"
+        check "sshd escuchando" \
+            "$([ -e /etc/systemd/system/multi-user.target.wants/sshd.service ] && echo yes || echo no)"
+        check "chrony habilitado" "$(unit_enabled chronyd.service && echo yes || echo no)"
+        check "sin escritorio (no queda greetd)" \
+            "$([ ! -e /usr/bin/startxfce4 ] && echo yes || echo no)"
+        ;;
+    *)
+        # El lanzador de sesión es el comando que va a /etc/greetd/environments.
+        SESSION=""
+        if [ -r /etc/greetd/environments ]; then
+            SESSION="$(head -n1 /etc/greetd/environments | tr -d '[:space:]')"
+        fi
+        check "sesión declarada en /etc/greetd/environments" \
+            "$([ -n "$SESSION" ] && echo yes || echo no)"
+        check "el lanzador de sesión existe en disco ($SESSION)" \
+            "$([ -n "$SESSION" ] && [ -x "$SESSION" ] && echo yes || echo no)"
+        check "greetd habilitado" "$(unit_enabled greetd.service && echo yes || echo no)"
+        check "config de greetd sin sección inicial_session" \
+            "$(grep -q '^\[initial_session\]' /etc/greetd/config.toml 2>/dev/null && echo no || echo yes)"
+        ;;
+esac
+
+if [ "$FAILURES" -eq 0 ]; then
+    log "--- todo correcto ---"
+else
+    log "--- $FAILURES comprobaciones con aviso; revisar $LOG ---"
+fi
+
+exit 0

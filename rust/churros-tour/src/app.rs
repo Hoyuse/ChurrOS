@@ -1,5 +1,4 @@
 use adw::prelude::*;
-use gtk::prelude::*;
 
 use crate::pages;
 
@@ -104,7 +103,6 @@ pub fn activate(app: &adw::Application) {
 
     back_btn.set_sensitive(false);
 
-    let stack_clone = stack.clone();
     let back_btn_clone = back_btn.clone();
     let next_btn_clone = next_btn.clone();
     let autostart_check_clone = autostart_check.clone();
@@ -138,7 +136,7 @@ pub fn activate(app: &adw::Application) {
             "customization" => {
                 // Here we should trigger the installation logic in the install page
                 stack_for_next.set_visible_child_name("install");
-                pages::install::start_installation();
+                pages::install::start_installation(window_clone.clone());
             },
             "install" => {
                 // Handle autostart logic
