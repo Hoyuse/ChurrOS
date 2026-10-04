@@ -8,7 +8,17 @@ export XDG_SESSION_DESKTOP=xfce
 export XDG_SESSION_TYPE=x11
 export DESKTOP_SESSION=xfce
 
-if [ "$1" = "--xinit" ]; then
+# ¿Ya hay un servidor X? Pasa con nuestro propio startx (--xinit) y también
+# cuando ReGreet lanza la sesión X11: antepone su x11_prefix por defecto
+# ("startx /usr/bin/env") al Exec de xfce.desktop. Lanzar otro startx aquí
+# fallaría ("Server is already active for display 0") y devolvería al greeter.
+x_running() {
+    [ -n "${DISPLAY:-}" ] || return 1
+    command -v xset >/dev/null 2>&1 || return 0
+    xset q >/dev/null 2>&1
+}
+
+if [ "${1:-}" = "--xinit" ] || x_running; then
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
     exec /usr/bin/startxfce4

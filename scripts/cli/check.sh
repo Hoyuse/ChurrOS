@@ -624,6 +624,83 @@ fi
 
 [ "$snap_ok" -eq 1 ] && pass "rollback btrfs wired (script + hook + profiledef + UI)"
 
+# ------------------------------------------------ XFCE X11-only session
+
+section "XFCE X11 session"
+
+XFCE_FIX=archiso/airootfs/usr/share/churros/scripts/fix-xfce-sessions
+XFCE_HOOK=archiso/airootfs/etc/pacman.d/hooks/92-churros-xfce-x11-session.hook
+XFCE_WRAPPER=archiso/airootfs/usr/bin/churros-xfce-session
+
+xfce_ok=1
+if [ ! -f "$XFCE_FIX" ]; then
+    fail "$XFCE_FIX missing (xfce-wayland.desktop would need labwc and bounce the login)"
+    xfce_ok=0
+elif ! grep -q 'fix-xfce-sessions' archiso/profiledef.sh; then
+    fail "archiso/profiledef.sh must declare the file_permissions entry for $XFCE_FIX"
+    xfce_ok=0
+else
+    # Run the script against a fixture shaped like xfce4-session 4.20.
+    xfce_tmp=$(mktemp -d)
+    mkdir -p "$xfce_tmp/usr/share/wayland-sessions" "$xfce_tmp/usr/share/xsessions"
+    printf '[Desktop Entry]\nName=Xfce Session (Wayland)\nExec=startxfce4 --wayland\n' \
+        > "$xfce_tmp/usr/share/wayland-sessions/xfce-wayland.desktop"
+    printf '[Desktop Entry]\nName=Xfce Session\nExec=startxfce4\nType=Application\n' \
+        > "$xfce_tmp/usr/share/xsessions/xfce.desktop"
+    if ! CHURROS_SESSION_ROOT="$xfce_tmp" bash "$XFCE_FIX" \
+        || ! CHURROS_SESSION_ROOT="$xfce_tmp" bash "$XFCE_FIX"; then
+        fail "$XFCE_FIX failed (it must be idempotent: the pacman hook reruns it)"
+        xfce_ok=0
+    elif [ -e "$xfce_tmp/usr/share/wayland-sessions/xfce-wayland.desktop" ]; then
+        fail "$XFCE_FIX does not remove xfce-wayland.desktop"
+        xfce_ok=0
+    elif ! grep -qx 'Exec=/usr/bin/churros-xfce-session' "$xfce_tmp/usr/share/xsessions/xfce.desktop"; then
+        fail "$XFCE_FIX does not point xfce.desktop at churros-xfce-session"
+        xfce_ok=0
+    fi
+    rm -rf "$xfce_tmp"
+fi
+
+if [ ! -f "$XFCE_HOOK" ]; then
+    fail "$XFCE_HOOK missing (pacman -Syu would bring back xfce-wayland.desktop)"
+    xfce_ok=0
+elif grep -q 'remove from airootfs' "$XFCE_HOOK"; then
+    fail "$XFCE_HOOK would be deleted by the ISO-only hook cleaner"
+    xfce_ok=0
+elif ! grep -qE 'Type[[:space:]]*=[[:space:]]*Path' "$XFCE_HOOK" \
+    || ! grep -q 'usr/share/wayland-sessions/xfce-wayland.desktop' "$XFCE_HOOK" \
+    || ! grep -q 'usr/share/xsessions/xfce.desktop' "$XFCE_HOOK" \
+    || ! grep -q 'When[[:space:]]*=[[:space:]]*PostTransaction' "$XFCE_HOOK" \
+    || ! grep -q 'Exec[[:space:]]*=[[:space:]]*/usr/share/churros/scripts/fix-xfce-sessions' "$XFCE_HOOK"; then
+    fail "$XFCE_HOOK must be a PostTransaction Path hook on both XFCE session files running fix-xfce-sessions"
+    xfce_ok=0
+fi
+
+for f in archiso/airootfs/root/scripts/desktop.sh \
+    archiso/airootfs/usr/share/churros/scripts/configure-greetd-session; do
+    if ! grep -q 'fix-xfce-sessions' "$f"; then
+        fail "$f must run fix-xfce-sessions (live boot / install)"
+        xfce_ok=0
+    fi
+done
+
+# ReGreet runs X11 sessions as 'startx /usr/bin/env <Exec>': the wrapper must
+# notice the running X server instead of nesting a second startx.
+if ! grep -q 'DISPLAY' "$XFCE_WRAPPER" || ! grep -q 'xset q' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER must detect an already running X server (ReGreet x11_prefix = startx)"
+    xfce_ok=0
+fi
+
+# A "Device" section forcing Driver "modesetting" breaks the NVIDIA driver
+# that netinstall offers; VM-only tweaks go in an OutputClass.
+if grep -lE '^[[:space:]]*Driver[[:space:]]+"modesetting"' archiso/airootfs/etc/X11/xorg.conf.d/*.conf 2>/dev/null \
+    | xargs -r grep -lE '^[[:space:]]*Section[[:space:]]+"Device"' | grep -q .; then
+    fail "archiso/airootfs/etc/X11/xorg.conf.d forces Driver \"modesetting\" in a Device section (breaks NVIDIA)"
+    xfce_ok=0
+fi
+
+[ "$xfce_ok" -eq 1 ] && pass "XFCE stays X11-only (wrapper + session fix + pacman hook)"
+
 # PartitionLabelsView fills palette().window() and upstream paints Qt::black / Qt::gray.
 LABELS_PATCH=installer/patches/calamares-partition-labels.patch
 if [ ! -f "$LABELS_PATCH" ]; then

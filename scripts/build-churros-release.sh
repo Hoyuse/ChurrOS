@@ -68,6 +68,15 @@ if [ -f "$AIROOTFS/etc/pacman.d/hooks/50-churros-snapshot.hook" ]; then
     echo "    + etc/pacman.d/hooks/50-churros-snapshot.hook"
 fi
 
+# 4b. Hook de la sesión X11 de XFCE (xfce4-session reinstala xfce-wayland.desktop
+#     en cada actualización); inerte en ediciones sin xfce4-session.
+if [ -f "$AIROOTFS/etc/pacman.d/hooks/92-churros-xfce-x11-session.hook" ]; then
+    mkdir -p "$STAGE/etc/pacman.d/hooks"
+    cp "$AIROOTFS/etc/pacman.d/hooks/92-churros-xfce-x11-session.hook" \
+        "$STAGE/etc/pacman.d/hooks/92-churros-xfce-x11-session.hook"
+    echo "    + etc/pacman.d/hooks/92-churros-xfce-x11-session.hook"
+fi
+
 # 4. Assets de /usr/share/churros (estilos, defaults, wallpapers, set-*)
 if [ -d "$AIROOTFS/usr/share/churros" ]; then
     mkdir -p "$STAGE/usr/share"
