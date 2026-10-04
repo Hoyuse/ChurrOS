@@ -26,6 +26,7 @@ if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde"
 fi
 
 PACKAGES_BACKED_UP=0
+GREETD_BACKED_UP=0
 unmount_work_submounts() {
     local target_dir="${1:-work}"
     if [ -d "$target_dir" ]; then
@@ -59,6 +60,9 @@ cleanup_temp() {
     fi
     if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f archiso/packages.x86_64.orig ]; then
         mv archiso/packages.x86_64.orig archiso/packages.x86_64
+    fi
+    if [ "$GREETD_BACKED_UP" -eq 1 ] && [ -f archiso/airootfs/etc/greetd/config.toml.orig ]; then
+        mv archiso/airootfs/etc/greetd/config.toml.orig archiso/airootfs/etc/greetd/config.toml
     fi
     rm -f archiso/airootfs/etc/churros-edition 2>/dev/null || true
     rm -f archiso/airootfs/root/customize_airootfs.sh 2>/dev/null || true
@@ -151,6 +155,11 @@ case "$EDITION" in
         exit 1
         ;;
 esac
+
+if [ -f archiso/airootfs/etc/greetd/config.toml ] && [ ! -f archiso/airootfs/etc/greetd/config.toml.orig ]; then
+    cp archiso/airootfs/etc/greetd/config.toml archiso/airootfs/etc/greetd/config.toml.orig
+    GREETD_BACKED_UP=1
+fi
 
 cat > archiso/airootfs/etc/greetd/config.toml << EOF
 [terminal]

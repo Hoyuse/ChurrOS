@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Wrapper to launch XFCE correctly from Greetd
 
+LOGFILE="${HOME:-/tmp}/.xsession-errors"
+touch "$LOGFILE" 2>/dev/null && exec >> "$LOGFILE" 2>&1
+echo "=== churros-xfce-session: start $(date) (pid=$$, arg1='${1:-}', DISPLAY='${DISPLAY:-}', WAYLAND='${WAYLAND_DISPLAY:-}') ==="
+
 export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
 export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
 export XDG_CURRENT_DESKTOP=XFCE
@@ -31,9 +35,10 @@ if [ "${1:-}" = "--xinit" ] || x_running; then
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
 
-    # Cargar recursos X del sistema si existen
-    if [ -f /etc/X11/xinit/xinitrc ]; then
-        . /etc/X11/xinit/xinitrc
+    # Cargar recursos X si existen (sin ejecutar xinitrc, ya que contiene 'exec xterm' por defecto y mata la sesión)
+    if command -v xrdb >/dev/null 2>&1; then
+        [ -f /etc/X11/Xresources ] && xrdb -merge /etc/X11/Xresources 2>/dev/null || true
+        [ -f "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
     fi
 
     # CRÍTICO: Ejecutar directamente xfce4-session en lugar de startxfce4.
@@ -53,7 +58,7 @@ VT="${XDG_VTNR:-7}"
 if command -v startx >/dev/null 2>&1; then
     # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame
     sleep 1
-    exec startx "$0" --xinit -- :0 "vt${VT}"
+    exec startx "$0" --xinit -- :0 "vt${VT}" -keeptty
 else
     exec /usr/bin/xfce4-session
 fi
