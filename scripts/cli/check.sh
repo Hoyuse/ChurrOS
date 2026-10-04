@@ -624,6 +624,16 @@ fi
 
 [ "$snap_ok" -eq 1 ] && pass "rollback btrfs wired (script + hook + profiledef + UI)"
 
+# PartitionLabelsView fills palette().window() and upstream paints Qt::black / Qt::gray.
+LABELS_PATCH=installer/patches/calamares-partition-labels.patch
+if [ ! -f "$LABELS_PATCH" ]; then
+    fail "$LABELS_PATCH missing (partition size/fs text stays Qt::gray on the legend)"
+elif ! grep -q 'bg.lightness()' "$LABELS_PATCH"; then
+    fail "$LABELS_PATCH does not pick label pens from the view background"
+else
+    pass "partition labels secondary-text patch present"
+fi
+
 # ------------------------------------------------ XFCE X11-only session
 
 section "XFCE X11 session"
@@ -690,6 +700,24 @@ if ! grep -q 'DISPLAY' "$XFCE_WRAPPER" || ! grep -q 'xset q' "$XFCE_WRAPPER"; th
     fail "$XFCE_WRAPPER must detect an already running X server (ReGreet x11_prefix = startx)"
     xfce_ok=0
 fi
+# Arch's /etc/X11/xinit/xinitrc ends in 'exec xterm' (not installed): sourcing
+# it kills the session with 127 before XFCE starts.
+if grep -qE '^[^#]*(\.|source)[[:space:]]+/etc/X11/xinit/xinitrc' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER sources /etc/X11/xinit/xinitrc (ends in 'exec xterm', exit 127)"
+    xfce_ok=0
+fi
+# startxfce4 runs /etc/xdg/xfce4/xinitrc (XDG_MENU_PREFIX, xrdb, dbus/systemd
+# env); a bare xfce4-session skips all of it.
+if grep -qE '^[^#]*exec[[:space:]]+(/usr/bin/)?xfce4-session' "$XFCE_WRAPPER" \
+    || ! grep -qE '^[^#]*exec[[:space:]]+/usr/bin/startxfce4' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER must exec startxfce4, not a bare xfce4-session"
+    xfce_ok=0
+fi
+# A hardcoded display defeats startx's free-display search (stale .X0-lock).
+if grep -qE '^[^#]*startx[^#]*--[[:space:]]+:[0-9]' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER hardcodes the X display in startx (let startx pick a free one)"
+    xfce_ok=0
+fi
 
 # A "Device" section forcing Driver "modesetting" breaks the NVIDIA driver
 # that netinstall offers; VM-only tweaks go in an OutputClass.
@@ -700,16 +728,6 @@ if grep -lE '^[[:space:]]*Driver[[:space:]]+"modesetting"' archiso/airootfs/etc/
 fi
 
 [ "$xfce_ok" -eq 1 ] && pass "XFCE stays X11-only (wrapper + session fix + pacman hook)"
-
-# PartitionLabelsView fills palette().window() and upstream paints Qt::black / Qt::gray.
-LABELS_PATCH=installer/patches/calamares-partition-labels.patch
-if [ ! -f "$LABELS_PATCH" ]; then
-    fail "$LABELS_PATCH missing (partition size/fs text stays Qt::gray on the legend)"
-elif ! grep -q 'bg.lightness()' "$LABELS_PATCH"; then
-    fail "$LABELS_PATCH does not pick label pens from the view background"
-else
-    pass "partition labels secondary-text patch present"
-fi
 
 # ----------------------------------------------- Calamares branding files
 

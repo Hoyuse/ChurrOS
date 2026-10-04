@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # Wrapper to launch XFCE correctly from Greetd
 
+# Registro de diagnóstico: se vacía al empezar cada inicio de sesión (la
+# invocación interna --xinit añade al mismo fichero) para que no crezca sin fin.
 LOGFILE="${HOME:-/tmp}/.xsession-errors"
-touch "$LOGFILE" 2>/dev/null && exec >> "$LOGFILE" 2>&1
+if [ "${1:-}" = "--xinit" ]; then
+    { exec >> "$LOGFILE"; } 2>/dev/null && exec 2>&1
+else
+    { exec > "$LOGFILE"; } 2>/dev/null && exec 2>&1
+fi
 echo "=== churros-xfce-session: start $(date) (pid=$$, arg1='${1:-}', DISPLAY='${DISPLAY:-}', WAYLAND='${WAYLAND_DISPLAY:-}') ==="
 
 export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
@@ -23,42 +29,31 @@ x_running() {
 }
 
 if [ "${1:-}" = "--xinit" ] || x_running; then
-    # Blindar el entorno X11: limpiar residuos de Wayland y variables que activan
-    # la búsqueda de labwc en XFCE 4.20
-    unset WAYLAND_DISPLAY
-    unset XFCE4_SESSION_COMPOSITOR
-    export XDG_SESSION_TYPE=x11
-    export XDG_CURRENT_DESKTOP=XFCE
-    export XDG_SESSION_DESKTOP=xfce
-    export DESKTOP_SESSION=xfce
+    # startxfce4 (4.20) solo busca labwc con --wayland, que exporta
+    # XFCE4_SESSION_COMPOSITOR. Sin esa variable y con DISPLAY puesto ejecuta
+    # /etc/xdg/xfce4/xinitrc: XDG_MENU_PREFIX=xfce- (menú de aplicaciones),
+    # xrdb (Xft/Xcursor), dbus-update-activation-environment --systemd y por
+    # último xfce4-session. No cambiarlo por xfce4-session a secas.
+    # Tampoco cargar /etc/X11/xinit/xinitrc: acaba en 'exec xterm' (exit 127).
+    unset WAYLAND_DISPLAY XFCE4_SESSION_COMPOSITOR
 
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
-
-    # Cargar recursos X si existen (sin ejecutar xinitrc, ya que contiene 'exec xterm' por defecto y mata la sesión)
-    if command -v xrdb >/dev/null 2>&1; then
-        [ -f /etc/X11/Xresources ] && xrdb -merge /etc/X11/Xresources 2>/dev/null || true
-        [ -f "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
-    fi
-
-    # CRÍTICO: Ejecutar directamente xfce4-session en lugar de startxfce4.
-    # En XFCE 4.20, startxfce4 detecta erróneamente Wayland y busca labwc,
-    # fallando con 'Please either install labwc or specify another compositor'.
-    # Como el servidor Xorg ya está activo, lanzamos directamente el gestor de sesión.
-    exec /usr/bin/xfce4-session
+    exec /usr/bin/startxfce4
 fi
 
 # Limpiar variables residuales del greeter (Wayland) que confunden a startx
-unset WAYLAND_DISPLAY
+unset WAYLAND_DISPLAY XFCE4_SESSION_COMPOSITOR
 unset DISPLAY
 
-# Determinar el VT que greetd asignó a esta sesión (evita colisión con cage)
+# Xorg en el VT que greetd asignó a la sesión. Sin ":N": startx elige el primer
+# display libre, así un /tmp/.X0-lock viejo no tumba el arranque.
 VT="${XDG_VTNR:-7}"
 
 if command -v startx >/dev/null 2>&1; then
     # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame
     sleep 1
-    exec startx "$0" --xinit -- :0 "vt${VT}" -keeptty
+    exec startx "$0" --xinit -- "vt${VT}" -keeptty
 else
-    exec /usr/bin/xfce4-session
+    exec /usr/bin/startxfce4
 fi
