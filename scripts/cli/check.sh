@@ -827,8 +827,13 @@ elif ! command -v readelf >/dev/null 2>&1; then
 else
     host_python=$(/usr/bin/python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
     abi_tmp=$(mktemp -d)
-    bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
-        bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
+    if command -v bsdtar >/dev/null 2>&1; then
+        bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
+            bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
+    else
+        tar --zstd -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
+            tar --zstd -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
+    fi
     abi_so=$(find "$abi_tmp" -name 'libcalamares.so*' -type f | head -1 || true)
     pkg_python=""
     if [ -n "$abi_so" ]; then

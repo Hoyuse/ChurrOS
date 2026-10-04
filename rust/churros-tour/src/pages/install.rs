@@ -5,7 +5,7 @@ use std::process::Command;
 use std::rc::Rc;
 use std::time::Duration;
 
-use adw::prelude::*;
+use gtk::prelude::*;
 use glib::ControlFlow;
 
 thread_local! {
@@ -109,7 +109,7 @@ fn which_exists(bin: &str) -> bool {
         .unwrap_or(false)
 }
 
-pub fn start_installation(window: adw::ApplicationWindow) {
+pub fn start_installation(window: gtk::ApplicationWindow) {
     let mut pkgs: Vec<String> = SELECTED_PACKAGES.with(|set| {
         set.borrow().iter().cloned().collect()
     });

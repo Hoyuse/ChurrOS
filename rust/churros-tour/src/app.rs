@@ -1,8 +1,11 @@
-use adw::prelude::*;
+use gtk::prelude::*;
 
 use crate::pages;
 
 fn load_css() {
+    let display = gtk::gdk::Display::default().expect("Failed to get default display");
+
+    // CSS compartido (misma prioridad que Preferences)
     let shared = "/usr/share/churros/styles/churros.css";
     let dev_shared = concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -18,15 +21,14 @@ fn load_css() {
     if let Some(path) = shared_path {
         let provider = gtk::CssProvider::new();
         provider.load_from_path(path);
-        if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-            );
-        }
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+        );
     }
 
+    // CSS local (misma prioridad que Preferences)
     let local = crate::assets::css_path();
     let provider = gtk::CssProvider::new();
     if local.is_file() {
@@ -34,34 +36,72 @@ fn load_css() {
     } else {
         provider.load_from_string(include_str!("../assets/style.css"));
     }
-    if let Some(display) = gtk::gdk::Display::default() {
-        gtk::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
-        );
-    }
+    gtk::style_context_add_provider_for_display(
+        &display,
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1, // Cambiado de USER+1 a APPLICATION+1
+    );
 
+    // Accent CSS (misma prioridad que Preferences)
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
         provider.load_from_string(&css);
-        if let Some(display) = gtk::gdk::Display::default() {
-            gtk::style_context_add_provider_for_display(
-                &display,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_USER,
-            );
-        }
+        gtk::style_context_add_provider_for_display(
+            &display,
+            &provider,
+            gtk::STYLE_PROVIDER_PRIORITY_USER,
+        );
     }
 }
 
-pub fn activate(app: &adw::Application) {
-    adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
+thread_local! {
+    static THEME_SETTINGS: std::cell::RefCell<Option<gio::Settings>> = const { std::cell::RefCell::new(None) };
+}
+
+fn apply_theme(window: &gtk::ApplicationWindow) {
+    let is_dark = churros_services::theme::is_dark();
+    if is_dark {
+        window.remove_css_class("light");
+    } else {
+        window.add_css_class("light");
+    }
+    #[allow(deprecated)]
+    if let Some(settings) = gtk::Settings::default() {
+        settings.set_gtk_application_prefer_dark_theme(is_dark);
+    }
+    window.queue_draw();
+}
+
+fn setup_theme(window: &gtk::ApplicationWindow) {
+    apply_theme(window);
+
+    let w = window.clone();
+    let settings = gio::SettingsSchemaSource::default().and_then(|schema_source| {
+        let schema = schema_source.lookup("org.gnome.desktop.interface", false)?;
+        let settings =
+            gio::Settings::new_full(&schema, None::<&gio::SettingsBackend>, None::<&str>);
+        settings.connect_changed(Some("color-scheme"), move |_, _| {
+            let w = w.clone();
+            glib::idle_add_local_once(move || apply_theme(&w));
+        });
+        Some(settings)
+    });
+    THEME_SETTINGS.with(|cell| *cell.borrow_mut() = settings);
+
+    let w_active = window.clone();
+    window.connect_is_active_notify(move |win| {
+        if win.is_active() {
+            apply_theme(&w_active);
+        }
+    });
+}
+
+pub fn activate(app: &gtk::Application) {
     load_css();
 
-    let window = adw::ApplicationWindow::builder()
+    let window = gtk::ApplicationWindow::builder()
         .application(app)
         .title("ChurrOS Tour")
         .default_width(900)
@@ -70,8 +110,13 @@ pub fn activate(app: &adw::Application) {
         .build();
 
     window.add_css_class("welcome");
+    window.add_css_class("tour");
+    window.add_css_class("churros-glass");
+    setup_theme(&window);
 
-    let stack = adw::ViewStack::new();
+    let stack = gtk::Stack::new();
+    stack.set_transition_type(gtk::StackTransitionType::SlideLeftRight);
+    stack.set_transition_duration(250);
     stack.set_vexpand(true);
 
     let welcome = pages::welcome::build();
@@ -79,10 +124,10 @@ pub fn activate(app: &adw::Application) {
     let customization = pages::customization::build();
     let install = pages::install::build();
 
-    stack.add_titled(&welcome, Some("welcome"), "Bienvenida");
-    stack.add_titled(&shortcuts, Some("shortcuts"), "Atajos");
-    stack.add_titled(&customization, Some("customization"), "Personalización");
-    stack.add_titled(&install, Some("install"), "Instalación");
+    stack.add_named(&welcome, Some("welcome"));
+    stack.add_named(&shortcuts, Some("shortcuts"));
+    stack.add_named(&customization, Some("customization"));
+    stack.add_named(&install, Some("install"));
 
     let action_bar = gtk::ActionBar::new();
     
@@ -108,7 +153,7 @@ pub fn activate(app: &adw::Application) {
     let autostart_check_clone = autostart_check.clone();
 
     // Logic to update buttons when page changes
-    stack.connect_visible_child_notify(move |s| {
+    stack.connect_visible_child_name_notify(move |s| {
         if let Some(child) = s.visible_child_name() {
             let name = child.as_str();
             
@@ -159,9 +204,10 @@ pub fn activate(app: &adw::Application) {
     });
 
     let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    content.add_css_class("tour-content");
     content.append(&stack);
     content.append(&action_bar);
 
-    window.set_content(Some(&content));
+    window.set_child(Some(&content));
     window.present();
 }

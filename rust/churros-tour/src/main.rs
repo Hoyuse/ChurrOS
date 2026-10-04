@@ -1,8 +1,10 @@
+#![allow(deprecated)]
+
 mod app;
 mod pages;
 mod assets;
 
-use adw::prelude::*;
+use gtk::prelude::*;
 use std::path::Path;
 
 const APP_ID: &str = "org.churros.tour";
@@ -19,7 +21,7 @@ fn main() -> glib::ExitCode {
         return glib::ExitCode::SUCCESS;
     }
 
-    let application = adw::Application::builder()
+    let application = gtk::Application::builder()
         .application_id(APP_ID)
         .build();
 
