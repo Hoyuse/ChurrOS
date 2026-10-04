@@ -21,7 +21,7 @@ if [ -f /etc/churros-edition ]; then
         # En la edición server el sistema instalado no tiene display manager:
         # configure-server lo quita y deja el arranque en multi-user.
         server) exit 0 ;;
-        xfce)   SESSION_CMD="/usr/bin/startxfce4" ;;
+        xfce)   SESSION_CMD="/usr/bin/churros-xfce-session" ;;
         kde)    SESSION_CMD="/usr/bin/startplasma-wayland" ;;
     esac
 fi

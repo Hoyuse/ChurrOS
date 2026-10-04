@@ -144,7 +144,7 @@ mkdir -p archiso/airootfs/etc/greetd
 # este case, el build se para aquí en vez de generar una ISO que instala mal.
 case "$EDITION" in
     niri)                SESSION_CMD="niri" ;;
-    xfce|server)         SESSION_CMD="startxfce4" ;;
+    xfce|server)         SESSION_CMD="churros-xfce-session" ;;
     kde)                 SESSION_CMD="startplasma-wayland" ;;
     *)
         echo "Error: sin comando de sesión definido para la edición '$EDITION'" >&2

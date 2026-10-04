@@ -82,6 +82,10 @@ case "$EDITION" in
             "$([ -n "$SESSION" ] && echo yes || echo no)"
         check "el lanzador de sesión existe en disco ($SESSION)" \
             "$([ -n "$SESSION" ] && [ -x "$SESSION" ] && echo yes || echo no)"
+        if [ "$EDITION" = "xfce" ]; then
+            check "sesión XFCE usa el wrapper churros-xfce-session" \
+                "$(case "$SESSION" in *churros-xfce-session*) echo yes ;; *) echo no ;; esac)"
+        fi
         check "greetd habilitado" "$(unit_enabled greetd.service && echo yes || echo no)"
         check "config de greetd sin sección inicial_session" \
             "$(grep -q '^\[initial_session\]' /etc/greetd/config.toml 2>/dev/null && echo no || echo yes)"
