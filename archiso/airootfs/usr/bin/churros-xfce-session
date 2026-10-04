@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # Wrapper to launch XFCE correctly from Greetd
 
+export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
+export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
+export XDG_CURRENT_DESKTOP=XFCE
+export XDG_SESSION_DESKTOP=xfce
+export XDG_SESSION_TYPE=x11
+export DESKTOP_SESSION=xfce
+
 if [ "$1" = "--xinit" ]; then
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
@@ -11,10 +18,6 @@ fi
 unset WAYLAND_DISPLAY
 # Si vamos a lanzar startx, Xorg necesita un entorno limpio sin un DISPLAY viejo
 unset DISPLAY
-
-export XDG_CURRENT_DESKTOP=XFCE
-export XDG_SESSION_DESKTOP=xfce
-export XDG_SESSION_TYPE=x11
 
 if command -v startx >/dev/null 2>&1; then
     # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame

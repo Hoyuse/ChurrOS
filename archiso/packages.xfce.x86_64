@@ -111,6 +111,7 @@ xorg-xinit
 xorg-xrandr
 xorg-xset
 xorg-xsetroot
+xorg-fonts-misc
 xf86-input-libinput
 xclip
 picom
@@ -222,6 +223,7 @@ ufw
 plymouth
 papirus-icon-theme
 adwaita-icon-theme
+adwaita-cursors
 fastfetch
 
 # Multimedia base

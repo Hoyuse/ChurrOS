@@ -24,6 +24,8 @@ XDG_CURRENT_DESKTOP=XFCE
 XDG_SESSION_DESKTOP=xfce
 XDG_SESSION_TYPE=x11
 DESKTOP_SESSION=xfce
+XCURSOR_THEME=Adwaita
+XCURSOR_SIZE=24
 EOF
 
     # Asegurar que la sesión X11 ejecute el wrapper para iniciar Xorg desde greetd
