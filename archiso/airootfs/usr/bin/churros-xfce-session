@@ -19,20 +19,41 @@ x_running() {
 }
 
 if [ "${1:-}" = "--xinit" ] || x_running; then
+    # Blindar el entorno X11: limpiar residuos de Wayland y variables que activan
+    # la búsqueda de labwc en XFCE 4.20
+    unset WAYLAND_DISPLAY
+    unset XFCE4_SESSION_COMPOSITOR
+    export XDG_SESSION_TYPE=x11
+    export XDG_CURRENT_DESKTOP=XFCE
+    export XDG_SESSION_DESKTOP=xfce
+    export DESKTOP_SESSION=xfce
+
     # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
     xsetroot -cursor_name left_ptr || true
-    exec /usr/bin/startxfce4
+
+    # Cargar recursos X del sistema si existen
+    if [ -f /etc/X11/xinit/xinitrc ]; then
+        . /etc/X11/xinit/xinitrc
+    fi
+
+    # CRÍTICO: Ejecutar directamente xfce4-session en lugar de startxfce4.
+    # En XFCE 4.20, startxfce4 detecta erróneamente Wayland y busca labwc,
+    # fallando con 'Please either install labwc or specify another compositor'.
+    # Como el servidor Xorg ya está activo, lanzamos directamente el gestor de sesión.
+    exec /usr/bin/xfce4-session
 fi
 
-# Limpiar variables residuales del greeter (Wayland) que confunden a startxfce4
+# Limpiar variables residuales del greeter (Wayland) que confunden a startx
 unset WAYLAND_DISPLAY
-# Si vamos a lanzar startx, Xorg necesita un entorno limpio sin un DISPLAY viejo
 unset DISPLAY
+
+# Determinar el VT que greetd asignó a esta sesión (evita colisión con cage)
+VT="${XDG_VTNR:-7}"
 
 if command -v startx >/dev/null 2>&1; then
     # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame
     sleep 1
-    exec startx "$0" --xinit
+    exec startx "$0" --xinit -- :0 "vt${VT}"
 else
-    exec /usr/bin/startxfce4
+    exec /usr/bin/xfce4-session
 fi
