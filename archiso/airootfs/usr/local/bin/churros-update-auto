@@ -10,8 +10,12 @@ LOG=/tmp/churros-update.log
     echo "=== $(date) ==="
     churros-pkexec pacman -Syu --noconfirm 2>&1
     PAC_RC=$?
-    churros-pkexec flatpak update -y 2>&1
-    FLAT_RC=$?
+    if command -v flatpak >/dev/null 2>&1; then
+        churros-pkexec flatpak update -y 2>&1
+        FLAT_RC=$?
+    else
+        FLAT_RC=0
+    fi
     churros-pkexec churros-update-utils 2>&1
     CHURROS_RC=$?
     echo "=== fin ==="

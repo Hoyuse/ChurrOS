@@ -156,6 +156,14 @@ impl IconsService {
         let _ = Command::new("xfconf-query")
             .args(["-c", "xsettings", "-p", "/Net/IconThemeName", "-s", theme])
             .output();
+
+        if churros_services::version::edition().contains("kde")
+            || churros_services::which("kwriteconfig6")
+        {
+            let _ = Command::new("kwriteconfig6")
+                .args(["--file", "kdeglobals", "--group", "Icons", "--key", "Theme", theme])
+                .output();
+        }
     }
 
     /// Temas disponibles: carpetas con index.theme en ICON_DIRS (sorted set)

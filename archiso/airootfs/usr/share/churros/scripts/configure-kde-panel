@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Aplica el logo de ChurrOS al botón Kickoff de KDE Plasma
+CONFIG_FILE="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+[ -f "$CONFIG_FILE" ] || exit 0
+
+if command -v kwriteconfig6 >/dev/null 2>&1; then
+    grep -n "plugin=org.kde.plasma.kickoff" "$CONFIG_FILE" | while IFS=: read -r _ line; do
+        applet_id=$(sed -n "1,${line}p" "$CONFIG_FILE" | grep -E '^\[Applets\[' | tail -n 1 | sed -E 's/.*\[Applets\[([0-9]+)\].*/\1/')
+        if [ -n "$applet_id" ]; then
+            kwriteconfig6 --file "$CONFIG_FILE" --group Containments --group 1 --group Applets --group "$applet_id" --group Configuration --group General --key icon "churros-logo"
+            kwriteconfig6 --file "$CONFIG_FILE" --group Containments --group 1 --group Applets --group "$applet_id" --group Configuration --group General --key useCustomButtonImage "true"
+            kwriteconfig6 --file "$CONFIG_FILE" --group Containments --group 1 --group Applets --group "$applet_id" --group Configuration --group General --key customButtonImage "/usr/share/icons/hicolor/scalable/apps/churros-logo.svg"
+        fi
+    done
+fi

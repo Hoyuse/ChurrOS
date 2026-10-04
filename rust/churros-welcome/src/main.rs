@@ -132,6 +132,15 @@ fn main() -> glib::ExitCode {
         libc::signal(libc::SIGPIPE, libc::SIG_IGN);
     }
 
+    // Si se pasa --live-only, la app solo debe iniciar en el entorno Live.
+    // En un sistema ya instalado no debe autoiniciar al entrar a la sesión.
+    let live_only = std::env::args().any(|arg| arg == "--live-only");
+    let is_live = std::path::Path::new("/run/archiso").exists();
+    let is_dev = std::env::var("CHURROS_DEV").is_ok();
+    if live_only && !is_live && !is_dev {
+        return glib::ExitCode::SUCCESS;
+    }
+
     let app = adw::Application::builder()
         .application_id(APP_ID)
         .build();
