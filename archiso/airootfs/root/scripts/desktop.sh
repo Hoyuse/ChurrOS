@@ -30,8 +30,14 @@ EOF
 
     # Asegurar que la sesión X11 ejecute el wrapper para iniciar Xorg desde greetd
     if [ -f /usr/share/xsessions/xfce.desktop ]; then
-        sed -i 's|^Exec=.*|Exec=churros-xfce-session|' /usr/share/xsessions/xfce.desktop
+        sed -i 's|^Exec=.*|Exec=/usr/bin/churros-xfce-session|' /usr/share/xsessions/xfce.desktop
     fi
+
+    # Eliminar la sesión Wayland experimental de XFCE instalada por xfce4-session 4.20.
+    # Dicha sesión ejecuta 'startxfce4 --wayland', que requiere labwc (no instalado).
+    # ChurrOS XFCE está diseñado exclusivamente para X11 (xfwm4 + picom).
+    # Al eliminarla, ReGreet seleccionará la sesión X11 (churros-xfce-session).
+    rm -f /usr/share/wayland-sessions/xfce-wayland.desktop
 
     # Asegurar que el fondo de ChurrOS se aplique incluso en monitores no preconfigurados por XFCE
     mkdir -p /usr/share/backgrounds/xfce

@@ -85,6 +85,8 @@ case "$EDITION" in
         if [ "$EDITION" = "xfce" ]; then
             check "sesión XFCE usa el wrapper churros-xfce-session" \
                 "$(case "$SESSION" in *churros-xfce-session*) echo yes ;; *) echo no ;; esac)"
+            check "sesión experimental xfce-wayland desactivada" \
+                "$([ ! -e /usr/share/wayland-sessions/xfce-wayland.desktop ] && echo yes || echo no)"
         fi
         check "greetd habilitado" "$(unit_enabled greetd.service && echo yes || echo no)"
         check "config de greetd sin sección inicial_session" \
