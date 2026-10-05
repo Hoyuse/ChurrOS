@@ -82,9 +82,14 @@ if [ "${1:-}" = "--xinit" ] || x_running; then
     unset WAYLAND_DISPLAY
     unset XFCE4_SESSION_COMPOSITOR
 
-    # Software cursor: the hardware cursor is invisible on the GPU drivers used
-    # in VMs. Cosmetic, so never let it break the login.
-    xsetroot -cursor_name left_ptr >/dev/null 2>&1 || true
+    # Do NOT run 'xsetroot -cursor_name left_ptr' here. It resolves the cursor
+    # through the core X11 "cursor" font (XLoadFont + XCreateGlyphCursor), not
+    # through the Xcursor theme, so it overrides XCURSOR_THEME/Adwaita with a
+    # 1-bit 16x16 glyph that does not scale and all but vanishes against the
+    # wallpaper. It used to be harmless only because xorg-fonts-misc was absent,
+    # so the call failed on a missing font and '|| true' swallowed it. Once that
+    # package landed the call started succeeding and the pointer disappeared.
+    # The cursor theme in xsettings.xml is what should decide this.
 
     log "churros-xfce-session: exec startxfce4 (X already running)"
     exec /usr/bin/startxfce4

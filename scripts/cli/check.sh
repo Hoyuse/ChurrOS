@@ -739,6 +739,17 @@ if grep -qE '^[^#]*\{[[:space:]]*exec[[:space:]]*>{1,2}' "$XFCE_WRAPPER"; then
     fail "$XFCE_WRAPPER redirects its own stdout/stderr before starting Xorg (Xorg reads fds 0-2 to find the VT; greetd watches that tty)"
     xfce_ok=0
 fi
+# 'xsetroot -cursor_name' resolves the cursor through the core X11 "cursor"
+# font, not through the Xcursor theme, so it overrides XCURSOR_THEME/Adwaita
+# with a 1-bit 16x16 glyph that does not scale and vanishes against the
+# wallpaper. It hid for a long time because xorg-fonts-misc was absent, so the
+# call failed on a missing font and '|| true' swallowed it; adding that package
+# made it start working and the pointer disappeared. xsettings.xml owns the
+# cursor theme instead.
+if grep -qE '^[^#]*xsetroot[[:space:]]+-cursor_name' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER calls 'xsetroot -cursor_name': it bypasses the Xcursor theme (Adwaita) with a 1-bit core-font glyph and hides the pointer. Set CursorThemeName in xsettings.xml instead"
+    xfce_ok=0
+fi
 
 # A "Device" section forcing Driver "modesetting" breaks the NVIDIA driver
 # that netinstall offers; VM-only tweaks go in an OutputClass.
