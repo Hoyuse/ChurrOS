@@ -1,8 +1,8 @@
 #![allow(deprecated)]
 
 mod app;
-mod pages;
 mod assets;
+mod pages;
 
 use gtk::prelude::*;
 use std::path::Path;
@@ -21,11 +21,12 @@ fn main() -> glib::ExitCode {
         return glib::ExitCode::SUCCESS;
     }
 
-    let application = gtk::Application::builder()
-        .application_id(APP_ID)
-        .build();
+    let application = gtk::Application::builder().application_id(APP_ID).build();
 
     application.connect_activate(app::activate);
 
     application.run()
 }
+
+#[cfg(test)]
+mod tests;

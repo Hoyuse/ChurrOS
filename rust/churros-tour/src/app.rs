@@ -126,11 +126,11 @@ pub fn activate(app: &gtk::Application) {
 
     stack.add_named(&welcome, Some("welcome"));
     stack.add_named(&shortcuts, Some("shortcuts"));
-    stack.add_named(&customization, Some("customization"));
-    stack.add_named(&install, Some("install"));
+    stack.add_named(&customization.root, Some("customization"));
+    stack.add_named(&install.root, Some("install"));
 
     let action_bar = gtk::ActionBar::new();
-    
+
     let back_btn = gtk::Button::with_label("Atrás");
     let next_btn = gtk::Button::with_label("Siguiente");
     next_btn.add_css_class("suggested-action");
@@ -138,7 +138,7 @@ pub fn activate(app: &gtk::Application) {
     // Autostart checkbox at the end
     let autostart_check = gtk::CheckButton::builder()
         .label("Abrir al iniciar")
-        .active(true)
+        .active(false)
         .visible(false) // Solo se muestra al final
         .build();
 
@@ -156,9 +156,9 @@ pub fn activate(app: &gtk::Application) {
     stack.connect_visible_child_name_notify(move |s| {
         if let Some(child) = s.visible_child_name() {
             let name = child.as_str();
-            
+
             back_btn_clone.set_sensitive(name != "welcome");
-            
+
             if name == "install" {
                 next_btn_clone.set_label("Finalizar");
                 autostart_check_clone.set_visible(true);
@@ -172,29 +172,60 @@ pub fn activate(app: &gtk::Application) {
     let stack_for_next = stack.clone();
     let window_clone = window.clone();
     let autostart_check_clone2 = autostart_check.clone();
-    
-    next_btn.connect_clicked(move |_| {
-        let current = stack_for_next.visible_child_name().map(|s| s.to_string()).unwrap_or_default();
+
+    let install_for_next = install.clone();
+    let back_for_next = back_btn.clone();
+    next_btn.connect_clicked(move |next| {
+        let current = stack_for_next
+            .visible_child_name()
+            .map(|s| s.to_string())
+            .unwrap_or_default();
         match current.as_str() {
             "welcome" => stack_for_next.set_visible_child_name("shortcuts"),
             "shortcuts" => stack_for_next.set_visible_child_name("customization"),
             "customization" => {
-                // Here we should trigger the installation logic in the install page
                 stack_for_next.set_visible_child_name("install");
-                pages::install::start_installation(window_clone.clone());
-            },
-            "install" => {
-                // Handle autostart logic
-                pages::install::handle_autostart(autostart_check_clone2.is_active());
-                window_clone.close();
+                back_for_next.set_sensitive(false);
+                next.set_sensitive(false);
+                autostart_check_clone2.set_sensitive(false);
+                let back = back_for_next.clone();
+                let next = next.clone();
+                let autostart = autostart_check_clone2.clone();
+                install_for_next.start(customization.packages(), move |success| {
+                    back.set_sensitive(true);
+                    next.set_sensitive(true);
+                    next.set_label(if success { "Finalizar" } else { "Cerrar" });
+                    autostart.set_sensitive(success);
+                    if !success {
+                        autostart.set_active(true);
+                    }
+                });
+            }
+            "install" => match install_for_next.finish(autostart_check_clone2.is_active()) {
+                Ok(()) => window_clone.close(),
+                Err(e) => install_for_next
+                    .show_error(&format!("No se pudo guardar el inicio del Tour: {e}")),
             },
             _ => {}
         }
     });
 
+    let install_for_close = install.clone();
+    window.connect_close_request(move |_| {
+        if install_for_close.is_running() {
+            install_for_close.show_error("La instalación sigue en curso. Termina o cancela la operación en la terminal antes de cerrar el Tour.");
+            glib::Propagation::Stop
+        } else {
+            glib::Propagation::Proceed
+        }
+    });
+
     let stack_for_back = stack.clone();
     back_btn.connect_clicked(move |_| {
-        let current = stack_for_back.visible_child_name().map(|s| s.to_string()).unwrap_or_default();
+        let current = stack_for_back
+            .visible_child_name()
+            .map(|s| s.to_string())
+            .unwrap_or_default();
         match current.as_str() {
             "shortcuts" => stack_for_back.set_visible_child_name("welcome"),
             "customization" => stack_for_back.set_visible_child_name("shortcuts"),
