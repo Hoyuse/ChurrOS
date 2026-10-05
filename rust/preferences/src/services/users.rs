@@ -169,6 +169,8 @@ impl UsersService {
         let desktop = churros_services::version::edition();
         let session_cmd = if desktop.contains("xfce") {
             "startxfce4"
+        } else if desktop.contains("kde") {
+            "startplasma-wayland"
         } else {
             "niri"
         };
