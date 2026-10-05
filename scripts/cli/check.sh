@@ -718,6 +718,27 @@ if grep -qE '^[^#]*startx[^#]*--[[:space:]]+:[0-9]' "$XFCE_WRAPPER"; then
     fail "$XFCE_WRAPPER hardcodes the X display in startx (let startx pick a free one)"
     xfce_ok=0
 fi
+# startx only accepts its client as the session program when the path starts
+# with '/' or './' (startx.c: case "$1" in /''*|\./''*)). Given a bare name it
+# silently falls back to its default client, xterm, which is not installed in
+# any ChurrOS package list: xinit exits 127 and greetd bounces to the greeter.
+# So the wrapper must resolve itself to an absolute path before calling startx.
+if grep -qE '^[^#]*exec[[:space:]]+startx[[:space:]]+"\$0"' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER passes \"\$0\" to startx: a relative \$0 makes startx run xterm (not installed) and greetd bounce to the greeter"
+    xfce_ok=0
+fi
+if ! grep -qE '^[^#]*exec[[:space:]]+startx[[:space:]]+"\$self"' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER must exec startx with an absolute, pre-resolved path (got \$self, not \$0)"
+    xfce_ok=0
+fi
+# Xorg finds the VT to take by inspecting its own fds 0-2 (lnx_init.c,
+# parse_vt_settings) and greetd watches the session on that same tty, so the
+# wrapper must not redirect stdout/stderr before exec'ing startx. Diagnostics
+# belong in a log() helper, not in an 'exec >' at the top of the session.
+if grep -qE '^[^#]*\{[[:space:]]*exec[[:space:]]*>{1,2}' "$XFCE_WRAPPER"; then
+    fail "$XFCE_WRAPPER redirects its own stdout/stderr before starting Xorg (Xorg reads fds 0-2 to find the VT; greetd watches that tty)"
+    xfce_ok=0
+fi
 
 # A "Device" section forcing Driver "modesetting" breaks the NVIDIA driver
 # that netinstall offers; VM-only tweaks go in an OutputClass.
