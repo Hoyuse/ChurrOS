@@ -1,15 +1,60 @@
 #!/usr/bin/env bash
-# Wrapper to launch XFCE correctly from Greetd
+# Wrapper to launch XFCE correctly from Greetd.
+#
+# Greetd + cage (regreet) runs the greeter on Wayland. On login greetd kills
+# cage and runs this script, in one of two ways:
+#
+#   1. As [initial_session] on the Live ISO / on autologin: no X server is
+#      running, so we start one ourselves with startx.
+#   2. Through ReGreet, which prefixes X11 sessions with its x11_prefix
+#      ("startx /usr/bin/env"): Xorg is already up and $DISPLAY is set, so we
+#      must NOT nest a second startx ("Server is already active for display 0").
+#
+# Both paths converge on startxfce4, which with DISPLAY set runs
+# /etc/xdg/xfce4/xinitrc (XDG_MENU_PREFIX=xfce-, xrdb, dbus env) and finally
+# xfce4-session. It only looks for labwc when --wayland is passed, so we never
+# pass it and never set XFCE4_SESSION_COMPOSITOR.
+#
+# NOTE: stdout/stderr are deliberately left alone on the path that starts Xorg.
+# Redirecting them to a file here is what broke the Live ISO: Xorg inspects its
+# own fds 0-2 to find the controlling VT (hw/xfree86/os-support/linux/
+# lnx_init.c, parse_vt_settings) and greetd watches the session on that same
+# tty. Diagnostics go through log() below, which appends to the log file
+# without touching the session's own descriptors.
 
-# Registro de diagnóstico: se vacía al empezar cada inicio de sesión (la
-# invocación interna --xinit añade al mismo fichero) para que no crezca sin fin.
+# Where the diagnostics of every login attempt are collected. Read it after a
+# failed login: it is the only record of what the wrapper and Xorg did.
 LOGFILE="${HOME:-/tmp}/.xsession-errors"
-if [ "${1:-}" = "--xinit" ]; then
-    { exec >> "$LOGFILE"; } 2>/dev/null && exec 2>&1
-else
-    { exec > "$LOGFILE"; } 2>/dev/null && exec 2>&1
-fi
-echo "=== churros-xfce-session: start $(date) (pid=$$, arg1='${1:-}', DISPLAY='${DISPLAY:-}', WAYLAND='${WAYLAND_DISPLAY:-}') ==="
+
+log() {
+    printf '%s\n' "$*" >>"$LOGFILE" 2>/dev/null || true
+}
+
+# startx only treats its first argument as the client program when it starts
+# with '/' or './' (startx.c, "case $1 in /''*|\./''*)"). Handed a bare
+# "churros-xfce-session" it silently falls back to its default client, xterm,
+# which is not installed: xinit dies with 127, greetd concludes the session
+# ended and drops back to the greeter. So never pass a relative path.
+#
+# $0 is only trustworthy when greetd exec'd us through an absolute path, which
+# it does for [initial_session] and for the Exec= line we install in
+# xfce.desktop. Resolve it properly instead of assuming.
+self="${BASH_SOURCE[0]:-$0}"
+case "$self" in
+    /*) ;;
+    */*) self="$PWD/$self" ;;
+    *)
+        resolved="$(command -v -- "$self" 2>/dev/null || true)"
+        if [ -n "$resolved" ]; then
+            self="$resolved"
+        else
+            log "churros-xfce-session: cannot resolve '$self' to an absolute path"
+            exit 127
+        fi
+        ;;
+esac
+
+log "=== churros-xfce-session: $(date) pid=$$ arg1='${1:-}' self='$self' DISPLAY='${DISPLAY:-}' WAYLAND_DISPLAY='${WAYLAND_DISPLAY:-}' XDG_VTNR='${XDG_VTNR:-}' ==="
 
 export XCURSOR_THEME="${XCURSOR_THEME:-Adwaita}"
 export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
@@ -18,42 +63,58 @@ export XDG_SESSION_DESKTOP=xfce
 export XDG_SESSION_TYPE=x11
 export DESKTOP_SESSION=xfce
 
-# ¿Ya hay un servidor X? Pasa con nuestro propio startx (--xinit) y también
-# cuando ReGreet lanza la sesión X11: antepone su x11_prefix por defecto
-# ("startx /usr/bin/env") al Exec de xfce.desktop. Lanzar otro startx aquí
-# fallaría ("Server is already active for display 0") y devolvería al greeter.
+# Is there already an X server we can use? True for our own --xinit callback
+# and for ReGreet's "startx /usr/bin/env <Exec>". Prefer asking the server
+# itself over testing for the socket, which a stale one could fake.
 x_running() {
     [ -n "${DISPLAY:-}" ] || return 1
-    command -v xset >/dev/null 2>&1 || return 0
-    xset q >/dev/null 2>&1
+    if command -v xset >/dev/null 2>&1; then
+        xset q >/dev/null 2>&1 && return 0
+        log "churros-xfce-session: DISPLAY=$DISPLAY set but 'xset q' failed"
+        return 1
+    fi
+    # No xset to ask: fall back to the socket, stripped of its ":N" suffix.
+    [ -S "/tmp/.X11-unix/X${DISPLAY#:}" ]
 }
 
 if [ "${1:-}" = "--xinit" ] || x_running; then
-    # startxfce4 (4.20) solo busca labwc con --wayland, que exporta
-    # XFCE4_SESSION_COMPOSITOR. Sin esa variable y con DISPLAY puesto ejecuta
-    # /etc/xdg/xfce4/xinitrc: XDG_MENU_PREFIX=xfce- (menú de aplicaciones),
-    # xrdb (Xft/Xcursor), dbus-update-activation-environment --systemd y por
-    # último xfce4-session. No cambiarlo por xfce4-session a secas.
-    # Tampoco cargar /etc/X11/xinit/xinitrc: acaba en 'exec xterm' (exit 127).
-    unset WAYLAND_DISPLAY XFCE4_SESSION_COMPOSITOR
+    # Cage's Wayland leftovers would make startxfce4 look for a compositor.
+    unset WAYLAND_DISPLAY
+    unset XFCE4_SESSION_COMPOSITOR
 
-    # Forzar el dibujado del cursor por defecto en Xorg para evitar que sea invisible en VMs
-    xsetroot -cursor_name left_ptr || true
+    # Software cursor: the hardware cursor is invisible on the GPU drivers used
+    # in VMs. Cosmetic, so never let it break the login.
+    xsetroot -cursor_name left_ptr >/dev/null 2>&1 || true
+
+    log "churros-xfce-session: exec startxfce4 (X already running)"
     exec /usr/bin/startxfce4
 fi
 
-# Limpiar variables residuales del greeter (Wayland) que confunden a startx
-unset WAYLAND_DISPLAY XFCE4_SESSION_COMPOSITOR
+# No X server yet: greetd handed us a bare Wayland greeter environment and we
+# have to bring up Xorg ourselves.
+unset WAYLAND_DISPLAY
+unset XFCE4_SESSION_COMPOSITOR
 unset DISPLAY
 
-# Xorg en el VT que greetd asignó a la sesión. Sin ":N": startx elige el primer
-# display libre, así un /tmp/.X0-lock viejo no tumba el arranque.
+# Run Xorg on the VT greetd allocated to this session. greetd exports
+# XDG_VTNR; 7 matches [terminal] vt in greetd's config.toml.
+#
+# -keeptty is required, not cosmetic: Xorg only enables its systemd-logind
+# integration when -keeptty is given (systemd-logind.c, systemd_logind_init),
+# and that integration is how a non-root Xorg is allowed to take the VT and the
+# DRM/KMS master. Without it Xorg starts, cannot grab the console and exits.
+#
+# No ":N" display argument: startx then picks the first free display, so a stale
+# /tmp/.X0-lock from a previous bounce cannot lock us out of the login.
 VT="${XDG_VTNR:-7}"
 
-if command -v startx >/dev/null 2>&1; then
-    # Esperar un segundo para permitir que cage libere el DRM master antes de que Xorg lo reclame
-    sleep 1
-    exec startx "$0" --xinit -- "vt${VT}" -keeptty
-else
+if ! command -v startx >/dev/null 2>&1; then
+    log "churros-xfce-session: startx unavailable, handing over to startxfce4"
     exec /usr/bin/startxfce4
 fi
+
+# Cage may still hold the DRM master for a moment after greetd killed it.
+sleep 1
+
+log "churros-xfce-session: exec startx '$self' --xinit -- vt$VT -keeptty"
+exec startx "$self" --xinit -- "vt${VT}" -keeptty
