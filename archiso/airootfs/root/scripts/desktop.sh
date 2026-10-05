@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 echo "==> Configuring desktop..."
 
@@ -83,14 +83,10 @@ EOF
         fi
     done
 
-    # Reemplazar la aplicación de configuración de KDE (systemsettings) por churros-settings
-    if [ -f /usr/bin/systemsettings ] && [ ! -L /usr/bin/systemsettings ]; then
-        mv /usr/bin/systemsettings /usr/bin/systemsettings.kde-orig 2>/dev/null || true
-        ln -sf /usr/bin/churros-settings /usr/bin/systemsettings
-    fi
-
-    # Ocultar las entradas de escritorio de systemsettings y discover de KDE
-    for ss_desktop in /usr/share/applications/*systemsettings*.desktop /usr/share/applications/*discover*.desktop; do
+    # Conservar systemsettings y su entrada: churros-settings abre los KCM de
+    # Plasma a través de ese ejecutable. No modificar archivos de su paquete.
+    # Discover sigue oculto en favor de Bazaar.
+    for ss_desktop in /usr/share/applications/*discover*.desktop; do
         if [ -f "$ss_desktop" ]; then
             sed -i '/^Exec=/c\Exec=churros-settings' "$ss_desktop" 2>/dev/null || true
             sed -i '/^NoDisplay=/d; /^Hidden=/d' "$ss_desktop" 2>/dev/null || true
