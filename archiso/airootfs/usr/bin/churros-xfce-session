@@ -82,9 +82,20 @@ if [ "${1:-}" = "--xinit" ] || x_running; then
     unset WAYLAND_DISPLAY
     unset XFCE4_SESSION_COMPOSITOR
 
-    # Software cursor: the hardware cursor is invisible on the GPU drivers used
-    # in VMs. Cosmetic, so never let it break the login.
-    xsetroot -cursor_name left_ptr >/dev/null 2>&1 || true
+    # Do NOT run 'xsetroot -cursor_name left_ptr' here. Its code path is
+    # XLoadFont on the core X11 "cursor" font + XCreateGlyphCursor +
+    # XDefineCursor on the root window; libXcursor is only used by -cursor and
+    # -xcf. So it overrides the theme xsettings.xml asks for (CursorThemeName
+    # Adwaita, size 24) with a 1-bit 16x16 glyph that does not scale and all
+    # but vanishes against the wallpaper.
+    #
+    # It was inert until d9f285a added xorg-fonts-misc to packages.xfce.x86_64:
+    # that package ships /usr/share/fonts/misc/cursor.pcf.gz, the font
+    # XLoadFont needs, and the branch went from skipping XDefineCursor to
+    # taking it. Note xsetroot exits 0 either way, so '|| true' was never what
+    # hid it.
+    #
+    # xsettings.xml owns the cursor theme; leave it to do that.
 
     log "churros-xfce-session: exec startxfce4 (X already running)"
     exec /usr/bin/startxfce4
