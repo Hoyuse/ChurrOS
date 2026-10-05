@@ -254,6 +254,55 @@ for command in "${COMMANDS[@]}"; do
 done
 [ "$missing" -eq 0 ] && pass "${#COMMANDS[@]} commands resolve"
 
+# -------------------------------------------------- Niri Xwayland integration
+
+section "Niri Xwayland integration"
+
+# packages.x86_64 is the default Niri profile; build.sh substitutes an edition-
+# specific list for XFCE, KDE, and Server builds. Keep the satellite scoped to Niri.
+XWAYLAND_SATELLITE="xwayland-satellite"
+if grep -Fxq "$XWAYLAND_SATELLITE" archiso/packages.x86_64; then
+    pass "xwayland-satellite is included in the Niri profile"
+else
+    fail "xwayland-satellite is missing from archiso/packages.x86_64 (Niri)"
+fi
+
+other_profile_satellite=0
+for pkg_list in archiso/packages.*.x86_64; do
+    [ -f "$pkg_list" ] || continue
+    if grep -Fxq "$XWAYLAND_SATELLITE" "$pkg_list"; then
+        fail "$XWAYLAND_SATELLITE must stay out of alternate profile $pkg_list"
+        other_profile_satellite=$((other_profile_satellite + 1))
+    fi
+done
+[ "$other_profile_satellite" -eq 0 ] && pass "xwayland-satellite is excluded from alternate profiles"
+
+# Niri owns DISPLAY when its automatic Xwayland integration is enabled. The
+# portal startup helper propagates that value to systemd and D-Bus activation.
+NIRI_SESSION_WRAPPER="archiso/airootfs/usr/bin/churros-niri-session"
+NIRI_PORTAL_HELPER="archiso/airootfs/usr/bin/churros-portal-start"
+if grep -Eq '^[[:space:]]*(DISPLAY[[:space:]]+|spawn(-at-startup)?[[:space:]].*xwayland-satellite)' "$NIRI_CONFIG"; then
+    fail "Niri config overrides DISPLAY or starts xwayland-satellite manually"
+else
+    pass "Niri config leaves DISPLAY and satellite startup to Niri"
+fi
+
+if grep -Eq '(^|[[:space:]])(unset[[:space:]]+DISPLAY|export[[:space:]]+DISPLAY=|DISPLAY=)' "$NIRI_SESSION_WRAPPER"; then
+    fail "Niri session wrapper overrides DISPLAY"
+else
+    pass "Niri session wrapper preserves Niri's DISPLAY"
+fi
+
+if grep -Eq '^[[:space:]]*spawn-at-startup[[:space:]]+"churros-portal-start"[[:space:]]*$' "$NIRI_CONFIG" &&
+   grep -A8 -F 'systemctl --user import-environment' "$NIRI_PORTAL_HELPER" |
+       grep -qE '^[[:space:]]+DISPLAY([[:space:]]|$)' &&
+   grep -A8 -F 'dbus-update-activation-environment --systemd' "$NIRI_PORTAL_HELPER" |
+       grep -qE '^[[:space:]]+DISPLAY([[:space:]]|$)'; then
+    pass "Niri startup imports DISPLAY into systemd and D-Bus environments"
+else
+    fail "Niri startup does not propagate DISPLAY to systemd and D-Bus"
+fi
+
 # ------------------------------------------------------- Desktop entries
 
 section "Desktop Exec / TryExec"
