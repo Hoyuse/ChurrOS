@@ -32,6 +32,8 @@ fn dotfiles() -> Vec<(&'static str, PathBuf)> {
         ("fuzzel", home().join(".config").join("fuzzel")),
         ("mako", home().join(".config").join("mako")),
         ("waybar", home().join(".config").join("waybar")),
+        ("noctalia", home().join(".config").join("noctalia")),
+        ("fastfetch", home().join(".config").join("fastfetch")),
     ]
 }
 
