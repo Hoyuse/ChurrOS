@@ -21,7 +21,7 @@ thread_local! {
 }
 
 fn cache_dir() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     PathBuf::from(home).join(".cache").join("churros-theme")
 }
 
@@ -30,7 +30,7 @@ fn dark_flag() -> PathBuf {
 }
 
 fn gtk_ini(dir: &str) -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     PathBuf::from(home).join(".config").join(dir).join("settings.ini")
 }
 

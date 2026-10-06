@@ -1,6 +1,5 @@
 use std::cell::Cell;
 use std::path::PathBuf;
-use std::process::Command;
 use std::rc::Rc;
 use std::time::Duration;
 
@@ -61,11 +60,7 @@ fn detect_terminal() -> (String, Vec<String>) {
         _ => &["foot", "konsole", "xfce4-terminal", "xterm"],
     };
     for &bin in candidates {
-        if Command::new("which")
-            .arg(bin)
-            .output()
-            .is_ok_and(|o| o.status.success())
-        {
+        if churros_services::which(bin) {
             let flags: &[&str] = match bin {
                 // These must remain attached to the launched shell, even when a
                 // terminal instance is already open in the desktop session.
@@ -77,7 +72,9 @@ fn detect_terminal() -> (String, Vec<String>) {
             return (bin.into(), flags.iter().map(|s| (*s).into()).collect());
         }
     }
-    ("xterm".into(), vec!["-e".into()]) // Launch error is reported by the page.
+    // Sin terminal disponible: devolver error explícito en vez de un
+    // binario que no existe (el usuario vería un error críptico de spawn).
+    ("".into(), Vec::new())
 }
 
 impl InstallPage {
@@ -139,6 +136,11 @@ impl InstallPage {
             }
         };
         let (terminal, flags) = detect_terminal();
+        if terminal.is_empty() {
+            self.failed("No hay terminal disponible para el instalador");
+            done(false);
+            return;
+        }
         let mut args = vec![terminal];
         args.extend(flags);
         args.extend([

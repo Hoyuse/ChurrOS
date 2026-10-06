@@ -61,7 +61,7 @@ fn parse_updates_json(raw: &str) -> Option<ChurrosUpdate> {
 }
 
 fn home() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     PathBuf::from(home)
 }
 
@@ -77,6 +77,18 @@ fn run_capture(args: &[&str], timeout_secs: u64) -> Option<String> {
         .stderr(Stdio::null())
         .spawn()
         .ok()?;
+
+    // Drenar stdout en un thread mientras esperamos: evita el deadlock por
+    // pipe lleno en comandos con mucha salida.
+    let mut out_pipe = child.stdout.take();
+    let reader = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = String::new();
+        if let Some(mut out) = out_pipe.take() {
+            let _ = out.read_to_string(&mut buf);
+        }
+        buf
+    });
 
     let deadline = Instant::now() + Duration::from_secs(timeout_secs);
     let status = loop {
@@ -94,13 +106,11 @@ fn run_capture(args: &[&str], timeout_secs: u64) -> Option<String> {
         }
     };
 
-    let mut buf = String::new();
-    if let Some(mut out) = child.stdout.take() {
-        use std::io::Read;
-        let _ = out.read_to_string(&mut buf);
-    }
-    let _ = status;
     let _ = child.wait();
+    let buf = reader.join().unwrap_or_default();
+    if !status.success() {
+        return None;
+    }
     Some(buf.trim().to_string())
 }
 

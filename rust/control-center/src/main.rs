@@ -31,7 +31,10 @@ fn main() -> glib::ExitCode {
 
 fn load_css() {
     logging::log("cargando css");
-    let display = gtk::gdk::Display::default().unwrap();
+    let Some(display) = gtk::gdk::Display::default() else {
+        eprintln!("churros-control-center: no hay display Wayland/X11 disponible");
+        std::process::exit(1);
+    };
     logging::log("display ok");
 
     // CSS compartido (misma prioridad que Preferences)
@@ -73,7 +76,7 @@ fn load_css() {
     );
 
     // Accent CSS (misma prioridad que Preferences)
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     let accent_path = std::path::PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();

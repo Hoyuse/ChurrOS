@@ -55,12 +55,9 @@ struct Scheduler {
 
 /// makoctl mode — salida cruda (equivalente al subprocess del Python).
 fn makoctl_mode() -> String {
-    std::process::Command::new("makoctl")
-        .arg("mode")
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::null())
-        .output()
-        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+    // Con timeout vía churros_services::run: nunca quedarse bloqueado en UI.
+    churros_services::run(&["makoctl", "mode"], 1000)
+        .map(|(_, stdout, _)| stdout)
         .unwrap_or_default()
 }
 

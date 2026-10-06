@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 pub fn cache_dir() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = crate::home_dir();
     PathBuf::from(home).join(".cache").join("churros-theme")
 }
 

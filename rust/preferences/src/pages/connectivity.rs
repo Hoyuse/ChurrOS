@@ -102,7 +102,8 @@ pub fn build(navigator: gtk::Stack) -> Page {
                         populate(&wg, &bg, data, &reload);
                         glib::ControlFlow::Break
                     }
-                    Err(_) => glib::ControlFlow::Continue,
+                    Err(std::sync::mpsc::TryRecvError::Empty) => glib::ControlFlow::Continue,
+                    Err(std::sync::mpsc::TryRecvError::Disconnected) => glib::ControlFlow::Break,
                 }
             });
         }

@@ -11,7 +11,7 @@ use serde_json::{Map, Value};
 pub struct SettingsService;
 
 fn config_dir() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     PathBuf::from(home).join(".config").join("churros")
 }
 
@@ -99,6 +99,13 @@ pub fn set(key: &str, value: Value) {
         // load() garantiza una raíz objeto, pero nunca paniquear aquí.
         return;
     };
+
+    // Rechazar claves vacías o con segmentos vacíos ("a..b", ".a", ""):
+    // si no, se insertarían claves "" en settings.json.
+    if key.is_empty() || key.split('.').any(|s| s.is_empty()) {
+        eprintln!("settings::set: clave inválida {key:?}");
+        return;
+    }
 
     let mut parts: Vec<&str> = key.split('.').collect();
     let last = parts.pop().unwrap();

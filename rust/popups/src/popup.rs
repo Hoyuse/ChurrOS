@@ -25,7 +25,10 @@ fn assets_root() -> PathBuf {
 /// Carga el CSS compartido de ChurrOS (si existe), el común de popups y el
 /// propio del popup (equivalente a popup.py + load_*_css de cada ventana).
 pub fn load_css(own: &str) {
-    let display = gtk::gdk::Display::default().expect("Failed to get default display");
+    let Some(display) = gtk::gdk::Display::default() else {
+        eprintln!("churros-popup: no hay display Wayland/X11 disponible");
+        std::process::exit(1);
+    };
 
     // CSS compartido (misma prioridad que Preferences)
     let shared = "/usr/share/churros/styles/churros.css";
@@ -65,7 +68,7 @@ pub fn load_css(own: &str) {
     }
 
     // Accent CSS (misma prioridad que Preferences)
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     let accent_path = PathBuf::from(home).join(".config/churros/accent.css");
     if let Ok(css) = std::fs::read_to_string(&accent_path) {
         let provider = gtk::CssProvider::new();
@@ -104,8 +107,42 @@ impl Header {
     }
 }
 
+/// Ejecuta `work` en un hilo aparte y entrega el resultado al hilo GTK vía
+/// timeout (repliega cada 25 ms hasta que llegue). Evita bloquear la UI con
+/// comandos síncronos como wpctl/nmcli/gsettings.
+pub fn run_bg<T, F, C>(work: F, cb: C)
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+    C: FnOnce(T) + 'static,
+{
+    let (tx, rx) = std::sync::mpsc::channel::<T>();
+    std::thread::spawn(move || {
+        let _ = tx.send(work());
+    });
+    let mut cb = Some(cb);
+    glib::timeout_add_local(std::time::Duration::from_millis(25), move || {
+        match rx.try_recv() {
+            Ok(v) => {
+                if let Some(cb) = cb.take() {
+                    cb(v);
+                }
+                glib::ControlFlow::Break
+            }
+            Err(std::sync::mpsc::TryRecvError::Empty) => glib::ControlFlow::Continue,
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => glib::ControlFlow::Break,
+        }
+    });
+}
+
 fn apply_theme(window: &gtk::ApplicationWindow) {
-    let is_dark = churros_services::theme::is_dark();
+    let w = window.clone();
+    run_bg(churros_services::theme::is_dark, move |is_dark| {
+        apply_theme_now(&w, is_dark);
+    });
+}
+
+fn apply_theme_now(window: &gtk::ApplicationWindow, is_dark: bool) {
     if is_dark {
         window.remove_css_class("light");
     } else {

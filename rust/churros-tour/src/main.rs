@@ -25,7 +25,7 @@ fn main() -> glib::ExitCode {
 
     application.connect_activate(app::activate);
 
-    application.run()
+    application.run_with_args(&[] as &[&str])
 }
 
 #[cfg(test)]
