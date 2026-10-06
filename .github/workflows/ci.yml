@@ -24,6 +24,18 @@ jobs:
       - name: Run checks
         run: ./churros check
 
+  test:
+    name: Tests Rust
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo test -p churros-services
+        run: cargo test -p churros-services --manifest-path rust/Cargo.toml
+
   arm64:
     name: Rust ARM64 compatibility
     runs-on: ubuntu-latest
@@ -36,5 +48,5 @@ jobs:
       - name: Install ARM64 target
         run: rustup target add aarch64-unknown-linux-gnu
 
-      - name: cargo check -p churros-services (ARM64)
-        run: cargo check -p churros-services --manifest-path rust/Cargo.toml --target aarch64-unknown-linux-gnu
+      - name: cargo check workspace (ARM64)
+        run: cargo check --workspace --manifest-path rust/Cargo.toml --target aarch64-unknown-linux-gnu
