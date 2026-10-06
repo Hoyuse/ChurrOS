@@ -76,7 +76,7 @@ Traducciones gettext.
 |-------|----------------|
 | Compositor | Niri |
 | Shell | Noctalia Shell (Quickshell) |
-| Display manager | greetd (tuigreet con autologin en Live) |
+| Display manager | greetd (regreet + cage con autologin en Live) |
 | Terminal | foot |
 | Launcher | Fuzzel |
 | Panel | Noctalia Shell (Waybar como alternativa) |

@@ -420,7 +420,7 @@ Resumen del orden de arranque del Live:
 4. NetworkManager arranca.
 5. `livecd-alsa-unmuter.service` (si `accessibility=on`) desilencia audio.
 6. `livecd-talk.service` (si `accessibility=on`) activa espeakup.
-7. `getty@tty1` hace autologin como root.
+7. `getty@tty1` está enmascarado en el Live; el autologin lo hace greetd como `churros`.
 8. `.zlogin` ejecuta `.automated_script.sh`.
 9. greetd arranca.
 10. Autologin como `churros`, sesión Niri.
