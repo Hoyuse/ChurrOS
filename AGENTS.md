@@ -72,7 +72,7 @@ archiso/                      ArchISO profile root
   profiledef.sh               iso metadata, bootmodes, file_permissions map
   packages/                   Local pacman repo (built pkgs + repo db live here)
   airootfs/                   Squashfs root overlay
-    etc/skel/.config/          niri, waybar, foot, fuzzel — DO NOT MODIFY
+    etc/skel/.config/          niri, waybar, noctalia, foot, fuzzel — DO NOT MODIFY
     root/scripts/             Live-ISO runtime scripts (users, services, desktop, cleanup)
     usr/share/churros/        Assets runtime de las apps Rust (welcome, preferences, control-center, tour) + scripts
 branding/                     Visual identity
@@ -125,7 +125,7 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 
 - `installer/calamares/branding/churros/` — branding, slideshow, QSS.
 - `branding/` — colors, typography, logo guidelines, mascot.
-- `archiso/airootfs/etc/skel/.config/` — niri, waybar, foot, fuzzel themes.
+- `archiso/airootfs/etc/skel/.config/` — niri, waybar, noctalia, foot, fuzzel themes.
 - Bootloader graphics and splash images.
 
 ## Notes
