@@ -124,14 +124,14 @@ impl WallpaperService {
     }
 
     pub fn user_dir() -> PathBuf {
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+        let home = churros_services::home_dir();
         PathBuf::from(home)
             .join(".local/share/churros/wallpapers")
     }
 
     /// Directorios donde se buscan wallpapers (orden de prioridad)
     pub fn wallpaper_dirs() -> Vec<PathBuf> {
-        let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+        let home = churros_services::home_dir();
         vec![
             PathBuf::from("/usr/share/churros/wallpapers"),
             PathBuf::from("/usr/share/backgrounds"),

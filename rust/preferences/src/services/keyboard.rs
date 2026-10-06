@@ -7,12 +7,12 @@ use std::fs;
 use std::path::PathBuf;
 
 fn config_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     PathBuf::from(home).join(".config").join("niri").join("config.kdl")
 }
 
 fn backup_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     PathBuf::from(home)
         .join(".config")
         .join("niri")

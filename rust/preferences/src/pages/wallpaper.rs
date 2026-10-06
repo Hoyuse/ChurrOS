@@ -224,7 +224,7 @@ fn import_from_files(navigator: &gtk::Stack, content: &gtk::Box) {
     dialog.set_default_filter(Some(&filter_any));
 
     // set_initial_folder(home) — el Python lo envuelve en try/except silencioso
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     let home_file = gio::File::for_path(&home);
     dialog.set_initial_folder(Some(&home_file));
 

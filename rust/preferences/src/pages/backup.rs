@@ -132,7 +132,7 @@ fn on_export(btn: &gtk::Button) {
     dialog.set_default_filter(Some(&filter));
 
     dialog.set_initial_name(Some("churros-backup.tar"));
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     dialog.set_initial_folder(Some(&gio::File::for_path(&home)));
 
     dialog.save(Some(&window), None::<&gio::Cancellable>, move |result| {
@@ -168,7 +168,7 @@ fn on_import(btn: &gtk::Button) {
     dialog.set_filters(Some(&filters));
     dialog.set_default_filter(Some(&filter));
 
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let home = churros_services::home_dir();
     dialog.set_initial_folder(Some(&gio::File::for_path(&home)));
 
     let btn = btn.clone();

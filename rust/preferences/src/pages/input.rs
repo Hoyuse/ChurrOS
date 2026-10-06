@@ -16,19 +16,16 @@ use crate::widgets::switch_row::SwitchRow;
 const LAYOUTS: [&str; 6] = ["es", "us", "latam", "fr", "de", "it"];
 
 fn run_gsettings(args: &[&str]) -> String {
-    let output = Command::new("gsettings")
-        .args(args)
-        .output()
-        .ok()
-        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+    let mut cmd: Vec<&str> = vec!["gsettings"];
+    cmd.extend_from_slice(args);
+    let output = churros_services::run(&cmd, 1000)
+        .map(|(_, stdout, _)| stdout.trim().to_string())
         .unwrap_or_default();
     output.trim_matches(|c| c == '\'' || c == '"').to_string()
 }
 
 fn set_gsettings(schema: &str, key: &str, value: &str) {
-    let _ = Command::new("gsettings")
-        .args(["set", schema, key, value])
-        .output();
+    let _ = churros_services::run(&["gsettings", "set", schema, key, value], 1000);
 }
 
 pub fn build(navigator: gtk::Stack) -> Page {

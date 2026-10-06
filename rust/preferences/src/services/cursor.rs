@@ -11,7 +11,7 @@ use serde_json::json;
 use crate::services::settings;
 
 fn home() -> String {
-    std::env::var("HOME").unwrap_or_else(|_| "/root".to_string())
+    churros_services::home_dir()
 }
 
 fn uid() -> u32 {

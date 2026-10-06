@@ -265,11 +265,14 @@ impl ControlCenterWindow {
             tx.send(info).ok();
         });
         glib::timeout_add_local(std::time::Duration::from_millis(25), glib::clone!(#[strong] this, move || {
-            if let Ok(info) = rx.try_recv() {
-                this.apply_system_info(&info);
-                glib::ControlFlow::Break
-            } else {
-                glib::ControlFlow::Continue
+            match rx.try_recv() {
+                Ok(info) => {
+                    this.apply_system_info(&info);
+                    glib::ControlFlow::Break
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => glib::ControlFlow::Continue,
+                // El hilo murió sin enviar: no reprogramar para siempre.
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => glib::ControlFlow::Break,
             }
         }));
     }
