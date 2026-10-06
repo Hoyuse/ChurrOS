@@ -160,8 +160,8 @@
   },
   "location": {
     "name": "",
-    "weatherEnabled": true,
-    "weatherShowEffects": true,
+    "weatherEnabled": false,
+    "weatherShowEffects": false,
     "weatherTaliaMascotAlways": false,
     "useFahrenheit": false,
     "use12hourFormat": false,
@@ -172,7 +172,7 @@
     "firstDayOfWeek": -1,
     "hideWeatherTimezone": false,
     "hideWeatherCityName": false,
-    "autoLocate": true
+    "autoLocate": false
   },
   "calendar": {
     "cards": [
@@ -185,7 +185,7 @@
         "id": "calendar-month-card"
       },
       {
-        "enabled": true,
+        "enabled": false,
         "id": "weather-card"
       }
     ]
@@ -315,7 +315,7 @@
         "id": "brightness-card"
       },
       {
-        "enabled": true,
+        "enabled": false,
         "id": "weather-card"
       },
       {
@@ -413,7 +413,7 @@
       },
       {
         "action": "hibernate",
-        "enabled": true,
+        "enabled": false,
         "keybind": "3"
       },
       {
@@ -543,7 +543,7 @@
     "enabled": true,
     "screenOffTimeout": 600,
     "lockTimeout": 660,
-    "suspendTimeout": 1800,
+    "suspendTimeout": 28800,
     "fadeDuration": 5,
     "screenOffCommand": "",
     "lockCommand": "",
