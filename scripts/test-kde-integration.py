@@ -25,9 +25,12 @@ class KdeIntegration(unittest.TestCase):
         self.env = {**os.environ, "HOME": str(self.home),
                     "XDG_CONFIG_HOME": str(self.home / "config")}
 
-    def run_command(self, args, **kwargs):
-        return subprocess.run(args, env=self.env, check=True, text=True,
-                              capture_output=True, **kwargs)
+    def run_command(self, args, env=None, **kwargs):
+        try:
+            return subprocess.run(args, env=self.env if env is None else env, check=True,
+                                  text=True, capture_output=True, **kwargs)
+        except subprocess.CalledProcessError as exc:
+            self.fail(f"{args} exited {exc.returncode}\n{exc.stdout}\n{exc.stderr}")
 
     def executable(self, name, source):
         path = self.home / name
@@ -141,7 +144,10 @@ fn main() {
 }
 ''')
         binary = self.home / "users-test"
-        self.run_command(["rustc", "--edition=2024", "-A", "dead_code", str(harness), "-o", str(binary)])
+        # The compiler runs with the real environment: with HOME pointing at
+        # the disposable tree, rustup cannot find its toolchains.
+        self.run_command(["rustc", "--edition=2024", "-A", "dead_code", str(harness), "-o", str(binary)],
+                         env=os.environ)
         config = etc / "greetd/config.toml"
         for edition, session in (("kde", "/usr/bin/startplasma-wayland"),
                                  ("xfce", "/usr/bin/startxfce4"),

@@ -63,7 +63,7 @@ for candidate in /usr/lib/polkit-1/polkitd /usr/libexec/polkitd /usr/lib/polkit/
         break
     fi
 done
-for tool in pkexec runuser useradd; do
+for tool in pkexec runuser useradd dbus-send; do
     command -v "$tool" >/dev/null 2>&1 || { echo "test-polkit-pkexec: falta $tool" >&2; exit 2; }
 done
 [ -n "$POLKITD" ] || { echo "test-polkit-pkexec: falta polkitd" >&2; exit 2; }
@@ -134,13 +134,30 @@ if [ "$(grep -c "\"$STUBS/" "$RULES_DIR/50-churros-store.rules")" -ne 6 ] ||
     exit 1
 fi
 
-"$POLKITD" --replace > "$LOG" 2>&1 &
+# Desde polkit 127 los mensajes de arranque son de nivel info y no salen por
+# defecto; los errores de las reglas sí.
+POLKITD_ARGS=(--replace)
+if "$POLKITD" --help 2>&1 | grep -q -- '--log-level'; then
+    POLKITD_ARGS+=(--log-level=info)
+fi
+"$POLKITD" "${POLKITD_ARGS[@]}" > "$LOG" 2>&1 &
 POLKITD_PID=$!
+
+# PID del dueño de org.freedesktop.PolicyKit1 en el bus del sistema.
+polkit_owner() {
+    dbus-send --system --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
+        org.freedesktop.DBus.GetConnectionUnixProcessID string:org.freedesktop.PolicyKit1 \
+        2>/dev/null | awk '/uint32/ { print $2 }'
+}
 for _ in $(seq 1 40); do
-    grep -q "Acquired the name" "$LOG" && break
+    [ "$(polkit_owner)" = "$POLKITD_PID" ] && break
     sleep 0.25
 done
-grep -q "Acquired the name" "$LOG" || { cat "$LOG" >&2; echo "polkitd no arrancó" >&2; exit 1; }
+if [ "$(polkit_owner)" != "$POLKITD_PID" ]; then
+    cat "$LOG" >&2
+    echo "polkitd no llegó a ser org.freedesktop.PolicyKit1" >&2
+    exit 1
+fi
 
 # Ejecuta pkexec como el usuario de prueba, sin agente. El shell intermedio es
 # el padre de pkexec, es decir, el sujeto de polkit.
@@ -161,7 +178,7 @@ if grep -q "50-churros-store.rules" "$LOG"; then
     grep "50-churros-store.rules" "$LOG"
     fail "polkitd no puede cargar 50-churros-store.rules"
 else
-    pass "polkitd carga 50-churros-store.rules sin errores ($(grep -o 'executing [0-9]* rules' "$LOG"))"
+    pass "polkitd carga 50-churros-store.rules sin errores ($(grep -o 'executing [0-9]* rules' "$LOG" || echo 'sin recuento'))"
 fi
 
 # --------------------------------------------------- 1. contrato de pkexec
