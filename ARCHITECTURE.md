@@ -79,8 +79,8 @@ Traducciones gettext.
 | Display manager | greetd (tuigreet con autologin en Live) |
 | Terminal | foot |
 | Launcher | Fuzzel |
-| Panel | Waybar |
-| Notificaciones | Mako |
+| Panel | Noctalia Shell (Waybar como alternativa) |
+| Notificaciones | Noctalia Shell (Mako como alternativa) |
 | Audio | PipeWire + WirePlumber |
 | Instalador | Calamares |
 | Arranque ISO | GRUB (UEFI) + Syslinux (BIOS) |
