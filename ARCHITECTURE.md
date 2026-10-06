@@ -78,7 +78,7 @@ Traducciones gettext.
 | Shell | Noctalia Shell (Quickshell) |
 | Display manager | greetd (tuigreet con autologin en Live) |
 | Terminal | foot |
-| Launcher | Fuzzel |
+| Launcher | Noctalia Shell (Fuzzel como alternativa) |
 | Panel | Noctalia Shell (Waybar como alternativa) |
 | Notificaciones | Noctalia Shell (Mako como alternativa) |
 | Audio | PipeWire + WirePlumber |
