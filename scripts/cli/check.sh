@@ -8,6 +8,9 @@ set -uo pipefail
 
 cd "$(dirname "$0")/../.." || exit 1
 
+# Arquitectura objetivo del port (x86_64 por defecto solo si el perfil arm64 no existe)
+TARGET_ARCH="${TARGET_ARCH:-aarch64}"
+
 FAILURES=0
 NOTICES=0
 
@@ -136,7 +139,7 @@ list_editions() {
         [ -f "$list" ] || continue
         base="${list##*/}"
         base="${base#packages.}"
-        # packages.x86_64 es el perfil por defecto y es la edicion niri.
+        # packages.${TARGET_ARCH} es el perfil por defecto y es la edicion niri.
         if [ "$base" = "x86_64" ]; then
             echo "niri"
         else
@@ -193,7 +196,7 @@ fi
 
 # ------------------------------------------------------- Shared resolvers
 
-mapfile -t PACKAGES < <(grep -v '^#' archiso/packages.x86_64 | grep -v '^$')
+mapfile -t PACKAGES < <(grep -v '^#' archiso/packages.${TARGET_ARCH} | grep -v '^$')
 
 # AUR extras built into archiso/packages/ by scripts/build-aur.sh
 mapfile -t LOCAL_AUR < <(
@@ -252,7 +255,7 @@ mapfile -t COMMANDS < <(
 missing=0
 for command in "${COMMANDS[@]}"; do
     if ! command_exists "$command"; then
-        fail "'$command' is spawned by Niri but is neither in usr/bin nor in packages.x86_64"
+        fail "'$command' is spawned by Niri but is neither in usr/bin nor in packages.${TARGET_ARCH}"
         missing=$((missing + 1))
     fi
 done
@@ -262,13 +265,13 @@ done
 
 section "Niri Xwayland integration"
 
-# packages.x86_64 is the default Niri profile; build.sh substitutes an edition-
+# packages.${TARGET_ARCH} is the default Niri profile; build.sh substitutes an edition-
 # specific list for XFCE, KDE, and Server builds. Keep the satellite scoped to Niri.
 XWAYLAND_SATELLITE="xwayland-satellite"
-if grep -Fxq "$XWAYLAND_SATELLITE" archiso/packages.x86_64; then
+if grep -Fxq "$XWAYLAND_SATELLITE" archiso/packages.${TARGET_ARCH}; then
     pass "xwayland-satellite is included in the Niri profile"
 else
-    fail "xwayland-satellite is missing from archiso/packages.x86_64 (Niri)"
+    fail "xwayland-satellite is missing from archiso/packages.${TARGET_ARCH} (Niri)"
 fi
 
 other_profile_satellite=0
@@ -342,7 +345,7 @@ for desktop in "$DESKTOP_DIR"/*.desktop; do
         continue
     fi
     if ! command_exists "$cmd"; then
-        fail "$base: '$cmd' does not resolve (usr/bin, deployable crate, packages.x86_64, or local build)"
+        fail "$base: '$cmd' does not resolve (usr/bin, deployable crate, packages.${TARGET_ARCH}, or local build)"
         desktop_missing=$((desktop_missing + 1))
     fi
 

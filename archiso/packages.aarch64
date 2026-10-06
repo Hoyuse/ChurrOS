@@ -161,3 +161,6 @@ ttf-jetbrains-mono-nerd
 otf-font-awesome
 firefox
 pavucontrol
+
+xorg-xwayland
+xwayland-satellite
