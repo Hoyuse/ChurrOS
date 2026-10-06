@@ -1,5 +1,12 @@
 # Devlog
 
+## 2026-10-05 — Pulido de la config de Noctalia
+
+- Esquema de color derivado de los wallpapers (`useWallpaperColors: true`, `tonal-spot`, dark mode) y fondos `solidColor`/`fillColor` en Midnight `#111827`, acorde a la paleta oficial.
+- Idle/lock propio de Noctalia activado (`lockOnSuspend` ya estaba; `~/.config/noctalia/settings.json` ahora define timeouts 600/660/1800 s). swayidle no se autoarranca en Niri, así que no hay conflicto.
+- Tarjeta de brillo habilitada en el control center y `launcherUseDistroLogo: true` en el dock.
+- Copia idéntica en `etc/skel` y `usr/share/churros/defaults/noctalia/`.
+
 ## 2026-10-05 — Noctalia Shell como shell del escritorio Niri
 
 **Shell**

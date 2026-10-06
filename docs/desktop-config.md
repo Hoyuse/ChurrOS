@@ -126,9 +126,11 @@ spawn-at-startup "churros-welcome"
 
 - Terminal de apps: `foot -e`.
 - Historial de portapapeles con `cliphist` activado.
-- Wallpapers desde `/usr/share/churros/wallpapers`.
+- Wallpapers desde `/usr/share/churros/wallpapers`, con `solidColor`/`fillColor` en Midnight `#111827`.
+- Colores: esquema derivado de los wallpapers, dark mode, generación `tonal-spot`.
 - Fuentes `JetBrains Mono`, paneles con opacidad 0.85 (acorde al glassmorphism del resto del sistema).
 - `showChangelogOnStartup: false`.
+- Idle/lock gestionado por Noctalia (timeouts 600/660/1800 s); dock con logo de la distro y control center con tarjeta de brillo.
 
 Los cambios hechos desde la UI de Noctalia se guardan en `~/.local/state/noctalia/settings.toml` y tienen prioridad sobre el fichero del skel.
 

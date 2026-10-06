@@ -201,9 +201,9 @@
     "setWallpaperOnAllMonitors": true,
     "linkLightAndDarkWallpapers": true,
     "fillMode": "crop",
-    "fillColor": "#000000",
+    "fillColor": "#111827",
     "useSolidColor": false,
-    "solidColor": "#1a1a2e",
+    "solidColor": "#111827",
     "automationEnabled": false,
     "wallpaperChangeMode": "random",
     "randomIntervalSec": 300,
@@ -311,7 +311,7 @@
         "id": "audio-card"
       },
       {
-        "enabled": false,
+        "enabled": true,
         "id": "brightness-card"
       },
       {
@@ -365,7 +365,7 @@
     "colorizeIcons": false,
     "showLauncherIcon": false,
     "launcherPosition": "end",
-    "launcherUseDistroLogo": false,
+    "launcherUseDistroLogo": true,
     "launcherIcon": "",
     "launcherIconColor": "none",
     "pinnedStatic": false,
@@ -500,7 +500,7 @@
     "backlightDeviceMappings": []
   },
   "colorSchemes": {
-    "useWallpaperColors": false,
+    "useWallpaperColors": true,
     "predefinedScheme": "Noctalia (default)",
     "darkMode": true,
     "schedulingMode": "off",
@@ -540,7 +540,7 @@
     "notifyUpdates": true
   },
   "idle": {
-    "enabled": false,
+    "enabled": true,
     "screenOffTimeout": 600,
     "lockTimeout": 660,
     "suspendTimeout": 1800,
