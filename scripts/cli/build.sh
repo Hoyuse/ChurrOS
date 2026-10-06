@@ -207,8 +207,10 @@ PYWAL_PKG=$(ls archiso/packages/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1
 YAY_PKG=$(ls archiso/packages/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 BAZAAR_PKG=$(ls archiso/packages/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 WLOGOUT_PKG=$(ls archiso/packages/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+NOCTALIA_QS_PKG=$(ls archiso/packages/noctalia-qs-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+NOCTALIA_SHELL_PKG=$(ls archiso/packages/noctalia-shell-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 
-if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ]; then
+if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ] || [ -z "$NOCTALIA_QS_PKG" ] || [ -z "$NOCTALIA_SHELL_PKG" ]; then
     echo "  AUR extras not found — building..."
     bash scripts/build-aur.sh
 fi

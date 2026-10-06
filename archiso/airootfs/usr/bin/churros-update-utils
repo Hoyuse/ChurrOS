@@ -219,7 +219,11 @@ while IFS= read -r path; do
 done < <(find "$STAGE" -mindepth 1)
 
 echo "Instalando..."
+# cp -a preserva permisos/owner de los ficheros del bundle, pero también
+# copia los atributos del propio $STAGE: mktemp lo crea con modo 0700 y eso
+# dejaría / con permisos 0700. Restaurar / a 755 tras la copia.
 cp -a "$STAGE"/. /
+chmod 755 /
 
 # Solo tras copiar se actualiza la versión instalada.
 if ! printf '%s\n' "$version" | cmp -s - "$VERSION_FILE"; then

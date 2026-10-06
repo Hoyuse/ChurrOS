@@ -34,6 +34,9 @@ fn dotfiles() -> Vec<(&'static str, PathBuf)> {
         ("waybar", home().join(".config").join("waybar")),
         ("noctalia", home().join(".config").join("noctalia")),
         ("fastfetch", home().join(".config").join("fastfetch")),
+        // Estado real que Noctalia persiste en la UI (settings.toml) — sin
+        // esto el backup ignora lo que la persona cambió en Noctalia.
+        ("noctalia-state", home().join(".local").join("state").join("noctalia")),
     ]
 }
 
@@ -215,7 +218,15 @@ impl BackupService {
                     continue;
                 }
 
-                let target_dir = home().join(".config").join(df_name);
+                // El directorio destino viene del propio dotfiles(): los de
+                // estado (noctalia-state) no viven en ~/.config.
+                let Some(target_dir) = dotfiles()
+                    .into_iter()
+                    .find(|(n, _)| *n == df_name)
+                    .map(|(_, p)| p)
+                else {
+                    continue;
+                };
 
                 if is_dir {
                     fs::create_dir_all(&target_dir).map_err(|e| e.to_string())?;
@@ -265,6 +276,18 @@ impl BackupService {
     }
 
     fn restore_dotfiles() {
+        // El estado de Noctalia (~/.local/state/noctalia/settings.toml) anula
+        // al settings.json restaurado: hay que borrarlo para que "restaurar
+        // valores por defecto" tenga efecto real.
+        let noctalia_state = home()
+            .join(".local")
+            .join("state")
+            .join("noctalia")
+            .join("settings.toml");
+        if noctalia_state.exists() {
+            let _ = fs::remove_file(&noctalia_state);
+        }
+
         let defaults_dir = PathBuf::from(DEFAULTS_DIR);
         let Ok(entries) = fs::read_dir(&defaults_dir) else {
             return;
