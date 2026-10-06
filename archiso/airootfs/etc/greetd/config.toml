@@ -6,5 +6,5 @@ command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 c
 user = "greeter"
 
 [initial_session]
-command = "startxfce4"
+command = "niri"
 user = "churros"
