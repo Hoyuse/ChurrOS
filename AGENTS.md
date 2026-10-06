@@ -23,7 +23,7 @@ The `churros` dispatcher is at repo root and `cd`s to its own dir before delegat
 
 ## Build Flow (scripts/cli/build.sh)
 
-Six ordered steps, runs from repo root:
+Ordered steps, runs from repo root:
 
 1. Copy `branding/customize_airootfs.sh` + `branding/files/` into `archiso/airootfs/root/`.
 2. `scripts/build-calamares.sh` (rebuilds if missing, if libpython does not match host/`python` on the ISO, or if `installer/patches/calamares-*.patch` changed), then `scripts/build-aur.sh` if those pkgs are missing. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `yay-*.pkg.tar.zst`, `wlogout-*.pkg.tar.zst` in `archiso/packages/`.
@@ -112,7 +112,7 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 
 - **Live user**: `churros` (wheel, audio, video, input, storage, network), NOPASSWD sudo — created by `archiso/airootfs/root/scripts/users.sh`.
 - **Compositor**: Niri (Wayland scrollable-tiling). Requires 3D accel in QEMU (see Testing).
-- **Display Manager**: greetd (tuigreet, autologin en Live y sesión niri nativa).
+- **Display Manager**: greetd (regreet, autologin en Live y sesión niri nativa).
 - **Shell**: Noctalia Shell (Quickshell) para barra, notificaciones, OSD y widgets; Waybar / Fuzzel / Mako / wlogout se mantienen instalados como alternativa.
 - **Terminal**: foot.
 - **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`), `churros-control-center` y `churros-tour` (recorrido guiado, se limpia al instalar). Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). Las traducciones gettext (`po/*.po`) siguen siendo las que usa el resto del sistema; las apps Rust llevan sus cadenas en el codigo.

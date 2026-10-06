@@ -285,7 +285,7 @@ sudo mkarchiso -v \
 
 sudo chown -R "$USER:$USER" work out 2>/dev/null || true
 
-echo "[5/5] Cleaning build artifacts..."
+echo "[6/6] Cleaning build artifacts..."
 
 unmount_work_submounts work
 if mountpoint -q work 2>/dev/null; then
