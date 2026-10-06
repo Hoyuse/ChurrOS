@@ -113,7 +113,8 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 - **Live user**: `churros` (wheel, audio, video, input, storage, network), NOPASSWD sudo — created by `archiso/airootfs/root/scripts/users.sh`.
 - **Compositor**: Niri (Wayland scrollable-tiling). Requires 3D accel in QEMU (see Testing).
 - **Display Manager**: greetd (tuigreet, autologin en Live y sesión niri nativa).
-- **Panel/Launcher/Terminal**: Waybar / Fuzzel / foot.
+- **Shell**: Noctalia Shell (Quickshell) para barra, notificaciones, OSD y widgets; Waybar / Fuzzel / Mako / wlogout se mantienen instalados como alternativa.
+- **Terminal**: foot.
 - **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`), `churros-control-center` y `churros-tour` (recorrido guiado, se limpia al instalar). Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). Las traducciones gettext (`po/*.po`) siguen siendo las que usa el resto del sistema; las apps Rust llevan sus cadenas en el codigo.
 - **Installer**: Calamares with custom `churros` branding (slideshow, QSS stylesheet).
 - **Boot modes** (from `profiledef.sh`): `bios.syslinux` + `uefi.grub`. No systemd-boot, no Limine (mkarchiso del host no lo soporta).

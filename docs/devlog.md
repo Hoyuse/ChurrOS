@@ -1,5 +1,24 @@
 # Devlog
 
+## 2026-10-05 — Noctalia Shell como shell del escritorio Niri
+
+**Shell**
+
+- Noctalia Shell (Quickshell, Qt/QML) pasa a ser la capa de shell de la edición Niri: barra, notificaciones, OSD, dock y widgets. Waybar, Fuzzel, Mako, wlogout y swaybg se mantienen instalados como alternativa (convivencia); `Mod+Space` sigue abriendo Fuzzel.
+- `archiso/airootfs/etc/skel/.config/niri/config.kdl` (y su copia en `usr/share/churros/defaults/niri/`) arrancan `qs -c noctalia-shell` en autostart en lugar de `waybar` + `mako`.
+- Config base de Noctalia en `~/.config/noctalia/settings.json` (terminal `foot -e`, cliphist, wallpapers de ChurrOS, fuentes JetBrains Mono, opacidad de paneles), desplegada también en `usr/share/churros/defaults/noctalia/`.
+
+**Construcción**
+
+- `scripts/build-aur.sh` compila además `noctalia-qs` (Quickshell) y `noctalia-shell` desde AUR hacia `archiso/packages/`.
+- `archiso/packages.x86_64` gana `noctalia-shell`, `noctalia-qs`, `qt6-multimedia`, `wlr-randr`, `imagemagick`, `cliphist` y `power-profiles-daemon`.
+
+**CI**
+
+- `./churros check` reconoce el binario `qs` (paquete `noctalia-qs`) en la resolución de comandos de Niri.
+
+---
+
 ## 2026-10-01 — Tercera edición, auditoría de seguridad y apps
 
 Trabajo integrado en `main`, todavía sin número de versión.

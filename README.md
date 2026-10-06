@@ -65,10 +65,9 @@ ChurrOS utiliza Arch Linux como base actualmente, mientras desarrolla progresiva
 La edición predeterminada. Utiliza:
 
 - Niri (Wayland con tiling dinámico)
-- Waybar
+- Noctalia Shell (Quickshell)
+- Waybar / Fuzzel / Mako (alternativa, mantenidos)
 - foot
-- Fuzzel
-- Mako
 - Aplicaciones oficiales de ChurrOS
 
 ```bash

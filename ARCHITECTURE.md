@@ -75,6 +75,7 @@ Traducciones gettext.
 | Pieza | Implementación |
 |-------|----------------|
 | Compositor | Niri |
+| Shell | Noctalia Shell (Quickshell) |
 | Display manager | greetd (tuigreet con autologin en Live) |
 | Terminal | foot |
 | Launcher | Fuzzel |
