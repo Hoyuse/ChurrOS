@@ -59,3 +59,7 @@ archiso/airootfs/root/branding/
 archiso/airootfs/root/customize_airootfs.sh
 archiso/airootfs/root/packages/
 archiso/airootfs/usr/share/churros/grub-theme/
+
+# Build-time backups of versioned files (restored by the cleanup trap)
+archiso/packages.x86_64.orig
+archiso/airootfs/etc/greetd/config.toml.bak
