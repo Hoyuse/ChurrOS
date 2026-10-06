@@ -124,7 +124,10 @@ fi
 # Anadir una edicion a medias (lista de paquetes pero sin lanzador de sesion,
 # o al reves) deja instalaciones que no arrancan. Se comprueba que cada lista
 # de paquetes tenga su edicion cableada en los cuatro sitios que la necesitan:
-# build.sh, stamp-os-release.sh, configure-greetd-session y el dispatcher.
+# build.sh, stamp-os-release.sh, edition-session.sh (sesion de greetd del
+# sistema instalado) y el dispatcher.
+
+EDITION_SESSION=archiso/airootfs/usr/share/churros/scripts/edition-session.sh
 
 # Brazo de un case. Se admiten los brazos combinados (xfce|server).
 arm_pattern() {
@@ -161,16 +164,14 @@ for ed in $(list_editions); do
         if ! grep -qE '^[[:space:]]*\*\)' branding/stamp-os-release.sh; then
             problems="$problems os-release-sin-variante"
         fi
-        if ! grep -qE '\*\)|churros-niri-session' \
-            archiso/airootfs/usr/share/churros/scripts/configure-greetd-session; then
+        if ! grep -qE '\*\)|churros-niri-session' "$EDITION_SESSION"; then
             problems="$problems greetd-sin-edicion"
         fi
     else
         if ! grep -qE "$(arm_pattern "$ed")" branding/stamp-os-release.sh; then
             problems="$problems os-release-sin-variante"
         fi
-        if ! grep -qE "$(arm_pattern "$ed")" \
-            archiso/airootfs/usr/share/churros/scripts/configure-greetd-session; then
+        if ! grep -qE "$(arm_pattern "$ed")" "$EDITION_SESSION"; then
             problems="$problems greetd-sin-edicion"
         fi
     fi
@@ -181,6 +182,16 @@ for ed in $(list_editions); do
         fail "edicion $ed incompleta:$problems"
     fi
 done
+
+# La tabla edicion -> sesion solo vive en edition-session.sh: la instalacion
+# (configure-greetd-session) y el autologin de Ajustes
+# (churros-write-root-config) la cargan en vez de llevar una copia propia.
+if grep -q 'edition-session.sh' archiso/airootfs/usr/share/churros/scripts/configure-greetd-session &&
+   grep -q 'edition-session.sh' archiso/airootfs/usr/local/bin/churros-write-root-config; then
+    pass "configure-greetd-session y churros-write-root-config comparten edition-session.sh"
+else
+    fail "configure-greetd-session o churros-write-root-config no cargan edition-session.sh"
+fi
 
 # El instalador no puede quedarse en una sola edicion: el ejecutable que
 # declara Calamares tiene que resolver la edicion en runtime.
@@ -1013,6 +1024,43 @@ if grep -q 'stamp-os-release.sh' branding/customize_airootfs.sh \
     pass "ISO build stamps os-release from VERSION"
 else
     fail "build.sh and customize_airootfs.sh must stamp os-release from VERSION"
+fi
+
+# --------------------------------------------- Ejecución privilegiada (polkit)
+
+section "Privileged execution"
+
+POLKIT_RULE=archiso/airootfs/etc/polkit-1/rules.d/50-churros-store.rules
+
+# pkexec publica `program` y `command_line`. `command` no existe y una regla que
+# lo lea no autoriza nunca nada: así pasó en #152 sin que nadie lo notara. Se
+# mira solo el código (las líneas `//` lo explican y lo nombran).
+rule_code=$(grep -nvE '^[[:space:]]*//' "$POLKIT_RULE" || true)
+if printf '%s\n' "$rule_code" |
+    grep -E "lookup\([[:space:]]*[\"']command[\"'][[:space:]]*\)|getDetails"; then
+    fail "$POLKIT_RULE lee lookup(\"command\") o getDetails(): pkexec solo publica program y command_line"
+else
+    pass "la regla polkit lee las claves que publica pkexec (program, command_line)"
+fi
+
+if command -v node >/dev/null 2>&1; then
+    if polkit_out=$(node scripts/test-polkit-rules.js 2>&1); then
+        pass "decisiones de la regla polkit ($polkit_out)"
+    else
+        printf '%s\n' "$polkit_out"
+        fail "scripts/test-polkit-rules.js"
+    fi
+else
+    notice "node no está instalado: no se prueban las decisiones de la regla polkit"
+fi
+
+# churros-update-utils sobre un root falso, churros-write-root-config y la
+# tabla edición -> sesión. Sin root y sin tocar /.
+if helpers_out=$(python3 scripts/test-privileged-helpers.py 2>&1); then
+    pass "helpers privilegiados en un root falso (scripts/test-privileged-helpers.py)"
+else
+    printf '%s\n' "$helpers_out" | tail -n 40
+    fail "scripts/test-privileged-helpers.py"
 fi
 
 # --------------------------------------------------------------- Hygiene

@@ -52,7 +52,9 @@ for s in churros-apply-wallpaper churros-pick-image churros-pkexec churros-porta
         echo "    + usr/bin/$s"
     fi
 done
-for s in churros-theme churros-update-auto churros-snapshot; do
+# churros-write-root-config va con churros-settings: el Ajustes nuevo le pasa
+# operaciones (greetd-autologin on|off...) que la versión anterior no entiende.
+for s in churros-theme churros-update-auto churros-snapshot churros-write-root-config; do
     if [ -f "$AIROOTFS/usr/local/bin/$s" ]; then
         cp "$AIROOTFS/usr/local/bin/$s" "$STAGE/usr/local/bin/$s"
         chmod 755 "$STAGE/usr/local/bin/$s"
