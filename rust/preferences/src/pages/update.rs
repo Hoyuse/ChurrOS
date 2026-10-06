@@ -211,11 +211,12 @@ fn check_updates(status: &Rc<RefCell<Option<Row>>>, churros_status: &Rc<RefCell<
         row.set_subtitle("Comprobando...");
     }
 
-    let (tx, rx) = std::sync::mpsc::channel::<(usize, usize, Option<String>)>();
+    // (p, f) como Option<usize>: None ⇒ error de comprobación; Some ⇒ al día o con updates.
+    let (tx, rx) = std::sync::mpsc::channel::<(Option<usize>, Option<usize>, Result<Option<String>, ()>)>();
     std::thread::spawn(move || {
-        let p = UpdateService::check_pacman().map(|v| v.len()).unwrap_or(0);
-        let f = UpdateService::check_flatpak().map(|v| v.len()).unwrap_or(0);
-        let c = UpdateService::check_churros().map(|u| u.version);
+        let p = UpdateService::check_pacman().map(|v| v.len());
+        let f = UpdateService::check_flatpak().map(|v| v.len());
+        let c = UpdateService::try_check_churros().map(|u| u.map(|x| x.version));
         let _ = tx.send((p, f, c));
     });
 
@@ -225,12 +226,17 @@ fn check_updates(status: &Rc<RefCell<Option<Row>>>, churros_status: &Rc<RefCell<
         match rx.try_recv() {
             Ok((p, f, c)) => {
                 if let Some(row) = status_rc.borrow().as_ref() {
-                    row.set_subtitle(&format!("{p} actualizaciones (pacman) · {f} (flatpak)"));
+                    let text = match (p, f) {
+                        (Some(p), Some(f)) => format!("{p} actualizaciones (pacman) · {f} (flatpak)"),
+                        _ => "No se pudo comprobar (sin conexión o error)".to_string(),
+                    };
+                    row.set_subtitle(&text);
                 }
                 let installed = UpdateService::installed_churros_version();
                 let text = match c {
-                    Some(avail) => format!("v{installed} instalada · v{avail} disponible"),
-                    None => format!("al día (v{installed})"),
+                    Ok(Some(avail)) => format!("v{installed} instalada · v{avail} disponible"),
+                    Ok(None) => format!("al día (v{installed})"),
+                    Err(()) => "No se pudo comprobar (sin conexión o error)".to_string(),
                 };
                 if let Some(row) = churros_rc.borrow().as_ref() {
                     row.set_subtitle(&text);

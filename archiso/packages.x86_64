@@ -254,3 +254,4 @@ os-prober
 udisks2
 zenity
 qt6-translations
+pacman-contrib

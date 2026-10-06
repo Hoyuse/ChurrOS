@@ -114,6 +114,46 @@ fn run_capture(args: &[&str], timeout_secs: u64) -> Option<String> {
     Some(buf.trim().to_string())
 }
 
+/// Ejecuta un comando devolviendo (exit_code, stdout). None si falla el
+/// spawn o excede el timeout. Drena stdout en un thread (evita pipe lleno).
+fn run_status(args: &[&str], timeout_secs: u64) -> Option<(i32, String)> {
+    let mut child = Command::new(args[0])
+        .args(&args[1..])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()?;
+
+    let mut out_pipe = child.stdout.take();
+    let reader = std::thread::spawn(move || {
+        use std::io::Read;
+        let mut buf = String::new();
+        if let Some(mut o) = out_pipe.take() {
+            let _ = o.read_to_string(&mut buf);
+        }
+        buf
+    });
+
+    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(st)) => break st,
+            Ok(None) => {
+                if Instant::now() >= deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return None;
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            Err(_) => return None,
+        }
+    };
+    let _ = child.wait();
+    let buf = reader.join().unwrap_or_default();
+    Some((status.code().unwrap_or(1), buf.trim().to_string()))
+}
+
 /// Ejecuta un comando con streaming: llama `cb` con cada línea de salida
 /// (stdout+stderr combinados) según se produce. Evita el deadlock del pipe
 /// leyendo ambos en threads mientras el proceso corre.
@@ -186,10 +226,13 @@ impl UpdateService {
 
     /// Lista de paquetes actualizables de pacman (`pacman -Qu`).
     pub fn check_pacman() -> Option<Vec<String>> {
-        // Refrescar las bases (root) y luego listar upgrades.
-        let _ = run_capture(&["churros-pkexec", "pacman", "-Sy"], 60);
-        let out = run_capture(&["pacman", "-Qu"], 30)?;
-        Some(out.lines().map(|s| s.to_string()).collect())
+        // checkupdates (pacman-contrib): trabaja con una copia temporal de la
+        // base de datos, no necesita root y sale con 2 cuando no hay nada.
+        match run_status(&["checkupdates", "--nocolor"], 60) {
+            Some((0, out)) => Some(out.lines().map(|s| s.to_string()).collect()),
+            Some((2, _)) => Some(Vec::new()),
+            _ => None,
+        }
     }
 
     /// Lista de actualizaciones flatpak (`flatpak remote-ls --updates`).
@@ -256,9 +299,17 @@ impl UpdateService {
     /// Comprueba si hay una versión nueva de las utilidades de ChurrOS.
     /// `Some` = hay actualización disponible (versión != instalada).
     pub fn check_churros() -> Option<ChurrosUpdate> {
+        match Self::try_check_churros() {
+            Ok(a) => a,
+            Err(_) => None,
+        }
+    }
+
+    /// Igual que check_churros pero indicando si la comprobación falló.
+    pub fn try_check_churros() -> Result<Option<ChurrosUpdate>, ()> {
         let base = Self::churros_url();
         let url = format!("{base}updates.json");
-        let out = run_capture(
+        let out = match run_capture(
             &[
                 "curl",
                 "-fsSL",
@@ -270,12 +321,18 @@ impl UpdateService {
                 url.as_str(),
             ],
             15,
-        )?;
-        let update = parse_updates_json(&out)?;
+        ) {
+            Some(o) => o,
+            None => return Err(()),
+        };
+        let update = match parse_updates_json(&out) {
+            Some(u) => u,
+            None => return Err(()),
+        };
         if update.version == Self::installed_churros_version() {
-            None
+            Ok(None)
         } else {
-            Some(update)
+            Ok(Some(update))
         }
     }
 
