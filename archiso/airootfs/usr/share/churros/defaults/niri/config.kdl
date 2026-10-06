@@ -250,7 +250,6 @@ binds {
 spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.png" "-m" "fill"
 spawn-at-startup "churros-portal-start"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-spawn-at-startup "waybar"
-spawn-at-startup "mako"
+spawn-at-startup "qs" "-c" "noctalia-shell"
 spawn-at-startup "churros-welcome"
 spawn-sh-at-startup "[ -f ~/.config/autostart/churros-tour.desktop ] && churros-tour"

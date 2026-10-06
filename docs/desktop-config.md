@@ -110,14 +110,27 @@ layout {
 ```kdl
 spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.png" "-m" "fill"
 spawn-at-startup "churros-portal-start"
-spawn-at-startup "waybar"
-spawn-at-startup "mako"
+spawn-at-startup "qs" "-c" "noctalia-shell"
 spawn-at-startup "churros-welcome"
 ```
 
-`swaybg` carga el wallpaper inicial y es el único gestor de wallpaper del autostart. `churros-portal-start` arranca los xdg-desktop-portals. `waybar` arranca la barra superior. `mako` es el daemon de notificaciones. `churros-welcome` muestra la pantalla de bienvenida.
+`swaybg` carga el wallpaper inicial. `churros-portal-start` arranca los xdg-desktop-portals. Noctalia Shell (Quickshell) arranca la barra, notificaciones, OSD y launcher; Waybar, Fuzzel y Mako siguen instalados como alternativa (`./churros apps` y Mod+Space siguen usando sus configs). `churros-welcome` muestra la pantalla de bienvenida.
 
 ---
+
+# Noctalia Shell
+
+**Binario:** `qs -c noctalia-shell` (paquete `noctalia-qs` + `noctalia-shell`, compilados desde AUR por `scripts/build-aur.sh`).
+
+**Config:** `~/.config/noctalia/settings.json` (v4 legacy). ChurrOS despliega una base en `archiso/airootfs/etc/skel/.config/noctalia/settings.json` y otra idéntica en `usr/share/churros/defaults/noctalia/` para que "restaurar valores por defecto" sea coherente:
+
+- Terminal de apps: `foot -e`.
+- Historial de portapapeles con `cliphist` activado.
+- Wallpapers desde `/usr/share/churros/wallpapers`.
+- Fuentes `JetBrains Mono`, paneles con opacidad 0.85 (acorde al glassmorphism del resto del sistema).
+- `showChangelogOnStartup: false`.
+
+Los cambios hechos desde la UI de Noctalia se guardan en `~/.local/state/noctalia/settings.toml` y tienen prioridad sobre el fichero del skel.
 
 # Waybar
 
@@ -348,8 +361,8 @@ Durante el arranque del Live, los servicios y la configuración se aplican en es
    - Copia la configuración de `/etc/skel/` a `/home/churros/` (`desktop.sh`)
    - Limpia la cache de pacman (`cleanup.sh`)
 5. greetd arranca, autologin como `churros`, carga `niri`.
-6. Niri lee `config.kdl` y ejecuta los `spawn-at-startup` (swaybg, waybar, churros-welcome, …).
-7. Waybar arranca y carga los popups de los módulos.
+6. Niri lee `config.kdl` y ejecuta los `spawn-at-startup` (swaybg, qs -c noctalia-shell, churros-welcome, …).
+7. Noctalia Shell arranca (barra, notificaciones, widgets). Waybar puede lanzarse manualmente como respaldo.
 
 ---
 

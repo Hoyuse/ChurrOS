@@ -219,6 +219,10 @@ command_exists() {
     if [ "$command" = calamares ]; then
         return 0
     fi
+    # Quickshell: el binario es `qs` y lo trae el paquete noctalia-qs.
+    if [ "$command" = qs ]; then
+        return 0
+    fi
     for package in "${LOCAL_AUR[@]}"; do
         [ "$command" = "$package" ] && return 0
     done
