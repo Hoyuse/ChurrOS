@@ -926,6 +926,15 @@ else
     fi
 fi
 
+# El config de greetd versionado debe arrancar la sesión niri en el Live;
+# build.sh lo reescribe por edición y lo restaura en el trap.
+section "greetd initial_session"
+if grep -A3 '\[initial_session\]' archiso/airootfs/etc/greetd/config.toml | grep -q 'niri'; then
+    pass "greetd initial_session es niri"
+else
+    fail "greetd initial_session no es niri"
+fi
+
 # ------------------------------------------------------- Live overlay size
 
 section "Live overlay size"
