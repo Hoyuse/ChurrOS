@@ -1075,6 +1075,13 @@ else
     fail "scripts/test-privileged-helpers.py"
 fi
 
+if network_out=$(python3 scripts/test-network-services.py 2>&1); then
+    pass "network service ownership (scripts/test-network-services.py)"
+else
+    printf '%s\n' "$network_out" | tail -n 40
+    fail "scripts/test-network-services.py"
+fi
+
 # --------------------------------------------------------------- Hygiene
 
 section "Repository hygiene"
