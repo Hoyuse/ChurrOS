@@ -25,9 +25,12 @@ class KdeIntegration(unittest.TestCase):
         self.env = {**os.environ, "HOME": str(self.home),
                     "XDG_CONFIG_HOME": str(self.home / "config")}
 
-    def run_command(self, args, **kwargs):
-        return subprocess.run(args, env=self.env, check=True, text=True,
-                              capture_output=True, **kwargs)
+    def run_command(self, args, env=None, **kwargs):
+        try:
+            return subprocess.run(args, env=self.env if env is None else env, check=True,
+                                  text=True, capture_output=True, **kwargs)
+        except subprocess.CalledProcessError as exc:
+            self.fail(f"{args} exited {exc.returncode}\n{exc.stdout}\n{exc.stderr}")
 
     def executable(self, name, source):
         path = self.home / name
@@ -107,20 +110,31 @@ class KdeIntegration(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("rustc"), "rustc unavailable")
     def test_autologin_uses_edition_session(self):
-        # Compile the complete UsersService with a stand-in for edition lookup.
-        # Redirect its /etc paths and helpers to this disposable tree; preserve
-        # the method's control flow and resulting TOML.
-        source = (ROOT / "rust/preferences/src/services/users.rs").read_text()
-        source = source.replace("/etc/greetd", str(self.home / "greetd"))
-        source = source.replace("/etc/lightdm", str(self.home / "lightdm"))
-        self.executable("churros-pkexec", '#!/bin/sh\nexec "$@"\n')
-        self.executable("churros-write-root-config", '#!/bin/sh\ncat > "$1"\n')
+        # Compile the complete UsersService and run it against the real
+        # churros-write-root-config in this disposable tree. Settings only asks
+        # for "greetd-autologin on|off"; the helper picks the user (PKEXEC_UID)
+        # and the session (edition table shared with configure-greetd-session).
+        etc = self.home / "etc"
+        (etc / "greetd").mkdir(parents=True)
+        lib = self.home / "edition-session.sh"
+        lib.write_text((OVERLAY / "usr/share/churros/scripts/edition-session.sh").read_text()
+                       .replace("/etc/churros-edition", str(etc / "churros-edition")))
+        helper = (OVERLAY / "usr/local/bin/churros-write-root-config").read_text()
+        helper = helper.replace("/usr/share/churros/scripts/edition-session.sh", str(lib))
+        helper = helper.replace("/etc/greetd", str(etc / "greetd"))
+        helper = helper.replace("/etc/lightdm", str(etc / "lightdm"))
+        helper_path = self.executable("churros-write-root-config", helper)
+        # pkexec exports PKEXEC_UID; a fake getent keeps the host's users out.
+        self.executable("churros-pkexec", '#!/bin/sh\nPKEXEC_UID=1000 exec "$@"\n')
+        self.executable("getent", '#!/bin/sh\n[ "$1 $2" = "passwd 1000" ] && '
+                                  'echo "ana:x:1000:1000::/home/ana:/bin/zsh"\n')
         self.env["PATH"] = str(self.home) + os.pathsep + os.environ["PATH"]
+        source = (ROOT / "rust/preferences/src/services/users.rs").read_text()
+        source = source.replace("/usr/local/bin/churros-write-root-config", str(helper_path))
+        source = source.replace("/etc/greetd", str(etc / "greetd"))
+        source = source.replace("/etc/lightdm", str(etc / "lightdm"))
         harness = self.home / "users.rs"
         harness.write_text(source + '''
-mod churros_services { pub mod version {
-    pub fn edition() -> String { std::env::var("TEST_EDITION").unwrap() }
-}}
 fn main() {
     assert!(UsersService::set_auto_login(true));
     assert!(UsersService::auto_login());
@@ -130,14 +144,20 @@ fn main() {
 }
 ''')
         binary = self.home / "users-test"
-        self.run_command(["rustc", "--edition=2024", str(harness), "-o", str(binary)])
-        (self.home / "greetd").mkdir()
-        config = self.home / "greetd/config.toml"
-        for edition, session in (("kde", "startplasma-wayland"), ("xfce", "startxfce4"), ("niri", "niri")):
+        # The compiler runs with the real environment: with HOME pointing at
+        # the disposable tree, rustup cannot find its toolchains.
+        self.run_command(["rustc", "--edition=2024", "-A", "dead_code", str(harness), "-o", str(binary)],
+                         env=os.environ)
+        config = etc / "greetd/config.toml"
+        for edition, session in (("kde", "/usr/bin/startplasma-wayland"),
+                                 ("xfce", "/usr/bin/startxfce4"),
+                                 ("niri", "/usr/bin/churros-niri-session")):
             config.write_text("[default_session]\ncommand = \"regreet\"\n")
-            self.env["TEST_EDITION"] = edition
+            (etc / "churros-edition").write_text(edition + "\n")
             self.run_command([str(binary)])
-            self.assertIn(f'command = "{session}"', config.read_text())
+            text = config.read_text()
+            self.assertIn(f'command = "{session}"', text)
+            self.assertIn('user = "ana"', text)
 
 
 if __name__ == "__main__":

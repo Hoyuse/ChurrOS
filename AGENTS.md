@@ -23,7 +23,7 @@ The `churros` dispatcher is at repo root and `cd`s to its own dir before delegat
 
 ## Build Flow (scripts/cli/build.sh)
 
-Six ordered steps, runs from repo root:
+Ordered steps, runs from repo root:
 
 1. Copy `branding/customize_airootfs.sh` + `branding/files/` into `archiso/airootfs/root/`.
 2. `scripts/build-calamares.sh` (rebuilds if missing, if libpython does not match host/`python` on the ISO, or if `installer/patches/calamares-*.patch` changed), then `scripts/build-aur.sh` if those pkgs are missing. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `yay-*.pkg.tar.zst`, `wlogout-*.pkg.tar.zst` in `archiso/packages/`.
@@ -39,6 +39,8 @@ A trap on EXIT cleans generated files out of `archiso/airootfs/` (`root/customiz
 There are no unit tests yet. Two layers of verification exist today.
 
 `./churros check` runs the static checks (`scripts/cli/check.sh`): bash syntax, shellcheck at error level, Python syntax, duplicate entries in `packages.x86_64`, commands spawned by niri that resolve to a binary/crate/package, desktop `Exec`/`TryExec` resolution, Calamares exec order and shellprocess configs, Calamares branding (`componentName`, slideshow API 2, image files), Calamares host preview (`./churros apps calamares`), local AUR extras listed in `netinstall.yaml`, and `msgfmt --check` on `po/*.po`. It needs no ISO build and runs in seconds. The same script runs in CI (`.github/workflows/ci.yml`) on every push to `main` and every pull request.
+
+`./churros check` also runs the privileged-execution tests (see `docs/privileged-execution.md`): `scripts/test-polkit-rules.js` (Node, no dependencies; skipped with a notice if `node` is missing) checks every decision of the polkit rule and that each real caller still uses the argv the rule allows; `scripts/test-privileged-helpers.py` runs `churros-update-utils` against a fake root, `churros-write-root-config` and the edition → session table without root. CI also runs `scripts/test-polkit-pkexec.sh` (`.github/workflows/polkit.yml`) against real polkitd and pkexec in an Arch container; it needs root, so do not run it on your machine. If you change a pkexec caller, change `50-churros-store.rules` and the caller table in `scripts/test-polkit-rules.js` with it.
 
 Behaviour on the live system is verified in QEMU:
 
@@ -112,7 +114,7 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 
 - **Live user**: `churros` (wheel, audio, video, input, storage, network), NOPASSWD sudo — created by `archiso/airootfs/root/scripts/users.sh`.
 - **Compositor**: Niri (Wayland scrollable-tiling). Requires 3D accel in QEMU (see Testing).
-- **Display Manager**: greetd (tuigreet, autologin en Live y sesión niri nativa).
+- **Display Manager**: greetd (regreet, autologin en Live y sesión niri nativa).
 - **Shell**: Noctalia Shell (Quickshell) para barra, notificaciones, OSD y widgets; Waybar / Fuzzel / Mako / wlogout se mantienen instalados como alternativa.
 - **Terminal**: foot.
 - **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`), `churros-control-center` y `churros-tour` (recorrido guiado, se limpia al instalar). Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). Las traducciones gettext (`po/*.po`) siguen siendo las que usa el resto del sistema; las apps Rust llevan sus cadenas en el codigo.

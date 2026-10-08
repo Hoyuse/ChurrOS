@@ -7,24 +7,20 @@
 # - We extract the autologin user (if any) that Calamares carefully configured.
 # - We rewrite the config.toml to use our graphical regreet GTK theme.
 # - We correctly enforce the session command of the installed edition (niri,
-#   startxfce4 or startplasma-wayland).
+#   startxfce4 or startplasma-wayland). The edition -> session table lives in
+#   edition-session.sh, shared with churros-write-root-config (autologin from
+#   Settings), so both write the same [initial_session].
 
 set -euo pipefail
 
-GREETD_CONF="/etc/greetd/config.toml"
-SESSION_CMD="/usr/bin/churros-niri-session"
+# shellcheck source=edition-session.sh
+. /usr/share/churros/scripts/edition-session.sh
 
-# Detect edition and adjust session command
-if [ -f /etc/churros-edition ]; then
-    EDITION="$(cat /etc/churros-edition 2>/dev/null | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-    case "$EDITION" in
-        # En la edición server el sistema instalado no tiene display manager:
-        # configure-server lo quita y deja el arranque en multi-user.
-        server) exit 0 ;;
-        xfce)   SESSION_CMD="/usr/bin/startxfce4" ;;
-        kde)    SESSION_CMD="/usr/bin/startplasma-wayland" ;;
-    esac
-fi
+GREETD_CONF="/etc/greetd/config.toml"
+
+# En la edición server el sistema instalado no tiene display manager:
+# configure-server lo quita y deja el arranque en multi-user.
+SESSION_CMD="$(churros_session_command "$(churros_edition)")" || exit 0
 
 # Extract the autologin user that Calamares displaymanager wrote
 AUTOLOGIN_USER=""
@@ -34,25 +30,12 @@ if [ -f "$GREETD_CONF" ]; then
     fi
 fi
 
-# Write our preferred greetd config
+# Write our preferred greetd config (with the fixed autologin block if a user
+# was found)
 mkdir -p "$(dirname "$GREETD_CONF")"
-cat > "$GREETD_CONF" <<EOF
-[terminal]
-vt = 7
+churros_greetd_config "$SESSION_CMD" "$AUTOLOGIN_USER" > "$GREETD_CONF"
 
-[default_session]
-command = "env WLR_NO_HARDWARE_CURSORS=1 XCURSOR_THEME=Adwaita XCURSOR_SIZE=24 cage -s -- regreet"
-user = "greeter"
-EOF
-
-# Append the fixed autologin block if a user was found
 if [ -n "$AUTOLOGIN_USER" ]; then
-    cat >> "$GREETD_CONF" <<EOF
-
-[initial_session]
-command = "$SESSION_CMD"
-user = "$AUTOLOGIN_USER"
-EOF
     echo "[greetd] Autologin enabled for user '$AUTOLOGIN_USER' with session '$SESSION_CMD'"
 else
     echo "[greetd] No autologin — regreet greeter will prompt for credentials"
