@@ -2,12 +2,14 @@
 """Isolated KDE regression checks. Never writes the host's /etc or session.
 
 Run with python3 scripts/test-kde-integration.py. kwriteconfig6 and rustc are
-optional: their integration tests report SKIP when unavailable.
+optional: their integration tests report SKIP when unavailable. rustc also
+needs edition 2024 (>= 1.85); older ones, like apt's on Ubuntu 24.04, SKIP too.
 """
 import configparser
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -15,6 +17,19 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 OVERLAY = ROOT / "archiso/airootfs"
+
+
+def rustc_has_edition_2024():
+    """rustc exists, runs (rustup may have no default toolchain) and is >= 1.85."""
+    if not shutil.which("rustc"):
+        return False
+    try:
+        version = subprocess.run(["rustc", "--version"], capture_output=True,
+                                 text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    match = re.match(r"rustc (\d+)\.(\d+)", version)
+    return bool(match) and (int(match[1]), int(match[2])) >= (1, 85)
 
 
 class KdeIntegration(unittest.TestCase):
@@ -98,7 +113,7 @@ class KdeIntegration(unittest.TestCase):
         self.assertEqual(config["preferred"]["org.freedesktop.impl.portal.Secret"], "kwallet")
         self.assertEqual(config["preferred"]["org.freedesktop.impl.portal.Notification"], "plasmanotify")
 
-    @unittest.skipUnless(shutil.which("rustc"), "rustc unavailable")
+    @unittest.skipUnless(rustc_has_edition_2024(), "rustc unavailable or older than 1.85 (edition 2024)")
     def test_autologin_uses_edition_session(self):
         # Compile the complete UsersService and run it against the real
         # churros-write-root-config in this disposable tree. Settings only asks

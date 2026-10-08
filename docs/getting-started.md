@@ -8,9 +8,45 @@ Esta guía explica cómo preparar el sistema, obtener el código fuente del proy
 
 # Requisitos
 
-ChurrOS está pensado para desarrollarse sobre Arch Linux o una distribución basada en Arch.
+ChurrOS se desarrolla sobre Arch Linux, pero se puede trabajar desde cualquier distro: lo que solo existe en Arch (`mkarchiso`, `makepkg`, GTK y libadwaita recientes) corre en un contenedor Arch definido en `Containerfile`.
 
-## Paquetes necesarios
+## Qué funciona en cada distro
+
+| Tarea | Arch y derivadas | Debian / Ubuntu | Fedora | Otras |
+|-------|------------------|-----------------|--------|-------|
+| `./install-deps.sh` | ✅ pacman | ✅ apt | ✅ dnf | ❌ instalar a mano |
+| `./churros check` y tests (Python, Node) | ✅ | ✅ | ✅ | ✅ con python3, node, shellcheck |
+| `./churros run` (QEMU) | ✅ | ✅ | ✅ | ✅ con qemu + OVMF/AAVMF |
+| `./churros build` (ISO en el host) | ✅ | ❌ | ❌ | ❌ |
+| `./churros build --container` | ✅ | ✅ | ✅ | ✅ con podman o docker |
+| `./churros rust` (apps GTK, en contenedor) | ✅ | ✅ | ✅ | ✅ con podman o docker |
+| `./churros rust --host` / `./churros apps` | ✅ | ❌ GTK/libadwaita viejos | ⚠️ depende de la versión | ⚠️ |
+| `cargo test -p churros-services` en el host | ✅ | ⚠️ necesita rustc ≥ 1.85 (rustup) | ✅ | ⚠️ |
+
+Notas:
+
+- `install-deps.sh` en Debian/Ubuntu instala `rustup` si el `rustc` de apt es anterior a 1.85 (Ubuntu 24.04 trae 1.75). Debian 12 no empaqueta rustup: instálalo desde https://rustup.rs.
+- `scripts/test-kde-integration.py` salta (SKIP) la prueba del panel sin `kwriteconfig6` y la de autologin sin un `rustc` ≥ 1.85.
+- Fuera de Arch, `./churros check` no compara la libpython del paquete de Calamares con el Python del host (no es el de la ISO): esa comprobación la hace el build en el contenedor.
+
+## Contenedor de build
+
+```bash
+./churros build --container              # ISO, en cualquier distro
+./churros build --container --edition kde
+./churros rust                           # build + test + clippy de rust/, como el CI
+```
+
+- Usa podman y, si no hay, docker. Se ejecuta con root real (`sudo podman` o el demonio de docker) y `--privileged`, porque `mkarchiso` monta `proc`, `sys` y `dev` en el chroot de la ISO. Docker rootless no sirve para el build.
+- El repo se monta en `/churros` y todo corre con tu UID: la ISO queda en `out/` a tu nombre. Rust compila en `rust/target/container`, separado de los builds del host.
+- La imagen (`localhost/churros-builder`) se construye sola la primera vez y se reconstruye si cambia `Containerfile` o tiene más de 7 días. `CHURROS_CONTAINER_REBUILD=1` fuerza la reconstrucción.
+- Volúmenes persistentes: `churros-pacman-cache` (paquetes de pacman/pacstrap) y `churros-builder-home` (registro de cargo, caché de fuentes). Se borran con `podman volume rm` (o `docker volume rm`).
+- Variables: `CHURROS_CONTAINER_ENGINE=podman|docker`, `CHURROS_CONTAINER_ARGS` (argumentos extra para `run`, p. ej. un proxy) y `CHURROS_CONTAINER_BASE` (imagen base; la oficial `archlinux` solo existe para x86_64).
+- El CI (`.github/workflows/rust.yml`) construye la imagen desde el mismo `Containerfile` en cada PR y una vez por semana, y ejecuta `./churros rust`.
+
+## Paquetes necesarios (Arch)
+
+En otras distros: `./install-deps.sh`.
 
 ```bash
 sudo pacman -S \

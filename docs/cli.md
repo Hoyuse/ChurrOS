@@ -52,6 +52,8 @@ Construye una nueva imagen ISO de ChurrOS.
 ```
 
 Opciones:
+- `--arch <x86_64|arm64>` (o `-a`): arquitectura de la ISO. Por defecto, la del equipo (`uname -m`); en un host x86_64 la ISO ARM se pide con `--arch arm64`.
+- `--container`: construye dentro del contenedor Arch del `Containerfile` (podman, o docker si no hay podman; con `sudo` y `--privileged`). Sirve en cualquier distro y la ISO queda igualmente en `out/`. Detalle en `docs/getting-started.md`.
 - `--edition <niri|xfce|kde|server>` (o `-e`): Selecciona la edición de la ISO (por defecto: `niri`). La edición `server` instala un sistema sin escritorio, accesible por SSH.
   - `niri`: Compositor Wayland con tiling dinámico horizontal (Noctalia Shell, foot, Fuzzel, Mako).
   - `xfce`: Entorno de escritorio clásico X11 (XFCE 4, panel ChurrOS, xfwm4, xfce4-terminal).
@@ -84,6 +86,7 @@ Este comando permite probar rápidamente los cambios realizados sin necesidad de
 
 Flags opcionales (detalle en `docs/vm.md`):
 
+- `--arch <x86_64|arm64>` — arquitectura de la ISO y de QEMU. Por defecto, la del equipo, igual que `build`.
 - `--nokvm` — emulación por software, sin KVM.
 - `--fresh` — resetea `vm/OVMF_VARS.fd` para arrancar desde el CD-ROM.
 - `--clean` — borra el disco de la VM y las variables EFI antes de arrancar.
@@ -140,6 +143,20 @@ Es el mismo comando que ejecuta el CI en cada Pull Request (ver `.github/workflo
 
 ---
 
+## rust
+
+Compila y prueba las apps Rust (`rust/`) con los mismos pasos que el CI: `cargo build --workspace --all-targets`, `cargo test --workspace` y `cargo clippy` (sus avisos no fallan).
+
+```bash
+./churros rust                       # en el contenedor Arch (cualquier distro)
+./churros rust -p churros-services   # solo un crate
+./churros rust --host                # en este equipo (Arch al día)
+```
+
+Por defecto corre en el contenedor porque gtk4-rs y libadwaita-rs piden versiones que Debian, Ubuntu o Fedora no tienen. El CI (`.github/workflows/rust.yml`) ejecuta exactamente este comando.
+
+---
+
 ## doctor
 
 Comprueba que las herramientas del entorno de desarrollo estén instaladas (`mkarchiso`, `qemu-system-x86_64`, `xorriso`, `grub`, `dosfstools`, `mtools`, etc.) y verifica la aceleración por hardware KVM.
@@ -151,7 +168,9 @@ Comprueba que las herramientas del entorno de desarrollo estén instaladas (`mka
 
 Características:
 - Identifica el nombre del paquete exacto que provee cada comando faltante.
-- Si faltan paquetes, propone el comando `sudo pacman -S --needed ...` y pregunta interactivamente al usuario si desea instalarlos de inmediato (`[S/n]`).
+- Detecta la distro: propone `sudo pacman -S --needed ...`, `sudo apt-get install ...` o `sudo dnf install ...` con los nombres de paquete de cada una, y pregunta si instalarlos (`[S/n]`).
+- Fuera de Arch no busca `mkarchiso` ni `makepkg`: recomienda `./churros build --container` y comprueba que haya podman o docker.
+- Avisa si `rustc` es anterior a 1.85 (edition 2024).
 - Diagnostica si el usuario carece de permisos sobre `/dev/kvm` o si la virtualización (`Intel VT-x` o `AMD SVM`) está deshabilitada en la BIOS/UEFI.
 
 
