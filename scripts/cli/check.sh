@@ -1072,6 +1072,13 @@ else
     fail "scripts/test-privileged-helpers.py"
 fi
 
+if calamares_out=$(python3 scripts/test-calamares-sequence.py 2>&1); then
+    pass "secuencia de módulos de Calamares (scripts/test-calamares-sequence.py)"
+else
+    printf '%s\n' "$calamares_out" | tail -n 40
+    fail "scripts/test-calamares-sequence.py"
+fi
+
 # --------------------------------------------------------------- Hygiene
 
 section "Repository hygiene"
