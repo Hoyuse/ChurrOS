@@ -1,5 +1,26 @@
 # Devlog
 
+## 2026-10-06 — Polkit con las claves reales de pkexec; actualizador endurecido
+
+**Seguridad**
+
+- `50-churros-store.rules` lee los detalles que publica pkexec (`program` y `command_line`). La regla anterior leía `command`, que no existe, y no autorizaba nunca nada: todo pedía contraseña (#152).
+- La allowlist pasa a ser de argv exacto por programa y se limita a los llamadores reales: sin contraseña solo `churros-snapshot list --json` / `create manual` y `timedatectl set-timezone` / `set-ntp`; con contraseña recordada (`auth_admin_keep`) las actualizaciones, `churros-snapshot delete` y `churros-write-root-config`. Salen `yay`, `paru`, `churros-theme` y el resto de operaciones de pacman y flatpak. Tabla en [`docs/privileged-execution.md`](privileged-execution.md#tabla-de-decisiones).
+- `churros-pkexec` hace `exec pkexec` para que la contraseña recordada sirva entre pasos, y los llamadores pasan rutas absolutas.
+- `churros-write-root-config` recibe operaciones acotadas (`greetd-autologin on|off`, `lightdm-autologin on|off`, `regreet-wallpaper`, `regreet-greeting`) en vez del fichero entero. El usuario sale de `PKEXEC_UID` y la sesión de la edición, con la tabla que comparte con la instalación (`edition-session.sh`); el autologin de Niri vuelve a pasar por `churros-niri-session`.
+- `churros-update-utils` instala fichero a fichero y ya no deja `/` en 0700 (#130), verifica la firma después de descargar el manifiesto (#139) y solo acepta `churros-*` en `usr/bin` y `usr/local/bin`, `usr/share/churros/` y tres ficheros de `etc`.
+
+**Ajustes**
+
+- Buscar actualizaciones usa `checkupdates` (nuevo `pacman-contrib` + `fakeroot` en las cuatro ediciones) en vez de `pkexec pacman -Sy`, y la página distingue "no se pudo comprobar" de "0 actualizaciones" o "al día" (#137).
+
+**CI**
+
+- `scripts/test-polkit-rules.js` (Node) prueba todas las decisiones de la regla y que cada llamador sigue escrito así; `scripts/test-privileged-helpers.py` prueba los helpers sobre un root falso. Los dos corren en `./churros check` y en CI, y `./churros check` falla si la regla vuelve a leer `lookup("command")`.
+- Nuevo workflow `polkit.yml`: sonda con polkitd y pkexec reales en un contenedor Arch.
+
+---
+
 ## 2026-10-05 — Pulido de la config de Noctalia
 
 - Esquema de color derivado de los wallpapers (`useWallpaperColors: true`, `tonal-spot`, dark mode) y fondos `solidColor`/`fillColor` en Midnight `#111827`, acorde a la paleta oficial.

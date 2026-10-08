@@ -134,6 +134,27 @@ spawn-at-startup "churros-welcome"
 
 Los cambios hechos desde la UI de Noctalia se guardan en `~/.local/state/noctalia/settings.toml` y tienen prioridad sobre el fichero del skel.
 
+### Widgets y atajos
+
+Distribución de la barra (`settings.json`):
+
+| Zona | Widgets |
+|------|---------|
+| Izquierda | Launcher, Clock, SystemMonitor, ActiveWindow, MediaMini |
+| Centro | Workspace |
+| Derecha | Tray, NotificationHistory, Battery, Volume, Brightness, ControlCenter |
+
+Atajos de Niri relacionados con el shell (`config.kdl`):
+
+| Atajo | Acción |
+|-------|--------|
+| `Mod+Space` | Launcher (Fuzzel) |
+| `Mod+C` | Control center (`churros-control-center`) |
+| `Mod+Shift+E` | Menú de sesión (`wlogout`) |
+| `Mod+Shift+N/A/B/L/T` | Popups: network, audio, bluetooth, brightness, battery |
+
+Los popups `churros-popup` y el control center Rust conviven con los widgets equivalentes de Noctalia; los atajos siguen apuntando a las apps Rust para mantener el mismo comportamiento en las tres ediciones.
+
 # Waybar
 
 **Path:** `archiso/airootfs/etc/skel/.config/waybar/`

@@ -366,6 +366,8 @@ Diálogo gráfico nativo en GTK para seleccionar imágenes (fondos de pantalla, 
 
 Wrapper para ejecutar comandos con permisos de administrador utilizando Polkit sin requerir terminal interactiva. Permite a las aplicaciones de usuario ejecutar utilidades privilegiadas (como `timedatectl`, `churros-update-utils` o `churros-snapshot`) respetando las políticas de `/etc/polkit-1/rules.d/`.
 
+Hace `exec pkexec`: así el sujeto de polkit es la app que llama y la contraseña que piden las acciones `auth_admin_keep` se recuerda unos minutos entre llamadas. Los llamadores pasan la ruta absoluta del programa, porque la regla autoriza por ruta y argv exactos. Tabla de decisiones en [privileged-execution.md](privileged-execution.md#tabla-de-decisiones).
+
 ## churros-portal-start
 
 **Path:** `/usr/bin/churros-portal-start`
@@ -382,9 +384,11 @@ El origen está **fijado en el binario** y el comando no acepta argumentos: una 
 
 - la versión y el nombre del fichero del manifiesto, contra expresiones regulares;
 - el SHA-256 del paquete frente al anunciado en el manifiesto;
-- la lista de miembros del tarball: sin rutas absolutas, sin `..`, sin enlaces simbólicos o duros, y solo sobre los prefijos autorizados (`usr/bin`, `usr/lib`, `usr/local/*`, `usr/share/churros`, `etc/churros-version`, `etc/churros-edition`).
+- la lista de miembros del tarball: solo ficheros regulares y directorios (sin enlaces simbólicos o duros, dispositivos ni FIFOs), sin rutas absolutas ni `..`, y solo en las rutas autorizadas: `usr/bin/churros-*`, `usr/local/bin/churros-*`, `usr/share/churros/`, `etc/churros-version`, `etc/churros-edition` y el hook `etc/pacman.d/hooks/50-churros-snapshot.hook`.
 
-La extracción se hace en un directorio de stage y solo después se copia sobre `/`. Si existe `/usr/share/churros/churros-release.pubkey`, el manifiesto además debe venir firmado por minisign y la actualización se aborta si la firma no valida.
+La extracción se hace en un directorio de stage y después se instala fichero a fichero: modo 0755 o 0644, temporal en el directorio de destino y `rename` atómico. Los directorios existentes no se tocan; antes, `cp -a` copiaba el modo 0700 del stage sobre `/` (#130).
+
+El manifiesto se descarga antes de verificar su firma (#139). Si existe `/usr/share/churros/churros-release.pubkey`, el manifiesto debe venir firmado por minisign y la actualización se aborta si la firma no valida o si falta `minisign`. Sin clave publicada solo se avisa; que la firma sea obligatoria está pendiente (#139, #141).
 
 ## churros-theme
 
@@ -416,7 +420,7 @@ Resumen del orden de arranque del Live:
 4. NetworkManager arranca.
 5. `livecd-alsa-unmuter.service` (si `accessibility=on`) desilencia audio.
 6. `livecd-talk.service` (si `accessibility=on`) activa espeakup.
-7. `getty@tty1` hace autologin como root.
+7. `getty@tty1` está enmascarado en el Live; el autologin lo hace greetd como `churros`.
 8. `.zlogin` ejecuta `.automated_script.sh`.
 9. greetd arranca.
 10. Autologin como `churros`, sesión Niri.
