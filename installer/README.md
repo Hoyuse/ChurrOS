@@ -21,20 +21,20 @@ installer/
 
 ## ⚙️ Secuencia de Instalación (`settings.conf`)
 
-La instalación en disco sigue una secuencia validada y crítica que incluye 6 hooks `shellprocess`:
+La secuencia separa las pantallas de `show` de las acciones de `exec`. La opción `netinstall` aparece después de los datos de usuario y antes del resumen; durante `exec`, instala los paquetes seleccionados tras configurar la red. Luego `packages` retira paquetes del Live que no deben quedar en el destino.
 
 ```text
-1. shellprocess@boot-nocow      -> Aplica chattr +C en /boot para evitar zstd en GRUB.
-2. unpackfs                     -> Extrae la imagen squashfs del Live al disco destino.
-3. shellprocess@pacman-init     -> Inicializa y puebla el keyring de pacman en el sistema instalado.
+1. shellprocess@boot-nocow      -> Evita que GRUB use zstd en /boot.
+2. unpackfs                     -> Extrae la imagen squashfs del Live al destino.
+3. shellprocess@pacman-init     -> Inicializa el keyring de pacman.
 4. shellprocess@fix-boot        -> Regenera presets de mkinitcpio y módulos del kernel.
-5. shellprocess@churros-repo    -> Registra el repositorio local [churros] temporalmente.
-6. netinstall / packages        -> Instala paquetes adicionales y extras AUR locales; sin Internet, Calamares omite este paso y conserva la instalación base de la ISO.
-7. bootloader                   -> Instala GRUB (UEFI) / Syslinux (BIOS).
-8. shellprocess@grub-theme      -> Aplica el tema GRUB centrado y hook de lectura Btrfs.
-9. shellprocess@post-install    -> Elimina el repo local, sudoers NOPASSWD, reglas polkit de Calamares y
-                                ajustes de ssh del Live, y limpia rastros del usuario Live.
-10. umount                      -> Desmonta las particiones instaladas.
+5. users / displaymanager / networkcfg / hwclock -> Configuración del sistema instalado.
+6. netinstall                   -> Instala las opciones de paquetes elegidas por el usuario.
+7. packages                     -> Retira paquetes innecesarios heredados del Live.
+8. services-systemd / grubcfg / bootloader -> Configura servicios y el arranque.
+9. shellprocess@grub-theme      -> Aplica el tema GRUB y el hook de lectura Btrfs.
+10. shellprocess@post-install   -> Limpia configuración temporal del instalador y rastros del usuario Live.
+11. umount                      -> Desmonta las particiones instaladas.
 ```
 
 ---
