@@ -2,7 +2,7 @@
 
 Este documento describe los servicios systemd y los hooks de pacman que configuran el entorno Live de ChurrOS durante el arranque.
 
-Estos servicios se incluyen en la ISO mediante `archiso/airootfs/etc/systemd/system/` y `archiso/airootfs/etc/pacman.d/hooks/`. No se copian al sistema instalado: viven solo en el Live.
+Las unidades y hooks se incluyen mediante `archiso/airootfs/etc/systemd/system/` y `archiso/airootfs/etc/pacman.d/hooks/`. Calamares instala el airootfs en el sistema destino, así que las unidades pueden heredarse; `services-systemd.conf` y `shellprocess-cleanup.conf` deshabilitan los servicios exclusivos del Live y corrigen las máscaras que no deben quedar en la instalación.
 
 ---
 
@@ -10,17 +10,15 @@ Estos servicios se incluyen en la ISO mediante `archiso/airootfs/etc/systemd/sys
 
 ```text
 archiso/airootfs/etc/
+├── NetworkManager/
+│   └── conf.d/
+│       └── 20-churros-dns.conf
+├── resolv.conf -> /run/systemd/resolve/stub-resolv.conf
 ├── systemd/
 │   ├── journald.conf.d/
 │   │   └── volatile-storage.conf
 │   ├── logind.conf.d/
 │   │   └── do-not-suspend.conf
-│   ├── network/
-│   │   ├── 20-ethernet.network
-│   │   ├── 20-wlan.network
-│   │   ├── 20-wwan.network
-│   │   └── networkd.conf.d/
-│   │       └── ipv6-privacy-extensions.conf
 │   ├── resolved.conf.d/
 │   │   └── archiso.conf
 │   └── system/
@@ -28,11 +26,7 @@ archiso/airootfs/etc/
 │       ├── etc-pacman.d-gnupg.mount
 │       ├── choose-mirror.service
 │       ├── livecd-alsa-unmuter.service
-│       ├── livecd-talk.service
-│       ├── getty@tty1.service.d/
-│       │   └── autologin.conf
-│       └── systemd-networkd-wait-online.service.d/
-│           └── wait-for-only-one-interface.conf
+│       └── livecd-talk.service
 └── pacman.d/
     └── hooks/
         ├── uncomment-mirrors.hook
@@ -244,17 +238,15 @@ Impide que el sistema se suspenda automáticamente en el Live. El usuario debe a
 
 Configura journald para almacenar logs en RAM (tmpfs). Como el sistema es Live, no tiene sentido escribir logs al disco.
 
-## 20-*.network
+## Propietario de red y DNS
 
-**Path:** `archiso/airootfs/etc/systemd/network/`
+NetworkManager es el único gestor de interfaces en el Live y en la instalación. El perfil usa `wpa_supplicant` para Wi-Fi; no habilita `iwd` ni `systemd-networkd`, y no incluye perfiles DHCP `20-*.network` que compitan por las mismas interfaces.
 
-Configuración DHCP automática para Ethernet, Wi-Fi y WWAN. Estos archivos usan systemd-networkd, no NetworkManager. NetworkManager toma el relevo cuando arranca (ver `services.sh`).
+`systemd-resolved` se mantiene habilitado como resolvedor DNS: `/etc/resolv.conf` apunta a `/run/systemd/resolve/stub-resolv.conf` y `NetworkManager/conf.d/20-churros-dns.conf` configura `dns=systemd-resolved` para que NetworkManager publique ahí los DNS recibidos.
 
-## wait-for-only-one-interface.conf
+Durante la instalación, `services-systemd.conf` deshabilita `iwd`, `systemd-networkd`, su socket de activación, su unidad wait-online y los servicios específicos de hipervisores. El perfil Live tampoco conserva el alias D-Bus `dbus-org.freedesktop.network1.service`. El paso post-install elimina perfiles y alias heredados de networkd, deshace las máscaras de Live para los servicios wait-online y de sincronización de hora, y habilita `NetworkManager-wait-online.service`. Así, `network-online.target` espera a NetworkManager en el sistema instalado, sin arrancar un segundo gestor de interfaces.
 
-**Path:** `archiso/airootfs/etc/systemd/system/systemd-networkd-wait-online.service.d/wait-for-only-one-interface.conf`
-
-Reduce el timeout de "esperar a que la red esté online" a la primera interfaz que se levante. Evita esperas largas si hay varios adaptadores.
+Los servicios de integración de Hyper-V, VirtualBox y VMware también quedan deshabilitados en la instalación para no arrastrar una activación específica del Live a todas las máquinas. En una VM, funciones como portapapeles, carpetas compartidas o ajustes de pantalla pueden requerir habilitar manualmente el servicio del hipervisor correspondiente; los paquetes disponibles no se eliminan.
 
 ---
 
