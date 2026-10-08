@@ -210,13 +210,11 @@ echo "[2/5] Checking packages..."
 # different libpython than the ISO's `python` package (pacstrap).
 bash scripts/build-calamares.sh
 CALAMARES_PKG=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
-PYWAL_PKG=$(ls archiso/packages/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-YAY_PKG=$(ls archiso/packages/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+AUR_MISSING=$(bash scripts/list-missing-aur-packages.sh archiso/packages)
 BAZAAR_PKG=$(ls archiso/packages/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-WLOGOUT_PKG=$(ls archiso/packages/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 
-if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ]; then
-    echo "  AUR extras not found — building..."
+if [ -n "$AUR_MISSING" ]; then
+    echo "  AUR extras missing ($AUR_MISSING) — building..."
     bash scripts/build-aur.sh
 fi
 

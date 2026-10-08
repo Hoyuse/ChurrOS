@@ -1072,6 +1072,13 @@ else
     fail "scripts/test-privileged-helpers.py"
 fi
 
+if aur_out=$(python3 scripts/test-aur-package-trigger.py 2>&1); then
+    pass "detección de AUR incompleto (scripts/test-aur-package-trigger.py)"
+else
+    printf '%s\n' "$aur_out" | tail -n 40
+    fail "scripts/test-aur-package-trigger.py"
+fi
+
 # --------------------------------------------------------------- Hygiene
 
 section "Repository hygiene"
