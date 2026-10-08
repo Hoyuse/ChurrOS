@@ -205,6 +205,8 @@ Mejoras previstas:
 | Workflow | Dónde corre | Qué hace |
 |----------|-------------|----------|
 | `ci.yml` | `ubuntu-latest` | `./churros check` y `cargo test -p churros-services` (rápido, sin GTK) |
-| `rust.yml` | contenedor `archlinux:latest` | Compila el workspace completo (`--all-targets`), ejecuta sus tests y pasa clippy |
+| `rust.yml` | imagen del `Containerfile`: `archlinux:latest` en `ubuntu-latest` y `menci/archlinuxarm` en `ubuntu-24.04-arm` | Compila el workspace completo (`--all-targets`), ejecuta sus tests y pasa clippy, en x86_64 y en ARM64 |
 
 Las apps GTK no se compilan en `ubuntu-latest`: gtk4-rs 0.11 exige GTK ≥ 4.22 y libadwaita-rs 0.9 exige libadwaita ≥ 1.9, versiones que Ubuntu no alcanza. `rust.yml` corre dentro de una imagen Arch, que es el mismo entorno donde se construye la ISO.
+
+ARM64 se compila en un runner arm64 nativo con Arch Linux ARM, no con `cargo check --target aarch64-unknown-linux-gnu` desde x86_64: glib-sys y gtk4-sys buscan con pkg-config las bibliotecas de aarch64, que el runner x86_64 no tiene. Arch Linux ARM no empaqueta archiso, así que esa imagen no lleva las herramientas de la ISO y el job ARM64 no las comprueba.

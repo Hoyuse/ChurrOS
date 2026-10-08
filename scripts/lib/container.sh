@@ -12,7 +12,8 @@
 #                              si no hay podman.
 #   CHURROS_CONTAINER_IMAGE    nombre de la imagen (localhost/churros-builder).
 #   CHURROS_CONTAINER_BASE     imagen base. Por defecto la oficial de Arch,
-#                              que solo existe para x86_64.
+#                              que solo existe para x86_64. En ARM, el CI usa
+#                              docker.io/menci/archlinuxarm.
 #   CHURROS_CONTAINER_REBUILD  1 = reconstruir la imagen aunque esté al día.
 #   CHURROS_CONTAINER_ARGS     argumentos extra para `run` (proxy, montajes).
 
