@@ -89,6 +89,8 @@ mesa-utils
 vulkan-virtio
 
 niri
+# Noctalia (shell de la sesión Niri), paquete de [extra]
+noctalia
 
 foot
 flatpak

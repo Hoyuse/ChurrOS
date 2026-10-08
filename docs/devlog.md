@@ -1,5 +1,26 @@
 # Devlog
 
+## 2026-10-08 — Noctalia v5 desde [extra]
+
+`noctalia-qs` 0.0.12 (AUR) ya no compila con Qt 6.12 y rompía `./churros build`. La edición Niri pasa al paquete `noctalia` 5.2.1 de `[extra]`, también disponible en Arch Linux ARM: Noctalia v5, escrita en C++ sin Qt ni Quickshell. La v5 no lee el `settings.json` de la v4.
+
+**Shell**
+
+- Niri arranca `noctalia` en lugar de `qs -c noctalia-shell` y abre flotante la ventana de ajustes de Noctalia (`dev.noctalia.Noctalia`). Los atajos no cambian.
+- `~/.config/noctalia/config.toml` (skel y `usr/share/churros/defaults/noctalia/`) sustituye a `settings.json` con los mismos ajustes donde hay equivalente: barra, dock, menú de sesión sin hibernar, idle 600/660/28800 s, notificaciones y OSD arriba a la derecha, colores desde el wallpaper, sin clima, geolocalización, telemetría ni sonidos. `polkit-gnome` sigue siendo el agente de polkit.
+- En el Live, `desktop.sh` permite desbloquear con la contraseña vacía (`live.toml`), porque el usuario `churros` no tiene contraseña y la v5 ignora ese Enter.
+- `churros-apply-wallpaper` y el cambio de tema de `churros-settings` avisan a Noctalia (`noctalia msg wallpaper-set` / `theme-mode-set`), que pinta su fondo encima de swaybg y reescribe el `color-scheme` de GNOME al arrancar.
+- "Restaurar valores por defecto" vacía `~/.local/state/noctalia/settings.toml` y repone `config.toml` en su sitio (conserva `live.toml`): la v5 no ve borrados ni carpetas recreadas.
+- Instalaciones de desarrollo con la v4: `sudo pacman -S noctalia && sudo pacman -Rns noctalia-shell noctalia-qs`, y restaurar los valores por defecto o cambiar el autostart de Niri a mano.
+
+**Construcción**
+
+- `build-aur.sh` deja de compilar `noctalia-qs` y `noctalia-shell`; `build.sh` ya no los exige y retira los que hayan quedado en `archiso/packages/` y en `churros.db`.
+- `packages.x86_64` cambia `noctalia-shell`, `noctalia-qs`, `qt6-multimedia` y `cliphist` por `noctalia`; `packages.aarch64` gana `noctalia`.
+- `./churros check` ya no da por bueno el binario `qs`.
+
+---
+
 ## 2026-10-06 — Polkit con las claves reales de pkexec; actualizador endurecido
 
 **Seguridad**

@@ -112,6 +112,17 @@ EOF
     if [ -f /usr/share/wayland-sessions/niri.desktop ]; then
         sed -i 's|^Exec=.*|Exec=/usr/bin/churros-niri-session|' /usr/share/wayland-sessions/niri.desktop
     fi
+
+    # El usuario live no tiene contraseña (users.sh) y Noctalia ignora Enter
+    # con la contraseña vacía: sin esto, el bloqueo por inactividad dejaría la
+    # sesión sin poder entrar. Solo en el Live; /etc/skel llega a los usuarios
+    # del sistema instalado.
+    mkdir -p /home/churros/.config/noctalia
+    cat > /home/churros/.config/noctalia/live.toml << 'EOF'
+[lockscreen]
+allow_empty_password = true
+EOF
+    chown -R churros:churros /home/churros/.config/noctalia
 fi
 chown -R churros:churros "/home/churros/.config/environment.d"
 

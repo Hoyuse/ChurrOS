@@ -196,6 +196,20 @@ apply_swaybg() {
     return 1
 }
 
+# Noctalia (sesión Niri) pinta su propio fondo encima de swaybg/awww y saca
+# de él la paleta: se le pasa la misma imagen por IPC.
+apply_noctalia() {
+
+    local path="$1"
+
+    command -v noctalia >/dev/null 2>&1 || return 1
+    pgrep -u "$(id -u)" -x noctalia >/dev/null 2>&1 || return 1
+    _detect_session_env || return 1
+
+    echo "$LOG_PREFIX noctalia msg wallpaper-set $path" >&2
+    noctalia msg wallpaper-set "$path" >/dev/null 2>&1
+}
+
 apply_kde() {
 
     local path="$1"
@@ -258,6 +272,8 @@ apply() {
             return 0
         fi
     fi
+
+    apply_noctalia "$path" || true
 
     if command -v swaybg >/dev/null 2>&1; then
 

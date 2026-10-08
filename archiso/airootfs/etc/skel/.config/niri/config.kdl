@@ -85,6 +85,13 @@ window-rule {
     open-floating true
 }
 
+// Ajustes de Noctalia (en v5 son una ventana propia): flotante y con el tamaño
+// que elige la app, como el panel de ajustes de la v4.
+window-rule {
+    match app-id="dev.noctalia.Noctalia"
+    open-floating true
+}
+
 // Apps de ChurrOS: glassmorphism — la transparencia sale del alpha del
 // fondo en CSS (GTK no soporta backdrop-filter); el blur real lo hace
 // el compositor con background-effect blur true.
@@ -250,6 +257,6 @@ binds {
 spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.png" "-m" "fill"
 spawn-at-startup "churros-portal-start"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-spawn-at-startup "qs" "-c" "noctalia-shell"
+spawn-at-startup "noctalia"
 spawn-at-startup "churros-welcome"
 spawn-sh-at-startup "[ -f ~/.config/autostart/churros-tour.desktop ] && churros-tour"

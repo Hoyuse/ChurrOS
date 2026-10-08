@@ -197,13 +197,10 @@ pamixer
 btop
 imv
 
-# Noctalia Shell (Quickshell) — repo local [churros] vía build-aur.sh
-noctalia-shell
-noctalia-qs
-qt6-multimedia
+# Noctalia (shell de la sesión Niri), paquete de [extra]
+noctalia
 wlr-randr
 imagemagick
-cliphist
 power-profiles-daemon
 
 upower

@@ -1,0 +1,229 @@
+# ~/.config/noctalia/config.toml — configuración base de Noctalia (v5) en ChurrOS.
+# Solo fija lo que difiere de los valores por defecto de Noctalia 5 o que es una
+# decisión explícita de ChurrOS. Los cambios hechos desde la interfaz se guardan en
+# ~/.local/state/noctalia/settings.toml y tienen prioridad sobre este archivo.
+# Comprobar con: noctalia config validate
+
+# ── Shell ─────────────────────────────────────────────────────────────────────
+[shell]
+font_family           = "JetBrains Mono"
+# Privacidad: sin telemetría (decisión de ChurrOS).
+telemetry_enabled     = false
+# Sin asistente de primer arranque: el sistema ya llega configurado.
+setup_wizard_enabled  = false
+# Un solo agente polkit: lo arranca Niri (polkit-gnome); el de Noctalia queda apagado.
+polkit_agent          = false
+# Historial del portapapeles nativo (sustituye a cliphist); sin pegado automático.
+clipboard_auto_paste  = "off"
+# offline_mode = true  # bloquea TODA petición HTTP (también carátulas e iconos remotos)
+
+[shell.animation]
+speed = 1.25
+
+[shell.panel]
+# Paneles flotantes ligeramente translúcidos (equivale a la opacidad 0.85 de v4).
+transparency_mode              = "soft"
+open_near_click_control_center = true
+# Menú de sesión flotante y centrado, como en v4.
+session_placement              = "floating"
+session_position               = "center"
+
+[shell.launcher]
+# Sin descargar tipos de cambio ni pegar automáticamente tras copiar.
+fetch_exchange_rates = false
+auto_paste           = "off"
+
+# Acciones de sesión y ventanas abiertas también en la búsqueda general (como en v4).
+[shell.launcher.providers.session]
+global = true
+
+[shell.launcher.providers.windows]
+global = true
+
+# Menú de sesión: mismo orden y atajos que en v4. Sin hibernar (no hay swap).
+# "lock_and_suspend" bloquea antes de suspender, como lockOnSuspend en v4.
+[[shell.session.actions]]
+action            = "lock"
+shortcut          = "1"
+countdown_seconds = 10.0
+
+[[shell.session.actions]]
+action            = "lock_and_suspend"
+shortcut          = "2"
+countdown_seconds = 10.0
+
+[[shell.session.actions]]
+action            = "reboot"
+shortcut          = "4"
+countdown_seconds = 10.0
+
+[[shell.session.actions]]
+action            = "logout"
+shortcut          = "5"
+countdown_seconds = 10.0
+
+[[shell.session.actions]]
+action            = "shutdown"
+shortcut          = "6"
+countdown_seconds = 10.0
+variant           = "destructive"
+
+[[shell.session.actions]]
+action            = "command"
+label             = "UEFI"
+glyph             = "reboot"
+command           = "systemctl reboot --firmware-setup || loginctl reboot --firmware-setup"
+shortcut          = "7"
+countdown_seconds = 10.0
+
+# ── Tema y fondo ──────────────────────────────────────────────────────────────
+[theme]
+# Modo oscuro con colores generados a partir del fondo de pantalla.
+# mode es el de las apps (Noctalia lo escribe en gsettings color-scheme);
+# churros-settings lo cambia con `noctalia msg theme-mode-set`. La barra y los
+# paneles de Noctalia se quedan siempre en oscuro, como en v4.
+mode             = "dark"
+shell_mode       = "dark"
+source           = "wallpaper"
+wallpaper_scheme = "m3-tonal-spot"
+
+[theme.templates]
+# Sin descargar el catálogo de plantillas comunitarias (api.noctalia.dev).
+enable_community_templates = false
+
+[wallpaper]
+directory           = "/usr/share/churros/wallpapers"
+fill_color          = "#111827"
+transition_duration = 800
+
+[wallpaper.default]
+path = "/usr/share/churros/wallpapers/default.png"
+
+# ── Privacidad: clima y geolocalización desactivados ─────────────────────────
+[weather]
+enabled = false
+
+[location]
+auto_locate = false
+
+[plugins]
+auto_update = "none"
+
+# ── Barra superior (mismo orden de widgets que en v4) ─────────────────────────
+# cpu, temp y ram son los widgets sysmon que Noctalia trae predefinidos.
+[bar.default]
+thickness          = 31     # altura de la barra "default" de v4
+background_opacity = 0.85
+capsule            = true   # cada widget en su cápsula, como en v4
+margin_ends        = 0      # barra a todo el ancho (tipo "simple" de v4)
+start  = ["launcher", "clock", "cpu", "temp", "ram", "active_window", "media"]
+center = ["workspaces"]
+end    = ["tray", "notifications", "battery", "volume", "brightness", "control-center"]
+
+[widget.launcher]
+glyph = "rocket"
+
+[widget.clock]
+format         = "{:%H:%M %a, %b %d}"
+tooltip_format = "{:%H:%M %a, %b %d}"
+
+[widget.active_window]
+title_scroll = "on_hover"
+
+[widget.media]
+hide_when_no_media = true
+artist_first       = true
+title_scroll       = "on_hover"
+
+[widget.workspaces]
+labels_only_when_occupied = true
+
+[widget.tray]
+drawer       = true
+hide_passive = false
+
+[widget.battery]
+display_mode = "graphic"
+show_label   = false
+
+[widget.volume]
+show_label = false
+
+[widget.brightness]
+show_label = false
+
+# ── Dock flotante con ocultado automático ────────────────────────────────────
+[dock]
+enabled             = true
+auto_hide           = true
+reserve_space       = false
+margin_edge         = 13     # separación del dock flotante de v4
+background_opacity  = 1.0
+active_monitor_only = true
+
+# ── Centro de control (v5 muestra como máximo 6 accesos directos) ────────────
+# Mismo orden que v4; quedan fuera "modo rendimiento" (no existe en v5) y
+# "luz nocturna" (séptimo; sigue disponible en Ajustes y por IPC).
+[[control_center.shortcuts]]
+type = "wifi"
+
+[[control_center.shortcuts]]
+type = "bluetooth"
+
+[[control_center.shortcuts]]
+type = "wallpaper"
+
+[[control_center.shortcuts]]
+type = "notification"
+
+[[control_center.shortcuts]]
+type = "power_profile"
+
+[[control_center.shortcuts]]
+type = "caffeine"
+
+# ── Notificaciones y OSD arriba a la derecha ─────────────────────────────────
+[notification]
+layer                     = "overlay"
+keep_dismissed_in_history = false
+
+[osd]
+position      = "top_right"
+hide_delay_ms = 2000
+
+[osd.kinds]
+media     = false
+lock_keys = false
+
+[audio]
+enable_sounds = false
+
+[battery]
+warning_threshold = 20
+
+[desktop_widgets]
+enabled = false
+
+# ── Inactividad: pantalla 600 s, bloqueo 660 s, suspensión 28800 s ───────────
+# La suspensión tardía evita que una instalación en vivo se suspenda a medias.
+[idle]
+behavior_order          = ["screen-off", "lock", "lock-and-suspend"]
+pre_action_fade_seconds = 5.0
+
+[idle.behavior.screen-off]
+action  = "screen_off"
+timeout = 600
+enabled = true
+
+[idle.behavior.lock]
+action  = "lock"
+timeout = 660
+enabled = true
+
+[idle.behavior.lock-and-suspend]
+action  = "lock_and_suspend"
+timeout = 28800
+enabled = true
+
+[lockscreen]
+lock_before_suspend = true

@@ -77,6 +77,25 @@ fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Noctalia vigila ~/.config/noctalia: si se borra la carpeta deja de ver
+/// cambios hasta reiniciarse. Se restauran los archivos en su sitio, se quitan
+/// los *.toml que no trae la configuración por defecto y se conserva
+/// live.toml, que solo existe en el Live (archiso/airootfs/root/scripts/desktop.sh).
+fn restore_noctalia_config(src: &Path, dst: &Path) {
+    let _ = fs::create_dir_all(dst);
+    if let Ok(entries) = fs::read_dir(dst) {
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let path = entry.path();
+            let is_toml = path.extension().is_some_and(|ext| ext == "toml");
+            if is_toml && name != "live.toml" && !src.join(&name).exists() {
+                let _ = fs::remove_file(&path);
+            }
+        }
+    }
+    let _ = copy_dir_all(src, dst);
+}
+
 impl BackupService {
     /// Exporta settings.json + dotfiles a un .tar (equivalente a export_to).
     pub fn export_to(dest_path: &str) -> Result<String, String> {
@@ -276,16 +295,17 @@ impl BackupService {
     }
 
     fn restore_dotfiles() {
-        // El estado de Noctalia (~/.local/state/noctalia/settings.toml) anula
-        // al settings.json restaurado: hay que borrarlo para que "restaurar
-        // valores por defecto" tenga efecto real.
+        // Lo que se cambia desde la UI de Noctalia (~/.local/state/noctalia/
+        // settings.toml) se aplica encima del config.toml restaurado. Se vacía
+        // en vez de borrarlo: Noctalia solo lo relee cuando se escribe y, si
+        // desaparece, vuelve a guardar los ajustes que tiene en memoria.
         let noctalia_state = home()
             .join(".local")
             .join("state")
             .join("noctalia")
             .join("settings.toml");
         if noctalia_state.exists() {
-            let _ = fs::remove_file(&noctalia_state);
+            let _ = fs::write(&noctalia_state, "");
         }
 
         let defaults_dir = PathBuf::from(DEFAULTS_DIR);
@@ -298,6 +318,10 @@ impl BackupService {
                 continue;
             }
             let dst = home().join(".config").join(entry.file_name());
+            if entry.file_name() == "noctalia" {
+                restore_noctalia_config(&src, &dst);
+                continue;
+            }
             if dst.exists() {
                 let _ = fs::remove_dir_all(&dst);
             }
@@ -328,5 +352,34 @@ impl BackupService {
             "cursor": { "theme": "Adwaita" },
             "fonts": { "family": "Inter", "scale": 1.0 }
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn restore_noctalia_keeps_live_toml_and_drops_extra_toml() {
+        let tmp =
+            std::env::temp_dir().join(format!("churros-noctalia-test-{}", std::process::id()));
+        let src = tmp.join("defaults");
+        let dst = tmp.join("config");
+        fs::create_dir_all(&src).unwrap();
+        fs::create_dir_all(&dst).unwrap();
+        fs::write(src.join("config.toml"), "[bar.default]\n").unwrap();
+        fs::write(dst.join("config.toml"), "editado").unwrap();
+        fs::write(dst.join("live.toml"), "[lockscreen]\n").unwrap();
+        fs::write(dst.join("extra.toml"), "[dock]\n").unwrap();
+
+        restore_noctalia_config(&src, &dst);
+
+        assert_eq!(
+            fs::read_to_string(dst.join("config.toml")).unwrap(),
+            "[bar.default]\n"
+        );
+        assert!(dst.join("live.toml").exists());
+        assert!(!dst.join("extra.toml").exists());
+        let _ = fs::remove_dir_all(&tmp);
     }
 }
