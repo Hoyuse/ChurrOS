@@ -1072,6 +1072,13 @@ else
     fail "scripts/test-privileged-helpers.py"
 fi
 
+if asset_out=$(python3 scripts/test-deploy-rust-assets.py 2>&1); then
+    pass "assets de apps Rust incluidos en bundles (scripts/test-deploy-rust-assets.py)"
+else
+    printf '%s\n' "$asset_out" | tail -n 40
+    fail "scripts/test-deploy-rust-assets.py"
+fi
+
 # --------------------------------------------------------------- Hygiene
 
 section "Repository hygiene"
