@@ -12,6 +12,12 @@ name: Rust
 # La imagen se construye en cada ejecución, sin caché de capas, y además una
 # vez por semana: Arch es rolling, y si un cambio de paquetes rompe el
 # Containerfile tiene que fallar aquí y no en la máquina de quien construye.
+#
+# El workspace se compila también en ARM64, en un runner arm64 con la misma
+# imagen sobre Arch Linux ARM: un cargo check cruzado desde x86_64 no sirve,
+# porque glib-sys y gtk4-sys buscan con pkg-config las bibliotecas de aarch64.
+# La base es docker.io/menci/archlinuxarm (pacstrap diario desde los
+# repositorios de Arch Linux ARM); no hay imagen oficial para aarch64.
 
 on:
   push:
@@ -30,13 +36,33 @@ concurrency:
 
 jobs:
   apps:
-    name: Build and test apps (Containerfile)
-    runs-on: ubuntu-latest
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Build and test apps (Containerfile)
+            runner: ubuntu-latest
+            base: ''
+            cache: rust-container-
+            iso-tools: true
+          - name: Build and test apps (Containerfile, ARM64)
+            runner: ubuntu-24.04-arm
+            base: docker.io/menci/archlinuxarm:latest
+            # Prefijo propio: restore-keys de x86_64 (rust-container-) no
+            # debe recuperar un target de aarch64.
+            cache: rust-arm64-container-
+            # Arch Linux ARM no empaqueta archiso (ver Containerfile).
+            iso-tools: false
 
     env:
       # El runner trae podman y docker; docker corre sin sudo para el usuario
       # del runner.
       CHURROS_CONTAINER_ENGINE: docker
+      # Vacía = la imagen oficial de Arch (x86_64).
+      CHURROS_CONTAINER_BASE: ${{ matrix.base }}
 
     steps:
       - uses: actions/checkout@v7
@@ -47,8 +73,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: rust/target/container
-          key: rust-container-${{ hashFiles('Containerfile', 'rust/Cargo.lock') }}
-          restore-keys: rust-container-
+          key: ${{ matrix.cache }}${{ hashFiles('Containerfile', 'rust/Cargo.lock') }}
+          restore-keys: ${{ matrix.cache }}
 
       - name: Build container image
         run: |
@@ -59,6 +85,7 @@ jobs:
       # Las mismas herramientas que comprueba el pre-flight de build.sh, más
       # makepkg y node: ./churros build --container falla si falta alguna.
       - name: ISO build tools present in the image
+        if: matrix.iso-tools
         run: |
           source scripts/lib/container.sh
           container_engine_init

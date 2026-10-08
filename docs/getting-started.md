@@ -41,8 +41,8 @@ Notas:
 - El repo se monta en `/churros` y todo corre con tu UID: la ISO queda en `out/` a tu nombre. Rust compila en `rust/target/container`, separado de los builds del host.
 - La imagen (`localhost/churros-builder`) se construye sola la primera vez y se reconstruye si cambia `Containerfile` o tiene más de 7 días. `CHURROS_CONTAINER_REBUILD=1` fuerza la reconstrucción.
 - Volúmenes persistentes: `churros-pacman-cache` (paquetes de pacman/pacstrap) y `churros-builder-home` (registro de cargo, caché de fuentes). Se borran con `podman volume rm` (o `docker volume rm`).
-- Variables: `CHURROS_CONTAINER_ENGINE=podman|docker`, `CHURROS_CONTAINER_ARGS` (argumentos extra para `run`, p. ej. un proxy) y `CHURROS_CONTAINER_BASE` (imagen base; la oficial `archlinux` solo existe para x86_64).
-- El CI (`.github/workflows/rust.yml`) construye la imagen desde el mismo `Containerfile` en cada PR y una vez por semana, y ejecuta `./churros rust`.
+- Variables: `CHURROS_CONTAINER_ENGINE=podman|docker`, `CHURROS_CONTAINER_ARGS` (argumentos extra para `run`, p. ej. un proxy) y `CHURROS_CONTAINER_BASE` (imagen base; la oficial `archlinux` solo existe para x86_64; en ARM, p. ej. `docker.io/menci/archlinuxarm`, que sirve para `./churros rust` pero no para `build --container`: Arch Linux ARM no empaqueta archiso).
+- El CI (`.github/workflows/rust.yml`) construye la imagen desde el mismo `Containerfile` en cada PR y una vez por semana, y ejecuta `./churros rust` en x86_64 y en un runner ARM64 (con `CHURROS_CONTAINER_BASE=docker.io/menci/archlinuxarm:latest`).
 
 ## Paquetes necesarios (Arch)
 
