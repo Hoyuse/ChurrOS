@@ -4,8 +4,8 @@
 #   Aplica un wallpaper al compositor activo (Niri / Hyprland / Sway).
 #
 #   Backends soportados en orden:
-#     1. awww (animations, GIF, multi-output)
-#     2. swaybg (estatico, simple)
+#     1. swaybg (estatico, simple)
+#     2. awww (animations, GIF, multi-output)
 #
 #   Detecta automaticamente WAYLAND_DISPLAY y XDG_RUNTIME_DIR si no
 #   estan en el entorno (caso live ISO sin session explicita).
@@ -262,7 +262,6 @@ apply() {
     if command -v swaybg >/dev/null 2>&1; then
 
         if apply_swaybg "$path"; then
-            _niri_refresh
             return 0
         fi
 
@@ -272,7 +271,6 @@ apply() {
     if command -v awww >/dev/null 2>&1; then
 
         if apply_awww "$path"; then
-            _niri_refresh
             return 0
         fi
     fi
@@ -295,15 +293,6 @@ apply() {
     return 1
 }
 
-_niri_refresh() {
-
-    if command -v niri >/dev/null 2>&1; then
-        # No forzamos screen-transition: el wallpaper cambia sin animación
-        # de niri para evitar el "parpadeo" que parece reinicio.
-        :
-    fi
-}
-
 if [ -n "$ARG_PATH" ]; then
     apply "$ARG_PATH"
     exit $?
@@ -311,10 +300,10 @@ fi
 
 if [ -f "$SETTINGS_FILE" ]; then
 
-    PATH_SAVED=$(python3 -c "
-import json, sys
+    PATH_SAVED=$(SETTINGS_FILE="$SETTINGS_FILE" python3 -c "
+import json, os, sys
 try:
-    with open('$SETTINGS_FILE') as f:
+    with open(os.environ['SETTINGS_FILE']) as f:
         d = json.load(f)
     print(d.get('wallpaper', {}).get('path', ''))
 except Exception:

@@ -80,11 +80,14 @@ cleanup_temp() {
     if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f "$PACKAGE_LIST.orig" ]; then
         mv "$PACKAGE_LIST.orig" "$PACKAGE_LIST"
     fi
+    if [ -f archiso/airootfs/etc/greetd/config.toml.bak ]; then
+        mv archiso/airootfs/etc/greetd/config.toml.bak archiso/airootfs/etc/greetd/config.toml
+    fi
     rm -f archiso/airootfs/etc/churros-edition 2>/dev/null || true
     rm -f archiso/airootfs/root/customize_airootfs.sh 2>/dev/null || true
-    rm -rf archiso/airootfs/root/branding 2>/dev/null || true
-    rm -rf archiso/airootfs/root/packages 2>/dev/null || true
-    rm -rf archiso/airootfs/etc/calamares 2>/dev/null || true
+    rm -rf --one-file-system archiso/airootfs/root/branding 2>/dev/null || true
+    rm -rf --one-file-system archiso/airootfs/root/packages 2>/dev/null || true
+    rm -rf --one-file-system archiso/airootfs/etc/calamares 2>/dev/null || true
     rm -f archiso/airootfs/etc/polkit-1/rules.d/49-calamares.rules 2>/dev/null || true
     # Binarios Rust desplegados por build-rust.sh (no se versionan en git)
     rm -f archiso/airootfs/usr/bin/churros-welcome 2>/dev/null || true
@@ -93,7 +96,7 @@ cleanup_temp() {
     rm -f archiso/airootfs/usr/bin/churros-control-center 2>/dev/null || true
     rm -f archiso/airootfs/usr/bin/churros-tour 2>/dev/null || true
     # GRUB theme copiado al airootfs para que esté disponible en el sistema instalado
-    rm -rf archiso/airootfs/usr/share/churros/grub-theme 2>/dev/null || true
+    rm -rf --one-file-system archiso/airootfs/usr/share/churros/grub-theme 2>/dev/null || true
 }
 
 trap cleanup_temp EXIT
@@ -171,6 +174,10 @@ case "$EDITION" in
         exit 1
         ;;
 esac
+
+if [ -f archiso/airootfs/etc/greetd/config.toml ] && [ ! -f archiso/airootfs/etc/greetd/config.toml.bak ]; then
+    cp archiso/airootfs/etc/greetd/config.toml archiso/airootfs/etc/greetd/config.toml.bak
+fi
 
 cat > archiso/airootfs/etc/greetd/config.toml << EOF
 [terminal]
@@ -277,9 +284,9 @@ if mountpoint -q work 2>/dev/null; then
     echo "  work is mounted (tmpfs) — cleaning contents..."
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
 else
-    sudo rm -rf work
+    sudo rm -rf --one-file-system work
 fi
-sudo rm -rf out
+sudo rm -rf --one-file-system out
 mkdir -p out
 
 echo "[5/5] Building ISO...";
@@ -305,13 +312,13 @@ sudo mkarchiso -v \
 
 sudo chown -R "$USER:$USER" work out 2>/dev/null || true
 
-echo "[5/5] Cleaning build artifacts..."
+echo "[6/6] Cleaning build artifacts..."
 
 unmount_work_submounts work
 if mountpoint -q work 2>/dev/null; then
     sudo find work -mindepth 1 -delete 2>/dev/null || sudo rm -rf work/* 2>/dev/null || true
 else
-    sudo rm -rf work 2>/dev/null || true
+    sudo rm -rf --one-file-system work 2>/dev/null || true
 fi
 
 echo
