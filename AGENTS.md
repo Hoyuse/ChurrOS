@@ -7,13 +7,17 @@
 ./churros build --edition xfce # Build ISO with XFCE edition
 ./churros build --edition kde   # Build ISO with KDE Plasma edition
 ./churros build --edition server # Build ISO with the headless server edition
+./churros build --arch arm64 # Build the aarch64 ISO (default: host architecture, uname -m; same for run)
+./churros build --container  # Same build inside the Arch container (Containerfile; podman or docker, --privileged)
+./churros rust               # cargo build/test/clippy of rust/ inside the container (same as CI); --host runs it locally
 ./churros run                # Build (if needed) and launch QEMU
 ./churros run --nokvm        # Force software emulation (no /dev/kvm)
 ./churros run --fresh        # Reset OVMF_VARS.fd so UEFI boots from CD-ROM instead of an existing install
 ./churros clean              # Remove work/ and out/ (also runs sudo rm -rf)
 ./churros check              # Static checks: bash, python, package lists, desktop files, Calamares branding, po files
 ./churros apps               # Open distro apps on the host (GTK preview is dummy; Calamares uses a tmp overlay)
-./churros doctor             # Check for mkarchiso, qemu, xorriso, mksquashfs, mcopy, mkinitcpio
+./churros doctor             # Check tools per distro (Arch: mkarchiso & co.; elsewhere: podman/docker for --container)
+./install-deps.sh            # Install dev deps with pacman, apt or dnf
 ./scripts/build-calamares.sh # Build Calamares .pkg.tar.zst from AUR into archiso/packages/
 ./scripts/build-aur.sh       # Build python-pywal + yay + wlogout AUR packages
 ./scripts/build-grub-theme.sh # Regenerate GRUB theme fonts (.pf2) + assets in branding/grub-theme/
@@ -33,6 +37,10 @@ Ordered steps, runs from repo root:
 6. `rm -rf work` and `chown` `out/` back to `$USER`.
 
 A trap on EXIT cleans generated files out of `archiso/airootfs/` (`root/customize_airootfs.sh`, `root/branding`, `root/packages`, `etc/calamares`, `polkit-1/rules.d/49-calamares.rules`, `usr/bin/churros-welcome`). Do not edit those paths directly — they are regenerated each build.
+
+## Build Container
+
+`Containerfile` (repo root) is the Arch build environment: archiso, base-devel, grub, gtk4, libadwaita, rust, lld, nodejs, python. `scripts/lib/container.sh` builds it as `localhost/churros-builder` (rebuilt when the Containerfile changes or the image is older than 7 days) and runs commands with the repo mounted at `/churros`; `scripts/container-entrypoint.sh` creates `builder` with the host UID/GID (makepkg refuses root; build.sh uses passwordless sudo inside). The engine runs as real root (`sudo podman` or the docker daemon) because pacstrap mounts devtmpfs/proc. In the container `CARGO_TARGET_DIR=rust/target/container` (`build-rust.sh` honours it). `scripts/lib/host.sh` detects the distro family from `/etc/os-release` (never by `command -v pacman`: Debian ships a game with that name). `.github/workflows/rust.yml` builds the image from the Containerfile on every PR and weekly, then runs `./churros rust`.
 
 ## Testing
 

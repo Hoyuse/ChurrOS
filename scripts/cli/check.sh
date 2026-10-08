@@ -8,6 +8,9 @@ set -uo pipefail
 
 cd "$(dirname "$0")/../.." || exit 1
 
+# shellcheck source=scripts/lib/host.sh
+source scripts/lib/host.sh
+
 # Arquitectura objetivo del port (x86_64 por defecto solo si el perfil arm64 no existe)
 TARGET_ARCH="${TARGET_ARCH:-aarch64}"
 
@@ -886,9 +889,15 @@ fi
 
 section "Calamares libpython"
 
+# El python del host solo representa al de la ISO en Arch. En otra distro
+# (paquete construido con ./churros build --container) la comparación daría un
+# fallo falso: build-calamares.sh ya recompila dentro del contenedor si la
+# versión de python de Arch cambia.
 CALAMARES_LOCAL=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
 if [ -z "$CALAMARES_LOCAL" ]; then
     notice "no local calamares package (ISO build will compile it)"
+elif ! churros_host_is_arch; then
+    notice "host is not Arch: libpython of $(basename "$CALAMARES_LOCAL") is checked by ./churros build --container"
 elif ! command -v readelf >/dev/null 2>&1; then
     notice "readelf not available; skip libpython check"
 else

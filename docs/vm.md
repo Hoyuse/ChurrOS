@@ -14,7 +14,8 @@ El comando principal es:
 ./churros run
 ```
 
-Para validar la ISO ARM64 en QEMU usa `--arch arm64`. Esta ruta emplea TCG,
+Sin `--arch`, `run` usa la arquitectura del equipo, igual que `./churros build`.
+Para validar la ISO ARM64 en un host x86_64 usa `--arch arm64`. Esta ruta emplea TCG,
 porque un host x86_64 no puede usar KVM para un guest aarch64:
 
 ```bash

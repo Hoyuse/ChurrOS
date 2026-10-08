@@ -1,12 +1,29 @@
 #!/usr/bin/env bash
 
 set -e
+
+# shellcheck source=scripts/lib/host.sh
+source "$(dirname "$0")/../lib/host.sh"
+
 HOST_REPO_SYMLINK=0
 EDITION="niri"
-TARGET_ARCH="aarch64"
+# Sin --arch se usa la arquitectura del equipo (uname -m).
+TARGET_ARCH=""
+USE_CONTAINER=0
+# Argumentos que se reenvían al build dentro del contenedor (sin --container).
+BUILD_ARGS=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --container)
+            USE_CONTAINER=1
+            shift
+            continue
+            ;;
+    esac
+    BUILD_ARGS+=("$1")
+    case "$1" in
         --edition|-e)
+            BUILD_ARGS+=("${2-}")
             EDITION="$2"
             shift 2
             ;;
@@ -15,6 +32,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --arch|-a)
+            BUILD_ARGS+=("${2-}")
             TARGET_ARCH="$2"
             shift 2
             ;;
@@ -28,11 +46,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+[ -n "$TARGET_ARCH" ] || TARGET_ARCH="$(uname -m)"
 case "$TARGET_ARCH" in
     arm64) TARGET_ARCH="aarch64" ;;
     x86_64|aarch64) ;;
     *)
-        echo "Error: unsupported architecture '$TARGET_ARCH' (use arm64 or x86_64)." >&2
+        echo "Error: unsupported architecture '$TARGET_ARCH' (use --arch arm64 or --arch x86_64)." >&2
         exit 1
         ;;
 esac
@@ -43,6 +62,24 @@ EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
 if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ] && [ "$EDITION" != "server" ]; then
     echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde, server)" >&2
     exit 1
+fi
+
+# --container: el build completo (makepkg de AUR, Rust, mkarchiso) corre en el
+# contenedor Arch del Containerfile. El repo se monta dentro, así que la ISO
+# queda en out/ igual que en un build normal. --privileged porque pacstrap
+# monta proc, sys y dev en el chroot de la ISO.
+if [ "$USE_CONTAINER" -eq 1 ] && ! churros_in_container; then
+    # shellcheck source=scripts/lib/container.sh
+    source "$(dirname "$0")/../lib/container.sh"
+
+    echo "[container] Build de la edición $EDITION ($TARGET_ARCH) en el contenedor Arch."
+    container_engine_init
+    container_ensure_image
+    # La arquitectura ya resuelta en el host manda: dentro de un contenedor
+    # emulado, uname -m daría la de la imagen.
+    container_run --privileged --upgrade -- \
+        bash scripts/cli/build.sh ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} --arch "$TARGET_ARCH"
+    exit 0
 fi
 
 PACKAGES_BACKED_UP=0
@@ -104,6 +141,7 @@ trap cleanup_temp EXIT
 echo "======================================"
 echo "      ChurrOS Build System"
 echo "      Edition: ${EDITION^^}"
+echo "      Arch: ${TARGET_ARCH}"
 echo "======================================"
 echo
 
@@ -133,8 +171,23 @@ if [ "${#missing_deps[@]}" -gt 0 ]; then
         echo "  - $dep" >&2
     done
     echo >&2
-    echo "Instálalas con:" >&2
-    echo "  sudo pacman -S --needed archiso grub dosfstools mtools squashfs-tools libisoburn" >&2
+    if churros_in_container; then
+        echo "La imagen del contenedor no trae estas herramientas: revisa Containerfile" >&2
+        echo "y reconstruye la imagen con CHURROS_CONTAINER_REBUILD=1." >&2
+        exit 1
+    elif churros_host_is_arch; then
+        echo "Instálalas con:" >&2
+        echo "  sudo pacman -S --needed archiso grub dosfstools mtools squashfs-tools libisoburn" >&2
+        echo >&2
+        echo "O construye en el contenedor Arch del proyecto:" >&2
+    else
+        # mkarchiso, pacstrap y makepkg solo existen en Arch: instalar herramientas
+        # sueltas en otra distro no basta.
+        echo "Este host es $(churros_host_name), no Arch Linux: mkarchiso y makepkg no están" >&2
+        echo "disponibles aquí. Construye la ISO en el contenedor Arch del proyecto" >&2
+        echo "(necesita podman o docker):" >&2
+    fi
+    echo "  ./churros build --container${BUILD_ARGS[*]:+ ${BUILD_ARGS[*]}}" >&2
     exit 1
 fi
 

@@ -3,7 +3,8 @@
 set -e
 
 VM_DIR="vm"
-TARGET_ARCH="aarch64"
+# Sin --arch se usa la arquitectura del equipo, igual que ./churros build.
+TARGET_ARCH=""
 QEMU_BIN="qemu-system-aarch64"
 DISK="$VM_DIR/ChurrOS-arm64.qcow2"
 VARS="$VM_DIR/OVMF_VARS_arm64.fd"
@@ -18,6 +19,7 @@ for ((arg_index = 1; arg_index <= $#; arg_index++)); do
             ;;
     esac
 done
+[ -n "$TARGET_ARCH" ] || TARGET_ARCH="$(uname -m)"
 case "$TARGET_ARCH" in
     arm64|aarch64)
         TARGET_ARCH="aarch64"
@@ -29,7 +31,7 @@ case "$TARGET_ARCH" in
         VARS="$VM_DIR/OVMF_VARS.fd"
         ;;
     *)
-        echo "Error: unsupported architecture '$TARGET_ARCH' (use arm64 or x86_64)." >&2
+        echo "Error: unsupported architecture '$TARGET_ARCH' (use --arch arm64 or --arch x86_64)." >&2
         exit 1
         ;;
 esac
