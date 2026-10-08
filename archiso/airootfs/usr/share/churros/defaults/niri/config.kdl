@@ -171,26 +171,25 @@ layer-rule {
 // Keybindings
 binds {
 
-    // Launch
-    Mod+Return { spawn "foot"; }
+    // Launch. Los títulos del overlay son los que muestra Mod+Shift+/.
+    // IPC de Noctalia 5.2.1: `noctalia msg panel-toggle <id>`.
+    Mod+Return hotkey-overlay-title="Abrir la terminal" { spawn "foot"; }
     Mod+Q { close-window; }
     Mod+Shift+M { quit; }
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
-    Mod+Space { spawn "fuzzel"; }
+    Mod+Space hotkey-overlay-title="Abrir el lanzador" { spawn-sh "noctalia msg panel-toggle launcher"; }
+    Mod+Shift+Space hotkey-overlay-title="Lanzador alternativo (Fuzzel)" { spawn "fuzzel"; }
 
-    // ChurrOS apps
-    Mod+C { spawn "churros-control-center"; }
-    Mod+P { spawn "churros-settings"; }
-    Mod+W { spawn "churros-welcome"; }
-    Mod+S { spawn "bazaar"; }
-    Mod+E { spawn "thunar"; }
-    Mod+Shift+E { spawn "wlogout"; }
-    Mod+Shift+N { spawn "churros-popup" "network"; }
-    Mod+Shift+A { spawn "churros-popup" "audio"; }
-    Mod+Shift+B { spawn "churros-popup" "bluetooth"; }
-    Mod+Shift+L { spawn "churros-popup" "brightness"; }
-    Mod+Shift+T { spawn "churros-popup" "battery"; }
+    // ChurrOS apps. El centro de control de Noctalia ya cubre red, audio,
+    // bluetooth, brillo y batería; churros-popup y churros-control-center
+    // siguen instalados para Waybar y el lanzador, sin atajo propio.
+    Mod+C hotkey-overlay-title="Abrir el centro de control" { spawn-sh "noctalia msg panel-toggle control-center"; }
+    Mod+P hotkey-overlay-title="Abrir ajustes" { spawn "churros-settings"; }
+    Mod+W hotkey-overlay-title="Abrir la bienvenida" { spawn "churros-welcome"; }
+    Mod+S hotkey-overlay-title="Abrir la tienda" { spawn "bazaar"; }
+    Mod+E hotkey-overlay-title="Abrir archivos" { spawn "thunar"; }
+    Mod+Shift+E hotkey-overlay-title="Menú de sesión" { spawn "wlogout"; }
 
     // Escape hatch
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
@@ -253,8 +252,9 @@ binds {
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
 }
 
-// Autostart
-spawn-at-startup "swaybg" "-i" "/usr/share/churros/wallpapers/default.png" "-m" "fill"
+// Autostart. El fondo lo pinta solo Noctalia ([wallpaper.default] en
+// ~/.config/noctalia/config.toml). swaybg sigue instalado como respaldo
+// fuera de esta sesión, pero no se arranca aquí: si no, se superpone.
 spawn-at-startup "churros-portal-start"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "noctalia"

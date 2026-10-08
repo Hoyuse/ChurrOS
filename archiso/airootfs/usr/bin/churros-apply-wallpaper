@@ -4,8 +4,9 @@
 #   Aplica un wallpaper al compositor activo (Niri / Hyprland / Sway).
 #
 #   Backends soportados en orden:
-#     1. swaybg (estatico, simple)
-#     2. awww (animations, GIF, multi-output)
+#     1. Noctalia, si la sesión Niri lo tiene en marcha (no arranca swaybg)
+#     2. swaybg (estatico, simple; KDE/XFCE y Niri sin Noctalia)
+#     3. awww (animations, GIF, multi-output)
 #
 #   Detecta automaticamente WAYLAND_DISPLAY y XDG_RUNTIME_DIR si no
 #   estan en el entorno (caso live ISO sin session explicita).
@@ -196,8 +197,8 @@ apply_swaybg() {
     return 1
 }
 
-# Noctalia (sesión Niri) pinta su propio fondo encima de swaybg/awww y saca
-# de él la paleta: se le pasa la misma imagen por IPC.
+# Noctalia (sesión Niri) es el único pintor del fondo cuando está en marcha.
+# IPC de Noctalia 5.2.1: `noctalia msg wallpaper-set <ruta>`.
 apply_noctalia() {
 
     local path="$1"
@@ -273,7 +274,10 @@ apply() {
         fi
     fi
 
-    apply_noctalia "$path" || true
+    # Si Noctalia acepta la imagen, no arrancar swaybg: los dos a la vez se pisan.
+    if apply_noctalia "$path"; then
+        return 0
+    fi
 
     if command -v swaybg >/dev/null 2>&1; then
 

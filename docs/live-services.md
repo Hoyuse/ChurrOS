@@ -416,7 +416,7 @@ Resumen del orden de arranque del Live:
 8. `.zlogin` ejecuta `.automated_script.sh`.
 9. greetd arranca.
 10. Autologin como `churros`, sesión Niri.
-11. Niri carga autostart (noctalia, swaybg, churros-welcome).
+11. Niri carga autostart (noctalia, churros-welcome). El fondo lo pinta Noctalia, no swaybg.
 
 ---
 
