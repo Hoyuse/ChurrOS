@@ -226,6 +226,20 @@ fi
 
 echo "[2/5] Checking packages..."
 
+# Noctalia v4 (noctalia-qs + noctalia-shell) se compilaba desde AUR; la ISO
+# instala ahora `noctalia` de [extra]. Los paquetes que dejó un build anterior
+# se copiarían a /root/packages y seguirían en el índice churros.db.
+for obsolete_pkg in noctalia-qs noctalia-qs-debug noctalia-shell; do
+    if compgen -G "archiso/packages/${obsolete_pkg}-*.pkg.tar.zst" >/dev/null; then
+        echo "  Removing obsolete local package: $obsolete_pkg"
+        rm -f archiso/packages/"${obsolete_pkg}"-*.pkg.tar.zst
+    fi
+    if [ -f archiso/packages/churros.db.tar.gz ] &&
+        tar -tzf archiso/packages/churros.db.tar.gz 2>/dev/null | grep -qE "^${obsolete_pkg}-[^-/]+-[^-/]+/desc$"; then
+        repo-remove -q archiso/packages/churros.db.tar.gz "$obsolete_pkg"
+    fi
+done
+
 # Always invoke: rebuilds if the package is missing or linked against a
 # different libpython than the ISO's `python` package (pacstrap).
 bash scripts/build-calamares.sh
@@ -234,10 +248,8 @@ PYWAL_PKG=$(ls archiso/packages/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1
 YAY_PKG=$(ls archiso/packages/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 BAZAAR_PKG=$(ls archiso/packages/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 WLOGOUT_PKG=$(ls archiso/packages/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-NOCTALIA_QS_PKG=$(ls archiso/packages/noctalia-qs-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-NOCTALIA_SHELL_PKG=$(ls archiso/packages/noctalia-shell-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 
-if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ] || [ -z "$NOCTALIA_QS_PKG" ] || [ -z "$NOCTALIA_SHELL_PKG" ]; then
+if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ]; then
     echo "  AUR extras not found — building..."
     bash scripts/build-aur.sh
 fi

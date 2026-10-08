@@ -177,6 +177,17 @@ fn persist_desktop(dark: bool) {
         ])
         .output();
 
+    // Noctalia (sesión Niri) vuelve a escribir color-scheme desde su
+    // [theme].mode al arrancar y con cada paleta: se le pasa el mismo modo,
+    // que guarda en su settings.toml. Sin Noctalia corriendo no hace nada.
+    if churros_services::which("noctalia") {
+        let _ = Command::new("noctalia")
+            .args(["msg", "theme-mode-set", if dark { "dark" } else { "light" }])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+    }
+
     // Sincronizar tema con XFCE (xsettings) solo en sesión XFCE
     if churros_services::version::edition().contains("xfce")
         || churros_services::which("xfce4-session")

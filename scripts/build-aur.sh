@@ -47,8 +47,6 @@ build_aur() {
 build_aur python-pywal
 build_aur yay
 build_aur wlogout
-build_aur noctalia-qs
-build_aur noctalia-shell
 
 echo
 echo "Updating churros local repo..."
@@ -66,7 +64,5 @@ echo "======================================"
 ls -la "$PACKAGE_DIR"/python-pywal-*.pkg.tar.zst 2>/dev/null || echo "(pywal not built)"
 ls -la "$PACKAGE_DIR"/yay-*.pkg.tar.zst 2>/dev/null || echo "(yay not built)"
 ls -la "$PACKAGE_DIR"/wlogout-*.pkg.tar.zst 2>/dev/null || echo "(wlogout not built)"
-ls -la "$PACKAGE_DIR"/noctalia-qs-*.pkg.tar.zst 2>/dev/null || echo "(noctalia-qs not built)"
-ls -la "$PACKAGE_DIR"/noctalia-shell-*.pkg.tar.zst 2>/dev/null || echo "(noctalia-shell not built)"
 echo
 echo "  Run: ./churros build"

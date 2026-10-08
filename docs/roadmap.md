@@ -59,7 +59,7 @@ Construir una experiencia de escritorio moderna.
 ## Objetivos
 
 - [x] Niri configurado.
-- [x] Noctalia Shell (barra, notificaciones, OSD, dock y launcher; Waybar/Mako/Fuzzel como alternativa).
+- [x] Noctalia (barra, notificaciones, OSD, dock y launcher; Waybar/Mako/Fuzzel como alternativa).
 - [x] Waybar.
 - [x] foot.
 - [x] Fuzzel.
