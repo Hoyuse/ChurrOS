@@ -1072,6 +1072,13 @@ else
     fail "scripts/test-privileged-helpers.py"
 fi
 
+if accessibility_out=$(python3 scripts/test-accessibility-packages.py 2>&1); then
+    pass "paquete de lectura de pantalla en todas las ediciones"
+else
+    printf '%s\n' "$accessibility_out" | tail -n 40
+    fail "scripts/test-accessibility-packages.py"
+fi
+
 # --------------------------------------------------------------- Hygiene
 
 section "Repository hygiene"
