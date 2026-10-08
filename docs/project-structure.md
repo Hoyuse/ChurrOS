@@ -39,7 +39,8 @@ Perfil de ArchISO usado para construir la ISO Live.
 Incluye:
 
 - `packages.x86_64`, `packages.xfce.x86_64`, `packages.kde.x86_64`, `packages.server.x86_64` — una lista de paquetes por edición
-- `profiledef.sh` — metadatos, bootmodes (`bios.syslinux` + `uefi.grub`) y permisos
+- `profiledef.sh` — metadatos, arquitectura (`CHURROS_ARCH`), bootmodes (`bios.syslinux` + `uefi.grub` en x86_64) y permisos
+- `pacman.x86_64.conf` y `pacman.aarch64.conf` — repositorios del bootstrap de cada arquitectura
 - `airootfs/` — overlay del sistema Live (skel, servicios, assets)
 - `grub/` y `syslinux/` — cargadores de la ISO
 - `packages/` — repo pacman local (Calamares y extras AUR construidos en el host)

@@ -250,7 +250,7 @@ fi
 if [ -n "$CALAMARES_PKG" ]; then
     echo "  Integrating Calamares installer..."
 
-    bash installer/apply-calamares.sh
+    CHURROS_ARCH="$TARGET_ARCH" bash installer/apply-calamares.sh
 
     # El slideshow del instalador se despliega con un marcador @EDITION@: el
     # texto que ve la persona depende de la edición que esta instalando.
@@ -307,7 +307,9 @@ else
     HOST_REPO_SYMLINK=1
 fi
 
-sudo mkarchiso -v \
+# profiledef.sh elige arch, bootmodes, compresión y pacman.<arch>.conf a partir
+# de CHURROS_ARCH. sudo limpia el entorno: la variable se pasa con env.
+sudo env CHURROS_ARCH="$TARGET_ARCH" mkarchiso -v \
     -w work \
     -o out \
     archiso

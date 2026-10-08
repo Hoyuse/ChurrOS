@@ -93,6 +93,54 @@ for pkg_list in archiso/packages*.x86_64; do
     fi
 done
 
+# ------------------------------------------ archiso profile per architecture
+
+section "archiso profile per architecture"
+
+# profiledef.sh deriva arch, bootmodes, compresion y pacman.<arch>.conf de
+# CHURROS_ARCH (build.sh: sudo env CHURROS_ARCH=... mkarchiso). Se carga como
+# lo hace mkarchiso (cwd archiso/, file_permissions asociativo) para cada arch.
+profile_ok=1
+for target in x86_64 aarch64; do
+    # shellcheck disable=SC2016
+    if ! pv=$(CHURROS_ARCH="$target" bash -c '
+        set -eu
+        declare -A file_permissions=()
+        cd archiso
+        . ./profiledef.sh
+        printf "%s|%s|%s|%s\n" "$arch" "$pacman_conf" "${bootmodes[*]}" "${airootfs_image_tool_options[*]}"
+    ' 2>&1); then
+        fail "profiledef.sh does not load with CHURROS_ARCH=$target: $pv"
+        profile_ok=0
+        continue
+    fi
+    IFS='|' read -r p_arch p_conf p_boot p_sfs <<< "$pv"
+    conf_arch=$(awk -F= '/^[[:space:]]*Architecture[[:space:]]*=/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' \
+        "archiso/$p_conf" 2>/dev/null || true)
+    if [ "$p_arch" != "$target" ] || [ "$conf_arch" != "$target" ]; then
+        fail "$target: profiledef.sh gives arch=$p_arch and archiso/$p_conf declares Architecture=${conf_arch:-?}"
+        profile_ok=0
+    fi
+    if [ "$target" != x86_64 ] && [[ " $p_boot " == *" bios."* ]]; then
+        fail "$target: BIOS boot modes are x86-only"
+        profile_ok=0
+    fi
+    # -Xbcj solo existe para xz: mksquashfs sale con error si va con zstd.
+    if [[ " $p_sfs " == *" -Xbcj "* && " $p_sfs " != *" -comp xz "* ]]; then
+        fail "$target: -Xbcj requires -comp xz in airootfs_image_tool_options"
+        profile_ok=0
+    fi
+    # apply-calamares.sh copia modules/<arch>/*.conf encima de los comunes.
+    unpackfs=installer/calamares/modules/unpackfs.conf
+    [ -f "installer/calamares/modules/$target/unpackfs.conf" ] &&
+        unpackfs="installer/calamares/modules/$target/unpackfs.conf"
+    if ! grep -q "bootmnt/churros/$target/airootfs.sfs" "$unpackfs"; then
+        fail "$target: $unpackfs does not unpack churros/$target/airootfs.sfs"
+        profile_ok=0
+    fi
+done
+[ "$profile_ok" -eq 1 ] && pass "x86_64 and aarch64 get their own pacman.conf, boot modes, squashfs options and unpackfs source"
+
 # -------------------------------------------- Defaults vs skel (coherencia)
 
 # /usr/share/churros/defaults lo usa churros-settings para "restaurar valores

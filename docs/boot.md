@@ -35,10 +35,11 @@ archiso/
     └── splash.png
 ```
 
-El modo de arranque se define en `archiso/profiledef.sh`:
+El modo de arranque se define en `archiso/profiledef.sh` según la arquitectura de la ISO:
 
 ```bash
-bootmodes=('bios.syslinux' 'uefi.grub')
+bootmodes=('bios.syslinux' 'uefi.grub')   # x86_64
+bootmodes=('uefi.grub')                   # aarch64
 ```
 
 Eso significa que en BIOS se usa Syslinux y en UEFI se usa GRUB. El bootmode `uefi.grub` hace que ArchISO genere el binario GRUB EFI (con `grub-mkstandalone`) y cree la imagen FAT de arranque El Torito. El archivo `grub/loopback.cfg` se usa para arrancar desde ISO por loopback.
