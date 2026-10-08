@@ -33,7 +33,7 @@ Ordered steps, runs from repo root:
 2. `scripts/build-calamares.sh` (rebuilds if missing, if libpython does not match host/`python` on the ISO, or if `installer/patches/calamares-*.patch` changed), then `scripts/build-aur.sh` if those pkgs are missing. Expect `calamares-*.pkg.tar.zst`, `python-pywal-*.pkg.tar.zst`, `yay-*.pkg.tar.zst`, `wlogout-*.pkg.tar.zst` in `archiso/packages/`.
 3. If Calamares pkg exists: run `installer/apply-calamares.sh` (deploys `settings.conf`, `modules/*.conf`, `modules/*.yaml`, `branding/churros/`, plus a polkit rule `49-calamares.rules` allowing user `churros` to pkexec calamares) and copy all `archiso/packages/*.pkg.tar.zst` into `airootfs/root/packages/`.
 4. Run `scripts/build-rust.sh`: compiles every crate in `rust/` (release) and deploys binaries into `archiso/airootfs/usr/bin/`. Binary names match crate names (e.g. `churros-welcome`).
-5. `sudo rm -rf work out` then `sudo mkarchiso -v -w work -o out archiso`.
+5. `sudo rm -rf work out` then `sudo env CHURROS_ARCH=<arch> mkarchiso -v -w work -o out archiso` (`<arch>` comes from `--arch`; `profiledef.sh` reads it).
 6. `rm -rf work` and `chown` `out/` back to `$USER`.
 
 A trap on EXIT cleans generated files out of `archiso/airootfs/` (`root/customize_airootfs.sh`, `root/branding`, `root/packages`, `etc/calamares`, `polkit-1/rules.d/49-calamares.rules`, `usr/bin/churros-welcome`). Do not edit those paths directly — they are regenerated each build.
@@ -79,7 +79,9 @@ scripts/
   build-aur.sh                Produces python-pywal + yay + wlogout pkgs
   build-rust.sh               Compiles rust/* crates -> archiso/airootfs/usr/bin/
 archiso/                      ArchISO profile root
-  profiledef.sh               iso metadata, bootmodes, file_permissions map
+  profiledef.sh               iso metadata, arch (CHURROS_ARCH), bootmodes, squashfs options, file_permissions map
+  pacman.x86_64.conf          Bootstrap repos for x86_64 (Arch Linux, host mirrorlist)
+  pacman.aarch64.conf         Bootstrap repos for aarch64 (Arch Linux ARM)
   packages/                   Local pacman repo (built pkgs + repo db live here)
   airootfs/                   Squashfs root overlay
     etc/skel/.config/          niri, waybar, noctalia, foot, fuzzel — DO NOT MODIFY
@@ -101,10 +103,10 @@ docs/                         Project documentation
 
 - **Git workflow**: every change starts on a new branch (never on `main`). Create the branch, make and verify the changes there, and only merge back into `main` once everything works.
 - Shell scripts: `#!/usr/bin/env bash`, `set -e`, shellcheck-compliant.
-- Calamares modules: `.conf` (and `.yaml` for netinstall) in `installer/calamares/modules/`.
+- Calamares modules: `.conf` (and `.yaml` for netinstall) in `installer/calamares/modules/`. Arch-specific variants (`unpackfs.conf`, `shellprocess-fixboot.conf`, `shellprocess-pacman.conf`) live in `installer/calamares/modules/<arch>/` and `apply-calamares.sh` copies them over the common ones.
 - Package lists: one package per line in `archiso/packages.x86_64`.
 - File mode map (not git): declared in `archiso/profiledef.sh` `file_permissions` (e.g. `/usr/bin/churros-*` 0755).
-- Bootstrap uses `pacman.conf` (declared in `profiledef.sh`); airootfs compressed squashfs xz; bootstrap tarball zstd.
+- Bootstrap uses `pacman.<arch>.conf`, chosen in `profiledef.sh` from `CHURROS_ARCH` (default: host arch); airootfs squashfs zstd on x86_64 and xz on aarch64; bootstrap tarball zstd.
 
 ## Calamares Sequence
 
@@ -112,7 +114,7 @@ docs/                         Project documentation
 
 - `shellprocess@boot-nocow` runs after `mount` and **MUST** come before `unpackfs`: `chattr +C` + `compression=none` on the target `/boot` so vmlinuz is never stored as btrfs zstd (GRUB `premature end of file`).
 - `shellprocess@pacman-init` (keyring init) **MUST** come before `shellprocess@fix-boot` (mkinitcpio preset rewrite + kernel modules) — both already ordered this way; do not reorder.
-- There is **no** `shellprocess@churros-repo`. The `[churros]` repo (`Server = file:///root/packages`) is declared in `archiso/pacman.conf`, so it is already in the live environment's pacman.conf and Calamares carries it into the target; that is how `netinstall` resolves yay/wlogout/python-pywal. It is removed again by `shellprocess@post-install` (unanchored `sed /churros/d` is forbidden — use the anchored `[churros]` block removal).
+- There is **no** `shellprocess@churros-repo`. The `[churros]` repo (`Server = file:///root/packages`) is declared in `archiso/pacman.<arch>.conf`, so it is already in the live environment's pacman.conf and Calamares carries it into the target; that is how `netinstall` resolves yay/wlogout/python-pywal. It is removed again by `shellprocess@post-install` (unanchored `sed /churros/d` is forbidden — use the anchored `[churros]` block removal).
 - `shellprocess@post-install` (cleanup: drops `[churros]`, `userdel -r churros`, removes live-only `/root` artifacts) is the last exec step before `umount`.
 - `shellprocess@grub-theme` runs right after `bootloader`: copies `branding/grub-theme` (deployed to `/usr/share/churros/grub-theme/` at live boot) into `/boot/grub/themes/churros/`, appends `GRUB_THEME` to the target's `/etc/default/grub`, reruns `grub-mkconfig -o /boot/grub/grub.cfg`, then `make-boot-grub-readable` so GRUB can read `/boot` on btrfs+zstd.
 
@@ -127,7 +129,7 @@ Config files per instance: `shellprocess-pacman.conf`, `shellprocess-fixboot.con
 - **Terminal**: foot.
 - **Apps**: portadas a Rust (gtk4-rs + libadwaita-rs) en `rust/`: `churros-welcome`, `churros-settings` (preferences), `churros-popup` (6 popups en un binario con toggle nativo vía pidfiles en `/tmp/churros/`), `churros-control-center` y `churros-tour` (recorrido guiado, se limpia al instalar). Sus binarios se despliegan en `/usr/bin/churros-*` por `build-rust.sh` (crates con `deploy = true`); los assets runtime viven en `/usr/share/churros/<app>/` (los crates resuelven a `assets/` local en desarrollo). Las traducciones gettext (`po/*.po`) siguen siendo las que usa el resto del sistema; las apps Rust llevan sus cadenas en el codigo.
 - **Installer**: Calamares with custom `churros` branding (slideshow, QSS stylesheet).
-- **Boot modes** (from `profiledef.sh`): `bios.syslinux` + `uefi.grub`. No systemd-boot, no Limine (mkarchiso del host no lo soporta).
+- **Boot modes** (from `profiledef.sh`): `bios.syslinux` + `uefi.grub` on x86_64, `uefi.grub` on aarch64. No systemd-boot, no Limine (mkarchiso del host no lo soporta).
 - **Audio**: PipeWire + WirePlumber.
 - **Build system**: archiso (`mkarchiso`).
 
