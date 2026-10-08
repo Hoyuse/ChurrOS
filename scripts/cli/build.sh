@@ -3,6 +3,7 @@
 set -e
 HOST_REPO_SYMLINK=0
 EDITION="niri"
+TARGET_ARCH="aarch64"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --edition|-e)
@@ -13,11 +14,30 @@ while [[ $# -gt 0 ]]; do
             EDITION="${1#*=}"
             shift
             ;;
+        --arch|-a)
+            TARGET_ARCH="$2"
+            shift 2
+            ;;
+        --arch=*)
+            TARGET_ARCH="${1#*=}"
+            shift
+            ;;
         *)
             shift
             ;;
     esac
 done
+
+case "$TARGET_ARCH" in
+    arm64) TARGET_ARCH="aarch64" ;;
+    x86_64|aarch64) ;;
+    *)
+        echo "Error: unsupported architecture '$TARGET_ARCH' (use arm64 or x86_64)." >&2
+        exit 1
+        ;;
+esac
+
+PACKAGE_LIST="archiso/packages.${TARGET_ARCH}"
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
 if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ] && [ "$EDITION" != "server" ]; then
@@ -57,8 +77,8 @@ cleanup_temp() {
         echo "[cleanup] Removing host /root/packages symlink..."
         sudo rm -f /root/packages 2>/dev/null || true
     fi
-    if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f archiso/packages.x86_64.orig ]; then
-        mv archiso/packages.x86_64.orig archiso/packages.x86_64
+    if [ "$PACKAGES_BACKED_UP" -eq 1 ] && [ -f "$PACKAGE_LIST.orig" ]; then
+        mv "$PACKAGE_LIST.orig" "$PACKAGE_LIST"
     fi
     if [ -f archiso/airootfs/etc/greetd/config.toml.bak ]; then
         mv archiso/airootfs/etc/greetd/config.toml.bak archiso/airootfs/etc/greetd/config.toml
@@ -120,12 +140,12 @@ fi
 
 # 0. Configurar paquetes según la edición
 if [ "$EDITION" != "niri" ]; then
-    PKG_LIST="archiso/packages.${EDITION}.x86_64"
+    PKG_LIST="archiso/packages.${EDITION}.${TARGET_ARCH}"
     echo "[0/5] Selecting ${EDITION} packages..."
     if [ -f "$PKG_LIST" ]; then
-        cp archiso/packages.x86_64 archiso/packages.x86_64.orig
+        cp "$PACKAGE_LIST" "$PACKAGE_LIST.orig"
         PACKAGES_BACKED_UP=1
-        cp "$PKG_LIST" archiso/packages.x86_64
+        cp "$PKG_LIST" "$PACKAGE_LIST"
     else
         echo "Error: $PKG_LIST not found!" >&2
         exit 1
