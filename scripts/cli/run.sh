@@ -135,22 +135,22 @@ if [ ! -f "$DISK" ]; then
     qemu-img create -f qcow2 "$DISK" 64G
 fi
 
-# QEMU exige que las dos imágenes pflash tengan el mismo tamaño. Mezclar
-# AAVMF_CODE de 64M con un VARS de 2M (o al revés) aborta el arranque.
-code_bytes=$(stat -c %s "$OVMF_CODE")
-vars_bytes=$(stat -c %s "$OVMF_VARS")
-if [ "$code_bytes" != "$vars_bytes" ]; then
+# ovmf.sh ya eligió un par coherente. En aarch64 QEMU exige además que las dos
+# imágenes pflash midan lo mismo; en x86 CODE y VARS miden distinto (normal).
+code_bytes=$(stat -L -c %s "$OVMF_CODE")
+template_vars_bytes=$(stat -L -c %s "$OVMF_VARS")
+if [ "$TARGET_ARCH" = aarch64 ] && [ "$code_bytes" != "$template_vars_bytes" ]; then
     echo "Error: el firmware pflash no coincide en tamaño." >&2
     echo "  CODE $OVMF_CODE ($code_bytes bytes)" >&2
-    echo "  VARS $OVMF_VARS ($vars_bytes bytes)" >&2
+    echo "  VARS $OVMF_VARS ($template_vars_bytes bytes)" >&2
     echo "Elige un par CODE/VARS de la misma generación (p. ej. AAVMF_CODE + AAVMF_VARS)." >&2
     exit 1
 fi
 
 # If the OVMF vars file doesn't exist, copy the default one to the VM directory.
-# Una VARS vieja de otro firmware también se descarta.
-if [ -f "$VARS" ] && [ "$(stat -c %s "$VARS")" != "$code_bytes" ]; then
-    echo "EFI vars size does not match firmware ($code_bytes bytes); resetting $VARS"
+# Una VARS vieja de otro firmware (tamaño distinto a la plantilla) se descarta.
+if [ -f "$VARS" ] && [ "$(stat -L -c %s "$VARS")" != "$template_vars_bytes" ]; then
+    echo "EFI vars size does not match firmware template ($template_vars_bytes bytes); resetting $VARS"
     rm -f "$VARS"
 fi
 if [ ! -f "$VARS" ]; then
