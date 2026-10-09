@@ -257,12 +257,17 @@ pub fn build(navigator: gtk::Stack) -> Page {
             Some("Temperatura de color y filtro de luz azul (wlsunset)"),
         ));
 
+        let lock_blurb = if churros_services::noctalia::shell_active() {
+            "El bloqueo lo gestiona Noctalia"
+        } else {
+            "swaylock + swayidle: estilo y bloqueo automatico"
+        };
         screen_group.add(&navigation_row::new(
             navigator.clone(),
             "Pantalla de bloqueo",
             "lock_screen.svg",
             "lock-screen",
-            Some("swaylock + swayidle: estilo y bloqueo automatico"),
+            Some(lock_blurb),
         ));
 
         page.add(screen_group.widget());

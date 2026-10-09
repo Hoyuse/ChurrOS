@@ -330,15 +330,20 @@ impl BackupService {
     }
 
     /// Recarga waybar/mako/fuzzel (equivalente a _reload_services).
+    /// Waybar y Mako solo si esa sesión los usa: si no, `reload(true)`
+    /// arranca Waybar y `makoctl` queda zombi.
     pub fn reload_services() {
-        crate::services::waybar::WaybarService::reload(true);
-        for cmd in [vec!["makoctl", "reload"], vec!["pkill", "-x", "fuzzel"]] {
-            let _ = Command::new(&cmd[0])
-                .args(&cmd[1..])
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn();
+        if churros_services::noctalia::uses_waybar() {
+            crate::services::waybar::WaybarService::reload(true);
         }
+        if churros_services::noctalia::uses_mako() {
+            crate::services::mako_config::MakoConfig::reload();
+        }
+        let _ = Command::new("pkill")
+            .args(["-x", "fuzzel"])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
     }
 
     /// Settings defaults (paridad con SettingsService.DEFAULTS de Python).

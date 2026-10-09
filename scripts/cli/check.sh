@@ -511,12 +511,23 @@ for mode in ("dark", "light"):
             fail(f"{mode} {fg} on {bg} contrast {ratio:.2f} is below {minimum}")
 
 apply = Path("archiso/airootfs/usr/bin/churros-apply-wallpaper").read_text(encoding="utf-8")
-noctalia_at = apply.find("if apply_noctalia")
-sway_at = apply.find("apply_swaybg", noctalia_at if noctalia_at >= 0 else 0)
-if noctalia_at < 0 or sway_at < 0 or noctalia_at > sway_at:
-    fail("churros-apply-wallpaper must accept Noctalia before falling back to swaybg")
-elif "return 0" not in apply[noctalia_at:sway_at]:
-    fail("a successful Noctalia wallpaper must return before starting swaybg")
+apply_fn = apply.split("apply() {", 1)[-1]
+noctalia_at = apply_fn.find("if noctalia_running")
+sway_at = apply_fn.find("apply_swaybg")
+if "for attempt in 1 2 3" not in apply or "noctalia msg wallpaper-set" not in apply:
+    fail("churros-apply-wallpaper must retry noctalia msg wallpaper-set three times")
+elif noctalia_at < 0 or sway_at < 0 or noctalia_at > sway_at:
+    fail("swaybg must stay behind the Noctalia guard in apply()")
+elif "return" not in apply_fn[noctalia_at:sway_at]:
+    fail("a running Noctalia must return before swaybg, even when wallpaper-set fails")
+
+wallpaper_rs = Path("rust/preferences/src/services/wallpaper.rs").read_text(encoding="utf-8")
+noctalia_rs = wallpaper_rs.find("running_shells().noctalia")
+sway_rs = wallpaper_rs.find('"-m", "fill"')
+if noctalia_rs < 0 or sway_rs < 0 or noctalia_rs > sway_rs:
+    fail("wallpaper.rs must notice a running Noctalia before starting swaybg")
+elif "return apply_with_noctalia" not in wallpaper_rs[noctalia_rs:sway_rs]:
+    fail("wallpaper.rs must return without swaybg when Noctalia is running")
 
 for pkg_list in ("archiso/packages.x86_64", "archiso/packages.aarch64"):
     names = [
@@ -535,6 +546,13 @@ then
     pass "Noctalia config, palette, wallpaper and Inter font check out"
 else
     fail "Noctalia integration check failed"
+fi
+
+if wallpaper_out=$(bash scripts/test-apply-wallpaper.sh 2>&1); then
+    pass "Noctalia en marcha no arranca swaybg (scripts/test-apply-wallpaper.sh)"
+else
+    fail "scripts/test-apply-wallpaper.sh"
+    printf '%s\n' "$wallpaper_out" | sed 's/^/    /'
 fi
 
 # -------------------------------------------------- Niri Xwayland integration

@@ -4,8 +4,9 @@
 #   Aplica un wallpaper al compositor activo (Niri / Hyprland / Sway).
 #
 #   Backends soportados en orden:
-#     1. Noctalia, si la sesión Niri lo tiene en marcha (no arranca swaybg)
-#     2. swaybg (estatico, simple; KDE/XFCE y Niri sin Noctalia)
+#     1. Noctalia, si está en marcha. Reintenta el IPC y, si falla, sale
+#        con error: swaybg no puede arrancar encima del shell.
+#     2. swaybg (estatico, simple; KDE/XFCE y sesiones sin Noctalia)
 #     3. awww (animations, GIF, multi-output)
 #
 #   Detecta automaticamente WAYLAND_DISPLAY y XDG_RUNTIME_DIR si no
@@ -197,18 +198,41 @@ apply_swaybg() {
     return 1
 }
 
-# Noctalia (sesión Niri) es el único pintor del fondo cuando está en marcha.
+# Noctalia en marcha: es el único pintor del fondo. `pgrep` falla si no corre.
+noctalia_running() {
+    command -v noctalia >/dev/null 2>&1 || return 1
+    pgrep -u "$(id -u)" -x noctalia >/dev/null 2>&1
+}
+
 # IPC de Noctalia 5.2.1: `noctalia msg wallpaper-set <ruta>`.
+# Un `read() failed: Resource temporarily unavailable` es transitorio: se
+# reintenta. Si los tres intentos fallan, se devuelve error. No se arranca
+# swaybg: Noctalia puede haber aplicado el fondo igual y swaybg se superpone.
 apply_noctalia() {
 
     local path="$1"
+    local attempt
 
-    command -v noctalia >/dev/null 2>&1 || return 1
-    pgrep -u "$(id -u)" -x noctalia >/dev/null 2>&1 || return 1
-    _detect_session_env || return 1
+    noctalia_running || return 1
+    # Un swaybg de un intento anterior se queda debajo del shell.
+    _swaybg_kill
 
-    echo "$LOG_PREFIX noctalia msg wallpaper-set $path" >&2
-    noctalia msg wallpaper-set "$path" >/dev/null 2>&1
+    for attempt in 1 2 3; do
+        echo "$LOG_PREFIX noctalia msg wallpaper-set $path (intento $attempt)" >&2
+        if noctalia msg wallpaper-set "$path" >/tmp/noctalia-wallpaper.log 2>&1; then
+            echo "$LOG_PREFIX noctalia OK intento $attempt: $path" >&2
+            return 0
+        fi
+        echo "$LOG_PREFIX noctalia intento $attempt fallo: $(head -3 /tmp/noctalia-wallpaper.log 2>/dev/null || true)" >&2
+        if [ "$attempt" -eq 1 ]; then
+            sleep 0.2
+        elif [ "$attempt" -eq 2 ]; then
+            sleep 0.4
+        fi
+    done
+
+    echo "$LOG_PREFIX noctalia no acepto el fondo tras 3 intentos; swaybg no se arranca" >&2
+    return 1
 }
 
 apply_kde() {
@@ -274,9 +298,11 @@ apply() {
         fi
     fi
 
-    # Si Noctalia acepta la imagen, no arrancar swaybg: los dos a la vez se pisan.
-    if apply_noctalia "$path"; then
-        return 0
+    # Con Noctalia en marcha no hay otro pintor. Un IPC fallido no cae en
+    # swaybg ni en awww: el fondo de Noctalia y swaybg se pisan.
+    if noctalia_running; then
+        apply_noctalia "$path"
+        return $?
     fi
 
     if command -v swaybg >/dev/null 2>&1; then

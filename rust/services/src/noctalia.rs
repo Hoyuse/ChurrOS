@@ -81,6 +81,51 @@ pub fn running_shells() -> RunningShells {
     }
 }
 
+/// Noctalia es el shell de esta sesión (proceso en marcha o autostart de Niri).
+pub fn shell_active() -> bool {
+    noctalia_is_shell(running_shells(), &read_user_niri())
+}
+
+/// `mode` de la tabla `[theme]` (no de `[theme.templates]` ni otras).
+pub fn theme_mode_in_toml(text: &str) -> Option<String> {
+    let mut in_theme = false;
+    for raw in text.lines() {
+        let line = strip_toml_comment(raw).trim();
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with('[') && line.ends_with(']') {
+            let name = line[1..line.len() - 1].trim().trim_matches('"');
+            in_theme = name == "theme";
+            continue;
+        }
+        if !in_theme {
+            continue;
+        }
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        if key.trim() != "mode" {
+            continue;
+        }
+        return unquote(value.trim());
+    }
+    None
+}
+
+/// Modo oscuro según Noctalia. `settings.toml` gana sobre `config.toml`.
+/// `auto` y un modo desconocido no se inventan.
+pub fn preferred_dark(state_toml: Option<&str>, config_toml: Option<&str>) -> Option<bool> {
+    let mode = state_toml
+        .and_then(theme_mode_in_toml)
+        .or_else(|| config_toml.and_then(theme_mode_in_toml))?;
+    match mode.as_str() {
+        "dark" => Some(true),
+        "light" => Some(false),
+        _ => None,
+    }
+}
+
 /// Ruta de wallpaper declarada en un TOML de Noctalia.
 ///
 /// Prioridad, la misma que usa el shell: `[wallpaper.default].path`, luego
@@ -376,6 +421,30 @@ spawn-at-startup \"/usr/bin/noctalia\" // barra
         assert!(!noctalia_is_shell(idle, ""));
         assert!(!session_uses(OptionalShell::Waybar, idle, ""));
         assert!(!session_uses(OptionalShell::Mako, idle, ""));
+    }
+
+    #[test]
+    fn shipped_noctalia_config_is_dark_and_state_overrides_it() {
+        assert_eq!(
+            theme_mode_in_toml(SHIPPED_NOCTALIA).as_deref(),
+            Some("dark")
+        );
+        assert_eq!(preferred_dark(None, Some(SHIPPED_NOCTALIA)), Some(true));
+        let state = "\
+[theme]
+mode = \"light\"
+
+[theme.templates]
+mode = \"dark\"
+";
+        assert_eq!(
+            preferred_dark(Some(state), Some(SHIPPED_NOCTALIA)),
+            Some(false)
+        );
+        assert_eq!(
+            preferred_dark(Some("[theme]\nmode = \"auto\"\n"), Some(SHIPPED_NOCTALIA)),
+            None
+        );
     }
 
     #[test]

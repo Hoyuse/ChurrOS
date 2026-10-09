@@ -229,8 +229,15 @@ impl WallpaperService {
             .map(|(k, v)| (k.as_str(), v.as_str()))
             .collect();
 
+        // Noctalia pinta el fondo. Si el IPC falla o el script pasa de 10 s,
+        // no arrancar swaybg: se queda debajo del shell aunque Noctalia
+        // haya aplicado la imagen.
+        if churros_services::noctalia::running_shells().noctalia {
+            return apply_with_noctalia(path, &env_refs);
+        }
+
         // Backend 1: wrapper churros-apply-wallpaper (con timeout: no bloquear
-        // la UI si el wrapper se cuelga).
+        // la UI si el wrapper se cuelga). swaybg solo si Noctalia no corre.
         if which("churros-apply-wallpaper") {
             let r = run_with_timeout(
                 &["churros-apply-wallpaper", path],
@@ -339,4 +346,51 @@ impl WallpaperService {
 
         Some(dest.to_string_lossy().to_string())
     }
+}
+
+/// Noctalia está en marcha: el script reintenta el IPC y no llama a swaybg.
+/// Si el script no está, el mismo reintento (3 veces, espera corta) se hace aquí.
+fn apply_with_noctalia(path: &str, env_refs: &[(&str, &str)]) -> bool {
+    if which("churros-apply-wallpaper") {
+        let r = run_with_timeout(
+            &["churros-apply-wallpaper", path],
+            Duration::from_secs(10),
+            env_refs,
+        );
+        return match r {
+            Some(out) => {
+                if !out.stderr.is_empty() {
+                    println!(
+                        "[wallpaper] wrapper stderr: {}",
+                        String::from_utf8_lossy(&out.stderr)
+                    );
+                }
+                out.status.success()
+            }
+            None => {
+                println!("[wallpaper] wrapper timeout; swaybg no se arranca");
+                false
+            }
+        };
+    }
+
+    if !which("noctalia") {
+        return false;
+    }
+    for attempt in 1..=3 {
+        println!("[wallpaper] noctalia msg wallpaper-set intento {attempt}");
+        let r = run_with_timeout(
+            &["noctalia", "msg", "wallpaper-set", path],
+            Duration::from_secs(3),
+            env_refs,
+        );
+        if r.as_ref().is_some_and(|out| out.status.success()) {
+            return true;
+        }
+        if attempt < 3 {
+            std::thread::sleep(Duration::from_millis(200 * u64::from(attempt)));
+        }
+    }
+    println!("[wallpaper] noctalia no acepto el fondo; swaybg no se arranca");
+    false
 }

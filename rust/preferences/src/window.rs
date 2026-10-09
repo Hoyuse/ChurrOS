@@ -277,8 +277,13 @@ impl PreferencesWindow {
             if is_niri {
                 s.register_subpage(
                     "night-light", "appearance", "Luz nocturna", "Temperatura de color y filtro de luz azul", Some("night_light.svg"));
+                let lock_blurb = if churros_services::noctalia::shell_active() {
+                    "El bloqueo lo gestiona Noctalia"
+                } else {
+                    "swaylock + swayidle: estilo y bloqueo automatico"
+                };
                 s.register_subpage(
-                    "lock-screen", "appearance", "Pantalla de bloqueo", "swaylock + swayidle: estilo y bloqueo automatico", Some("lock_screen.svg"));
+                    "lock-screen", "appearance", "Pantalla de bloqueo", lock_blurb, Some("lock_screen.svg"));
             }
             s.register_subpage(
                 "power-profile", "power", "Perfiles de energia", "Performance, balanced o power-saver", None);

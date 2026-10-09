@@ -343,7 +343,7 @@ ChurrOS incluye un conjunto de utilidades auxiliares en `/usr/bin/` y `/usr/loca
 Aplica el fondo de pantalla en compositores Wayland (Niri / Hyprland / Sway).
 
 - Detecta automáticamente sockets `WAYLAND_DISPLAY` y `XDG_RUNTIME_DIR` incluso en entornos live sin sesión explícita.
-- Soporta backends `swaybg` (modo estático predeterminado) y `awww` (animaciones/transiciones).
+- Si Noctalia está en marcha, el fondo se lo pasa a `noctalia msg wallpaper-set` (reintenta y no arranca `swaybg`). Sin Noctalia usa `swaybg` y, si falla, `awww`.
 - Si no recibe argumentos, lee la ruta guardada en `~/.config/churros/settings.json` o recurre a `/usr/share/churros/wallpapers/default.png`.
 
 ## churros-pick-image

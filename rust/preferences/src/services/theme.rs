@@ -129,6 +129,13 @@ fn migrate_adwaita_dark_ini(ini: &Path) {
     let _ = fs::write(ini, updated);
 }
 
+fn noctalia_prefers_dark() -> Option<bool> {
+    let home = PathBuf::from(churros_services::home_dir());
+    let state = fs::read_to_string(home.join(".local/state/noctalia/settings.toml")).ok();
+    let config = fs::read_to_string(home.join(".config/noctalia/config.toml")).ok();
+    churros_services::noctalia::preferred_dark(state.as_deref(), config.as_deref())
+}
+
 fn write_dark_flag(dark: bool) {
     if let Some(parent) = dark_flag().parent() {
         let _ = fs::create_dir_all(parent);
@@ -269,6 +276,15 @@ impl ThemeService {
     }
 
     pub fn is_dark() -> bool {
+        // Con Noctalia, settings.json puede seguir en false (el default
+        // antiguo) mientras el shell está en oscuro. El modo real es
+        // [theme].mode de settings.toml, o el de config.toml si aún no
+        // hay override.
+        if churros_services::noctalia::shell_active() {
+            if let Some(dark) = noctalia_prefers_dark() {
+                return dark;
+            }
+        }
         if let Ok(content) = fs::read_to_string(dark_flag()) {
             return content.trim() == "1";
         }
