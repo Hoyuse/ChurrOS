@@ -2,6 +2,9 @@
 
 set -e
 
+# shellcheck source=scripts/lib/ovmf.sh
+source "$(cd "$(dirname "$0")/.." && pwd)/lib/ovmf.sh"
+
 VM_DIR="vm"
 # Sin --arch se usa la arquitectura del equipo, igual que ./churros build.
 TARGET_ARCH=""
@@ -36,58 +39,17 @@ case "$TARGET_ARCH" in
         ;;
 esac
 
-if [ "$TARGET_ARCH" = "aarch64" ]; then
-    OVMF_CODE_CANDIDATES=(
-        /usr/share/edk2/aarch64/QEMU_EFI.fd
-        /usr/share/edk2/aarch64/QEMU_EFI-pflash.raw
-        /usr/share/qemu-efi-aarch64/QEMU_EFI.fd
-        /usr/share/AAVMF/AAVMF_CODE.fd
-    )
-    OVMF_VARS_CANDIDATES=(
-        /usr/share/edk2/aarch64/QEMU_VARS.fd
-        /usr/share/AAVMF/AAVMF_VARS.fd
-    )
-else
-    OVMF_CODE_CANDIDATES=(
-        /usr/share/edk2/x64/OVMF_CODE.4m.fd
-        /usr/share/edk2-ovmf/x64/OVMF_CODE.4m.fd
-        /usr/share/edk2/x64/OVMF_CODE.fd
-        /usr/share/OVMF/OVMF_CODE.fd
-        /usr/share/ovmf/x64/OVMF_CODE.4m.fd
-        /usr/share/ovmf/OVMF_CODE.fd
-    )
-    OVMF_VARS_CANDIDATES=(
-        /usr/share/edk2/x64/OVMF_VARS.4m.fd
-        /usr/share/edk2-ovmf/x64/OVMF_VARS.4m.fd
-        /usr/share/edk2/x64/OVMF_VARS.fd
-        /usr/share/OVMF/OVMF_VARS.fd
-        /usr/share/ovmf/x64/OVMF_VARS.4m.fd
-        /usr/share/ovmf/OVMF_VARS.fd
-    )
+# CODE y VARS se eligen juntos. El primer par en el que ambos existen y
+# miden igual gana (AAVMF_CODE+AAVMF_VARS, QEMU_CODE+QEMU_VARS, OVMF *.4m).
+# Un QEMU_EFI.fd crudo sin pareja se rellena a 64 MiB.
+mkdir -p "$VM_DIR"
+if ! pflash_out=$(churros_resolve_pflash "$TARGET_ARCH" "$VM_DIR"); then
+    echo "Error: OVMF firmware not found, do you have QEMU installed?"
+    echo "Please configure the OVMF firmware paths manually otherwise."
+    exit 1
 fi
-
-# Search OVMF firmware files in standard locations
-OVMF_CODE=""
-for path in "${OVMF_CODE_CANDIDATES[@]}"; do
-    if [ -f "$path" ]; then
-        OVMF_CODE="$path"
-        break
-    fi
-done
-if [ -z "$OVMF_CODE" ]; then
-    OVMF_CODE=$(find /usr/share/edk2 /usr/share/ovmf /usr/share/OVMF /usr/share/AAVMF /usr/share/qemu /usr/share/qemu-efi-aarch64 -type f \( -iname 'OVMF_CODE*.4m.fd' -o -iname 'OVMF_CODE*.fd' -o -iname 'QEMU_EFI*.fd' -o -iname 'AAVMF_CODE*.fd' \) ! -name '*secboot*' -print -quit 2>/dev/null || true)
-fi
-
-OVMF_VARS=""
-for path in "${OVMF_VARS_CANDIDATES[@]}"; do
-    if [ -f "$path" ]; then
-        OVMF_VARS="$path"
-        break
-    fi
-done
-if [ -z "$OVMF_VARS" ]; then
-    OVMF_VARS=$(find /usr/share/edk2 /usr/share/ovmf /usr/share/OVMF /usr/share/AAVMF /usr/share/qemu -type f \( -iname 'OVMF_VARS*.4m.fd' -o -iname 'OVMF_VARS*.fd' -o -iname 'QEMU_VARS*.fd' -o -iname 'AAVMF_VARS*.fd' \) -print -quit 2>/dev/null || true)
-fi
+OVMF_CODE=$(printf '%s\n' "$pflash_out" | sed -n '1p')
+OVMF_VARS=$(printf '%s\n' "$pflash_out" | sed -n '2p')
 
 # El nombre que pone mkarchiso lleva la arquitectura (…-aarch64.iso).
 # Si no, un out/ con una ISO x86_64 se arrancaría en QEMU ARM.
@@ -108,16 +70,14 @@ for arg in "$@"; do
     esac
 done
 
-# If OVMF firmware files couldn't be found, exit 1
 if [ -z "$OVMF_CODE" ] || [ -z "$OVMF_VARS" ]; then
     echo "Error: OVMF firmware not found, do you have QEMU installed?"
-    echo "Please configure the OVMF firmware paths manually otherwaise."
+    echo "Please configure the OVMF firmware paths manually otherwise."
     exit 1
-else
-    echo "OVMF firmware found:"
-    echo "  OVMF_CODE: $OVMF_CODE"
-    echo "  OVMF_VARS: $OVMF_VARS"
 fi
+echo "OVMF firmware found:"
+echo "  OVMF_CODE: $OVMF_CODE"
+echo "  OVMF_VARS: $OVMF_VARS"
 
 # If no ISO was found, prompt the user to build ChurrOS
 if [ -z "$ISO" ]; then

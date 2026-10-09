@@ -946,6 +946,92 @@ EOF
 fi
 [ "$grub_ok" -eq 1 ] && pass "aarch64 drops missing GRUB modules; x86 boot modes and module list stay"
 
+# ------------------------------------------- QEMU pflash and live login
+
+section "QEMU pflash and live login"
+
+# shellcheck source=scripts/lib/ovmf.sh
+source scripts/lib/ovmf.sh
+
+pflash_ok=1
+if ! grep -q 'churros_resolve_pflash' scripts/cli/run.sh \
+    || grep -q 'OVMF_CODE_CANDIDATES' scripts/cli/run.sh; then
+    fail "run.sh must select CODE/VARS as matched pairs"
+    pflash_ok=0
+fi
+if grep -q 'x86_64' branding/files/issue || ! grep -q '\\m' branding/files/issue; then
+    fail "branding/files/issue must use the agetty \\\\m escape, not a hardcoded arch"
+    pflash_ok=0
+fi
+if ! grep -q '/dev/tty1' archiso/airootfs/root/.zlogin \
+    || ! grep -q 'is-active --quiet greetd.service' archiso/airootfs/root/.zlogin \
+    || ! grep -q -- '-x ~/.automated_script.sh' archiso/airootfs/root/.zlogin; then
+    fail "root .zlogin must start greetd only on tty1 and only run an executable automated_script"
+    pflash_ok=0
+fi
+if ! grep -q '\["/root/.automated_script.sh"\]="0:0:755"' archiso/profiledef.sh; then
+    fail "profiledef.sh must mark /root/.automated_script.sh executable"
+    pflash_ok=0
+fi
+
+fw_root=$(mktemp -d)
+fw_out=$(mktemp -d)
+mk_fw() {
+    mkdir -p "$(dirname "$1")"
+    truncate -s "$2" "$1"
+    printf '%s' "$3" | dd of="$1" conv=notrunc status=none
+}
+# Debian: QEMU_EFI.fd de 3 MiB junto a AAVMF de 64 MiB. El par de 64 gana.
+mk_fw "$fw_root/usr/share/qemu-efi-aarch64/QEMU_EFI.fd" 3145728 RAW
+mk_fw "$fw_root/usr/share/AAVMF/AAVMF_CODE.fd" 67108864 AAVM
+mk_fw "$fw_root/usr/share/AAVMF/AAVMF_VARS.fd" 67108864 VARS
+if ! fw_pair=$(CHURROS_FIRMWARE_ROOT="$fw_root" churros_resolve_pflash aarch64 "$fw_out") \
+    || [ "$(printf '%s\n' "$fw_pair" | sed -n '1p')" != "$fw_root/usr/share/AAVMF/AAVMF_CODE.fd" ] \
+    || [ "$(printf '%s\n' "$fw_pair" | sed -n '2p')" != "$fw_root/usr/share/AAVMF/AAVMF_VARS.fd" ]; then
+    fail "aarch64 firmware must prefer the 64 MiB AAVMF pair over the raw QEMU_EFI.fd"
+    pflash_ok=0
+fi
+rm -f "$fw_root/usr/share/AAVMF/AAVMF_CODE.fd"
+fw_pad=$(mktemp -d)
+if ! fw_pair=$(CHURROS_FIRMWARE_ROOT="$fw_root" churros_resolve_pflash aarch64 "$fw_pad") \
+    || [ "$(stat -c %s "$(printf '%s\n' "$fw_pair" | sed -n '1p')")" -ne 67108864 ] \
+    || [ "$(stat -c %s "$(printf '%s\n' "$fw_pair" | sed -n '2p')")" -ne 67108864 ] \
+    || [ "$(head -c 3 "$(printf '%s\n' "$fw_pair" | sed -n '1p')")" != RAW ] \
+    || [ "$(head -c 4 "$(printf '%s\n' "$fw_pair" | sed -n '2p')")" != VARS ]; then
+    fail "a raw QEMU_EFI.fd must be padded to 64 MiB with the VARS template"
+    pflash_ok=0
+fi
+rm -rf "$fw_root/usr/share/AAVMF" "$fw_root/usr/share/qemu-efi-aarch64"
+mk_fw "$fw_root/usr/share/qemu-efi-aarch64/QEMU_EFI.fd" 3145728 RAW
+fw_pad2=$(mktemp -d)
+if ! fw_pair=$(CHURROS_FIRMWARE_ROOT="$fw_root" churros_resolve_pflash aarch64 "$fw_pad2") \
+    || [ "$(stat -c %s "$(printf '%s\n' "$fw_pair" | sed -n '2p')")" -ne 67108864 ] \
+    || [ -n "$(head -c 4 "$(printf '%s\n' "$fw_pair" | sed -n '2p')" | tr -d '\0')" ]; then
+    fail "a raw QEMU_EFI.fd without VARS must get a zeroed 64 MiB vars image"
+    pflash_ok=0
+fi
+# x86: CODE.4m con VARS.4m, no el CODE de 2 MiB con el VARS de 4 MiB.
+rm -rf "$fw_root"
+fw_root=$(mktemp -d)
+mk_fw "$fw_root/usr/share/OVMF/OVMF_CODE.fd" 2097152 CODE2
+mk_fw "$fw_root/usr/share/OVMF/OVMF_VARS.fd" 2097152 VARS2
+mk_fw "$fw_root/usr/share/OVMF/OVMF_CODE_4M.fd" 4194304 CODE4
+mk_fw "$fw_root/usr/share/OVMF/OVMF_VARS_4M.fd" 4194304 VARS4
+if ! fw_pair=$(CHURROS_FIRMWARE_ROOT="$fw_root" churros_resolve_pflash x86_64 "$fw_out") \
+    || [ "$(printf '%s\n' "$fw_pair" | sed -n '1p')" != "$fw_root/usr/share/OVMF/OVMF_CODE_4M.fd" ] \
+    || [ "$(printf '%s\n' "$fw_pair" | sed -n '2p')" != "$fw_root/usr/share/OVMF/OVMF_VARS_4M.fd" ]; then
+    fail "x86 firmware must pair OVMF_CODE_4M with OVMF_VARS_4M"
+    pflash_ok=0
+fi
+rm -f "$fw_root/usr/share/OVMF/OVMF_CODE_4M.fd" "$fw_root/usr/share/OVMF/OVMF_VARS.fd"
+if CHURROS_FIRMWARE_ROOT="$fw_root" churros_resolve_pflash x86_64 "$fw_out" >/dev/null 2>&1; then
+    fail "x86 must not pair a 4 MiB VARS image with a different-sized CODE"
+    pflash_ok=0
+fi
+rm -rf "$fw_root" "$fw_out" "$fw_pad" "$fw_pad2"
+unset CHURROS_FIRMWARE_ROOT
+[ "$pflash_ok" -eq 1 ] && pass "pflash pairs match in size; live login stays on tty1"
+
 # ------------------------------------------- Rollback (churros-snapshot)
 
 section "Rollback snapshots btrfs"

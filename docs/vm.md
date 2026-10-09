@@ -36,7 +36,7 @@ Si existe `/usr/share/binfmts/qemu-aarch64`, lo mismo se hace con `update-binfmt
 
 La imagen aarch64 escribe `PKGEXT='.pkg.tar.zst'` en `/etc/makepkg.conf.d/churros.conf`. ALARM trae `.pkg.tar.xz`; con esa extensión el build no encontraba el paquete de Calamares y lo recompilaba cada vez. Los scripts buscan `*.pkg.tar.*`, así que un paquete `.xz` que ya esté en `archiso/packages/aarch64/` también se reutiliza.
 
-QEMU del guest ARM usa TCG en un host x86_64 (no hay KVM para aarch64). La máquina es `virt`: no tiene IDE ni teclado PS/2, así que el CD va por virtio-scsi, el disco por virtio-blk y el teclado por USB. La consola serie es PL011 (`ttyAMA0` en el kernel; el log sigue en `vm_serial.log`). CODE y VARS del firmware pflash tienen que medir lo mismo (un `AAVMF_CODE` de 64 MiB con un `VARS` de otro tamaño aborta el arranque). `run` elige la ISO cuyo nombre lleva la arquitectura, para no arrancar una ISO x86_64 que haya quedado en `out/`.
+QEMU del guest ARM usa TCG en un host x86_64 (no hay KVM para aarch64). La máquina es `virt`: no tiene IDE ni teclado PS/2, así que el CD va por virtio-scsi, el disco por virtio-blk y el teclado por USB. La consola serie es PL011 (`ttyAMA0` en el kernel; el log sigue en `vm_serial.log`). CODE y VARS del firmware pflash tienen que medir lo mismo. `run` usa el primer par en el que ambos ficheros existen y miden igual (`AAVMF_CODE.fd` con `AAVMF_VARS.fd`, `QEMU_CODE.fd` con `QEMU_VARS.fd`, y en x86 `OVMF_CODE.4m.fd` con `OVMF_VARS.4m.fd`). Si solo está el `QEMU_EFI.fd` crudo, rellena copias a 64 MiB. `run` elige la ISO cuyo nombre lleva la arquitectura, para no arrancar una ISO x86_64 que haya quedado en `out/`.
 
 Este script vive en `scripts/cli/run.sh` y se encarga de:
 
