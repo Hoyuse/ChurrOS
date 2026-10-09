@@ -19,8 +19,6 @@
 
 set -u
 
-ARG_PATH="${1:-}"
-
 SETTINGS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/churros/settings.json"
 
 LOG_PREFIX="[churros-apply-wallpaper]"
@@ -355,8 +353,10 @@ apply() {
     return 1
 }
 
-if [ -n "$ARG_PATH" ]; then
-    apply "$ARG_PATH"
+# Un argumento explícito, aunque sea "", no es "sin argumentos": apply()
+# imprime el error y el proceso tiene que salir con ese código.
+if [ "$#" -gt 0 ]; then
+    apply "$1"
     exit $?
 fi
 
@@ -382,7 +382,9 @@ fi
 DEFAULT="/usr/share/churros/wallpapers/default.png"
 
 if [ -f "$DEFAULT" ]; then
-    apply "$DEFAULT" || true
+    apply "$DEFAULT"
+    exit $?
 fi
 
-exit 0
+echo "$LOG_PREFIX archivo no existe:" >&2
+exit 1

@@ -276,10 +276,8 @@ impl ThemeService {
     }
 
     pub fn is_dark() -> bool {
-        // Con Noctalia, settings.json puede seguir en false (el default
-        // antiguo) mientras el shell está en oscuro. El modo real es
-        // [theme].mode de settings.toml, o el de config.toml si aún no
-        // hay override.
+        // Con Noctalia el modo real es [theme].mode: settings.toml si hay
+        // override, y si no el config.toml de fábrica (oscuro).
         if churros_services::noctalia::shell_active() {
             if let Some(dark) = noctalia_prefers_dark() {
                 return dark;
@@ -295,10 +293,17 @@ impl ThemeService {
     }
 
     pub fn set(dark: bool) {
-        if APPLYING.with(Cell::get) {
+        if APPLYING.with(Cell::get) || Self::is_dark() == dark {
             return;
         }
-        if Self::is_dark() == dark {
+        Self::apply(dark);
+    }
+
+    /// Escribe el modo aunque `is_dark()` ya coincida. Tras restablecer,
+    /// el config de Noctalia vuelve a `mode = "dark"` y `set(true)` saldría
+    /// sin `theme-mode-set` ni el prefer-dark de GTK.
+    pub fn apply(dark: bool) {
+        if APPLYING.with(Cell::get) {
             return;
         }
         APPLYING.with(|flag| flag.set(true));

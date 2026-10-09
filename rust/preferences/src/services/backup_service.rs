@@ -278,6 +278,10 @@ impl BackupService {
 
         Self::restore_settings();
         Self::restore_dotfiles();
+        // El config restaurado ya dice oscuro, así que ThemeService::set
+        // no haría nada y GTK / `[theme].mode` se quedarían en claro.
+        // apply() recorre el mismo camino que el interruptor de Apariencia.
+        crate::services::theme::ThemeService::apply(true);
         Self::reload_services();
         // settings.json vuelve a Orange, pero accent.css (y el acento de KDE)
         // se quedan con el hex de pywal. El selector de color reescribe ambos.
@@ -289,7 +293,7 @@ impl BackupService {
 
     fn restore_settings() {
         let defaults = serde_json::json!({
-            "theme": { "dark": false, "dynamic_colors": false },
+            "theme": { "dark": true, "dynamic_colors": false },
             "accent": { "color": "Orange" },
             "wallpaper": { "path": "" },
             "icons": { "theme": "Papirus" },
@@ -355,7 +359,7 @@ impl BackupService {
     #[allow(dead_code)]
     pub fn defaults() -> Value {
         serde_json::json!({
-            "theme": { "dark": false, "dynamic_colors": false },
+            "theme": { "dark": true, "dynamic_colors": false },
             "accent": { "color": "Orange" },
             "wallpaper": { "path": "" },
             "icons": { "theme": "Papirus" },

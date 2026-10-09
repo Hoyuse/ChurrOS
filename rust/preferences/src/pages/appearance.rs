@@ -36,7 +36,7 @@ pub fn build(navigator: gtk::Stack) -> Page {
     // Modo oscuro
     let dark_active = ThemeService::is_dark();
     let feedback_rc = Rc::clone(&feedback);
-    theme_group.add(&SwitchRow::new(
+    let dark_row = SwitchRow::new(
         "Modo oscuro",
         Some("appearance.svg"),
         Some("Usar el tema oscuro"),
@@ -45,10 +45,24 @@ pub fn build(navigator: gtk::Stack) -> Page {
             ThemeService::set(active);
             set_feedback(
                 &feedback_rc,
-                if active { "Modo oscuro activado" } else { "Modo claro activado" },
+                if active {
+                    "Modo oscuro activado"
+                } else {
+                    "Modo claro activado"
+                },
             );
         })),
-    ));
+    );
+    let dark_switch = dark_row.switch.clone();
+    theme_group.add(&dark_row);
+    // La página se construye una vez: el interruptor no se entera del
+    // restablecer si nadie lo mueve. set_active reentra en el callback,
+    // y apply() ignora esa reentrada mientras APPLYING está puesto.
+    ThemeService::on_change(move |dark| {
+        if dark_switch.is_active() != dark {
+            dark_switch.set_active(dark);
+        }
+    });
 
     // Colores dinámicos (pywal)
     let dynamic_active = settings::get_bool("theme.dynamic_colors", false);

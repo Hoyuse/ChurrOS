@@ -260,6 +260,11 @@ impl WallpaperService {
                         return true;
                     }
                     println!("[wallpaper] wrapper fallo rc={:?}", out.status.code());
+                    // Ruta vacía o inexistente: el script ya lo dijo. swaybg
+                    // arrancaría igual y apply() lo contaría como éxito.
+                    if String::from_utf8_lossy(&out.stderr).contains("archivo no existe") {
+                        return false;
+                    }
                 }
                 None => println!("[wallpaper] wrapper timeout/ex"),
             }

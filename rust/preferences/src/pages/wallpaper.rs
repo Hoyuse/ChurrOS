@@ -358,6 +358,13 @@ fn apply_wallpaper(src: &str, navigator: &gtk::Stack, content: &gtk::Box) {
         };
         println!("[wallpaper] import+set retorno: {success} dest: {dest}");
         populate(&content, &nav);
+        if !success {
+            show_error(
+                &nav,
+                "No se pudo aplicar el fondo",
+                "La ruta está vacía o el fondo no se pudo aplicar.",
+            );
+        }
     });
 }
 
@@ -394,6 +401,14 @@ fn select(wallpaper: &str, navigator: &gtk::Stack, content: &gtk::Box) {
         };
         println!("[wallpaper-page] set retorno: {success}");
         populate(&content, &nav);
+        if !success {
+            show_error(
+                &nav,
+                "No se pudo aplicar el fondo",
+                "La ruta está vacía o el fondo no se pudo aplicar.",
+            );
+            return;
+        }
         nav.set_visible_child_name("appearance");
     });
 }

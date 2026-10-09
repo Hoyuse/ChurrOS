@@ -85,6 +85,20 @@ fail() {
     exit 1
 }
 
+# Argumento vacío: el script imprime el error y no sale con 0.
+set +e
+empty_err="$(
+    env -u XDG_CURRENT_DESKTOP -u XDG_SESSION_DESKTOP \
+        PATH="$tmp/bin:$PATH" \
+        HOME="$tmp" \
+        XDG_CONFIG_HOME="$tmp/cfg" \
+        "$script" "" 2>&1
+)"
+empty_rc=$?
+set -e
+[[ "$empty_rc" -ne 0 ]] || fail "ruta vacia salio con rc=0"
+[[ "$empty_err" == *"archivo no existe"* ]] || fail "ruta vacia no imprimio el error: $empty_err"
+
 # Tres intentos: los dos primeros fallan, el tercero aplica. swaybg quieto.
 : >"$count"
 : >"$sway_log"
