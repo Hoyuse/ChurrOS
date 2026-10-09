@@ -23,7 +23,7 @@ impl AccentService {
         ("Purple", "#9141AC"),
         ("Pink", "#E01B9C"),
         ("Red", "#E62D2D"),
-        ("Orange", "#E66100"),
+        ("Orange", "#F97316"),
         ("Yellow", "#F5C211"),
         ("Green", "#2EC27E"),
         ("Teal", "#1C71D8"),

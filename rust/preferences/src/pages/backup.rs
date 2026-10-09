@@ -233,8 +233,15 @@ fn on_reset(btn: &gtk::Button) {
         .default_width(520)
         .build();
     dialog.add_css_class("reset-confirm");
+    if parent.has_css_class("light") {
+        dialog.add_css_class("light");
+    }
 
     let root = gtk::Box::new(gtk::Orientation::Vertical, 16);
+    root.add_css_class("reset-confirm-surface");
+    if parent.has_css_class("light") {
+        root.add_css_class("light");
+    }
     root.set_width_request(460);
     root.set_margin_top(28);
     root.set_margin_bottom(22);

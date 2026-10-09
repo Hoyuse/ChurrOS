@@ -205,13 +205,15 @@ noctalia_running() {
 }
 
 # IPC de Noctalia 5.2.1: `noctalia msg wallpaper-set <ruta>`.
-# Un `read() failed: Resource temporarily unavailable` es transitorio: se
-# reintenta. Si los tres intentos fallan, se devuelve error. No se arranca
-# swaybg: Noctalia puede haber aplicado el fondo igual y swaybg se superpone.
+# EAGAIN (`Resource temporarily unavailable`) es transitorio: Noctalia puede
+# haber pintado el fondo y seguir ocupado. Cada intento se corta a los 3 s
+# y entre medias se espera 1.5 s y luego 2.5 s (como mucho ~13 s, por debajo
+# del tope de 18 s de Settings). Si los tres fallan, se devuelve error.
+# No se arranca swaybg.
 apply_noctalia() {
 
     local path="$1"
-    local attempt
+    local attempt rc log
 
     noctalia_running || return 1
     # Un swaybg de un intento anterior se queda debajo del shell.
@@ -219,15 +221,29 @@ apply_noctalia() {
 
     for attempt in 1 2 3; do
         echo "$LOG_PREFIX noctalia msg wallpaper-set $path (intento $attempt)" >&2
-        if noctalia msg wallpaper-set "$path" >/tmp/noctalia-wallpaper.log 2>&1; then
+        if command -v timeout >/dev/null 2>&1; then
+            timeout 3 noctalia msg wallpaper-set "$path" >/tmp/noctalia-wallpaper.log 2>&1
+        else
+            noctalia msg wallpaper-set "$path" >/tmp/noctalia-wallpaper.log 2>&1
+        fi
+        rc=$?
+        if [ "$rc" -eq 0 ]; then
             echo "$LOG_PREFIX noctalia OK intento $attempt: $path" >&2
             return 0
         fi
-        echo "$LOG_PREFIX noctalia intento $attempt fallo: $(head -3 /tmp/noctalia-wallpaper.log 2>/dev/null || true)" >&2
+        log="$(head -3 /tmp/noctalia-wallpaper.log 2>/dev/null || true)"
+        echo "$LOG_PREFIX noctalia intento $attempt fallo: $log" >&2
+        if [ "$attempt" -ge 3 ]; then
+            break
+        fi
+        # EAGAIN y el corte por timeout se reintentan; no son un fallo final.
+        if [ "$rc" -eq 124 ] || printf '%s\n' "$log" | grep -Eiq 'resource temporarily unavailable|eagain'; then
+            echo "$LOG_PREFIX noctalia ocupado (EAGAIN); se reintenta" >&2
+        fi
         if [ "$attempt" -eq 1 ]; then
-            sleep 0.2
-        elif [ "$attempt" -eq 2 ]; then
-            sleep 0.4
+            sleep 1.5
+        else
+            sleep 2.5
         fi
     done
 

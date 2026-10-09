@@ -686,8 +686,21 @@ entry:focus {
 }
 
 /* ── Confirmación de restablecer ─────────────────────── */
-.reset-confirm {
-    background: var(--bg-window);
+/* --bg-window lleva alfa ~0.6 y deja ver la página de detrás. */
+window.reset-confirm {
+    background-color: #0D1016;
+}
+
+window.reset-confirm.light {
+    background-color: #F0F4FA;
+}
+
+.reset-confirm-surface {
+    background-color: #0D1016;
+}
+
+.reset-confirm-surface.light {
+    background-color: #F0F4FA;
 }
 
 .reset-heading {

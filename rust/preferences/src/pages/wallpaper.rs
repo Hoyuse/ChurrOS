@@ -37,6 +37,26 @@ pub fn build(navigator: gtk::Stack) -> Page {
     page
 }
 
+/// Aviso mientras `WallpaperService::set` corre. `populate` lo quita.
+fn show_applying(content: &gtk::Box) {
+    let mut child = content.first_child();
+    while let Some(widget) = child {
+        let next = widget.next_sibling();
+        if widget.has_css_class("wallpaper-applying") {
+            content.remove(&widget);
+        }
+        child = next;
+    }
+    let label = gtk::Label::new(Some("Aplicando…"));
+    label.add_css_class("wallpaper-applying");
+    label.add_css_class("row-subtitle");
+    label.set_xalign(0.0);
+    label.set_margin_top(4);
+    label.set_margin_bottom(8);
+    label.set_margin_start(4);
+    content.prepend(&label);
+}
+
 fn clear_children(content: &gtk::Box) {
     let mut child = content.first_child();
     while let Some(c) = child {
@@ -326,6 +346,7 @@ fn apply_wallpaper(src: &str, navigator: &gtk::Stack, content: &gtk::Box) {
 
     // Solo la ruta viaja al hilo de trabajo: los widgets GTK no son Send.
     // El futuro local corre en el hilo principal y reconstruye la página.
+    show_applying(content);
     let content = content.clone();
     let nav = navigator.clone();
     glib::spawn_future_local(async move {
@@ -364,6 +385,7 @@ fn select(wallpaper: &str, navigator: &gtk::Stack, content: &gtk::Box) {
     let nav = navigator.clone();
     let content = content.clone();
     let wp = wallpaper.to_string();
+    show_applying(&content);
 
     glib::spawn_future_local(async move {
         let outcome = gio::spawn_blocking(move || WallpaperService::set(&wp)).await;
