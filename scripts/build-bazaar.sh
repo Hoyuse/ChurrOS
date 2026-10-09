@@ -3,7 +3,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-PACKAGE_DIR="$PROJECT_DIR/archiso/packages"
+# shellcheck source=scripts/lib/local-repo.sh
+source "$SCRIPT_DIR/lib/local-repo.sh"
+PACKAGE_DIR="$(churros_local_repo_dir)"
 
 choose_work_dir() {
     local parent="$PROJECT_DIR/work"
@@ -67,6 +69,8 @@ text = text.replace(
 open(path, "w", encoding="utf-8").write(text)
 print("    libdex moved from depends to provides/conflicts; pkgrel bumped to 2")
 PY
+
+churros_pkgbuild_allow_arch "$WORK_DIR/PKGBUILD"
 
 echo "[3/4] Building bazaar (this may take a while)..."
 

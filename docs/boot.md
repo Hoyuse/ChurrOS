@@ -44,6 +44,10 @@ bootmodes=('uefi.grub')                   # aarch64
 
 Eso significa que en BIOS se usa Syslinux y en UEFI se usa GRUB. El bootmode `uefi.grub` hace que ArchISO genere el binario GRUB EFI (con `grub-mkstandalone`) y cree la imagen FAT de arranque El Torito. El archivo `grub/loopback.cfg` se usa para arrancar desde ISO por loopback.
 
+En aarch64 el perfil no activa `uefi.systemd-boot`: ese modo y `uefi.grub` escriben los dos `EFI/BOOT/BOOTAA64.EFI`. Syslinux no existe en ARM.
+
+El kernel de Arch Linux ARM (`linux-aarch64`) instala `/boot/Image` y `/boot/initramfs-linux.img`, no `vmlinuz-linux`. `publish-aarch64-kernel` copia esos ficheros a `vmlinuz-linux-aarch64` e `initramfs-linux-aarch64.img` antes de que mkarchiso arme el arranque de la ISO, y otra vez en el sistema instalado (el preset de mkinitcpio apunta al nombre estable y un hook de pacman vuelve a publicar tras una actualización del kernel). El menú GRUB de la ISO elige esos nombres cuando `grub_cpu` es `arm64`, y la consola serie pasa a `ttyAMA0` (PL011 de la máquina `virt`). En x86_64 el menú sigue usando `vmlinuz-linux`, `initramfs-linux.img` y `ttyS0`.
+
 ---
 
 # GRUB

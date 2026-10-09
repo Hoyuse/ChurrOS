@@ -3,7 +3,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-PACKAGE_DIR="$PROJECT_DIR/archiso/packages"
+# shellcheck source=scripts/lib/local-repo.sh
+source "$SCRIPT_DIR/lib/local-repo.sh"
+PACKAGE_DIR="$(churros_local_repo_dir)"
 
 choose_work_dir() {
     local parent="$PROJECT_DIR/work"
@@ -121,6 +123,7 @@ open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
 
 echo "    PKGBUILD patched (source + prepare + checksum)"
+churros_pkgbuild_allow_arch "$WORK_DIR/PKGBUILD"
 
 echo "[3/4] Pre-downloading calamares source (codeberg can be flaky)..."
 

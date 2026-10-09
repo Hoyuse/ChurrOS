@@ -12,8 +12,8 @@ dmidecode
 dmraid
 dosfstools
 e2fsprogs
-edk2-shell
 efibootmgr
+archlinuxarm-keyring
 ethtool
 exfatprogs
 f2fs-tools
@@ -57,8 +57,6 @@ parted
 pptpclient
 pv
 qemu-guest-agent
-refind
-reflector
 rsync
 rxvt-unicode-terminfo
 sdparm
@@ -95,6 +93,8 @@ noctalia
 foot
 flatpak
 waybar
+# No está en ALARM: el PKGBUILD de AUR declara solo x86_64 y build-aur.sh lo amplía.
+wlogout
 
 # Bazaar app store (instalado desde el repo local patcheado)
 appstream

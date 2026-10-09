@@ -64,15 +64,50 @@ if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde"
     exit 1
 fi
 
+# Solo la edición niri tiene lista aarch64. El resto seguiría copiando
+# packages.<edicion>.x86_64 o fallaría a medias.
+if [ "$TARGET_ARCH" = aarch64 ] && [ "$EDITION" != niri ]; then
+    echo "Error: la ISO aarch64 solo tiene la edición niri (no hay packages.${EDITION}.aarch64)." >&2
+    exit 1
+fi
+
+# En un host que no es aarch64, pacstrap y makepkg tienen que ser nativos
+# de Arch Linux ARM. Sin --container se estarían usando las herramientas
+# x86_64 del host.
+if [ "$TARGET_ARCH" = aarch64 ] && [ "$(uname -m)" != aarch64 ] && ! churros_in_container && [ "$USE_CONTAINER" -ne 1 ]; then
+    echo "Error: este host es $(uname -m). La ISO aarch64 se construye entera dentro de" >&2
+    echo "un contenedor Arch Linux ARM (qemu-user en x86_64, nativo en aarch64):" >&2
+    echo "  ./churros build --container --arch arm64" >&2
+    echo "Comprueba binfmt con:" >&2
+    echo "  ./churros doctor --arch arm64" >&2
+    exit 1
+fi
+
 # --container: el build completo (makepkg de AUR, Rust, mkarchiso) corre en el
 # contenedor Arch del Containerfile. El repo se monta dentro, así que la ISO
 # queda en out/ igual que en un build normal. --privileged porque pacstrap
 # monta proc, sys y dev en el chroot de la ISO.
+# aarch64 usa Containerfile.aarch64 (--platform linux/arm64): el mismo
+# contenedor es nativo en un host ARM y emulado con qemu-user en x86_64.
 if [ "$USE_CONTAINER" -eq 1 ] && ! churros_in_container; then
     # shellcheck source=scripts/lib/container.sh
     source "$(dirname "$0")/../lib/container.sh"
 
-    echo "[container] Build de la edición $EDITION ($TARGET_ARCH) en el contenedor Arch."
+    if [ "$TARGET_ARCH" = aarch64 ]; then
+        container_use_arch aarch64
+        if churros_need_aarch64_emulation && ! churros_aarch64_emulation_ready; then
+            echo "Error: falta qemu-user aarch64 (binfmt) para construir la ISO ARM en este host." >&2
+            echo "  Debian/Ubuntu: sudo apt install qemu-user-static binfmt-support" >&2
+            echo "  Fedora:        sudo dnf install qemu-user-static" >&2
+            echo "  Arch:          sudo pacman -S qemu-user-static qemu-user-static-binfmt" >&2
+            echo "  o:             ./install-deps.sh --arch arm64" >&2
+            echo "Comprueba con: ./churros doctor --arch arm64" >&2
+            exit 1
+        fi
+        echo "[container] Build de la edición $EDITION ($TARGET_ARCH) en el contenedor Arch Linux ARM."
+    else
+        echo "[container] Build de la edición $EDITION ($TARGET_ARCH) en el contenedor Arch."
+    fi
     container_engine_init
     container_ensure_image
     # La arquitectura ya resuelta en el host manda: dentro de un contenedor
@@ -81,6 +116,16 @@ if [ "$USE_CONTAINER" -eq 1 ] && ! churros_in_container; then
         bash scripts/cli/build.sh ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"} --arch "$TARGET_ARCH"
     exit 0
 fi
+
+# x86_64 sigue en archiso/packages/. aarch64 tiene su propio directorio para
+# que un paquete -x86_64 no entre en el repo que pacstrap de la ISO ARM.
+if [ "$TARGET_ARCH" = aarch64 ]; then
+    LOCAL_REPO="archiso/packages/aarch64"
+else
+    LOCAL_REPO="archiso/packages"
+fi
+mkdir -p "$LOCAL_REPO"
+export CHURROS_PKG_DIR="$PWD/$LOCAL_REPO"
 
 PACKAGES_BACKED_UP=0
 unmount_work_submounts() {
@@ -172,7 +217,11 @@ if [ "${#missing_deps[@]}" -gt 0 ]; then
     done
     echo >&2
     if churros_in_container; then
-        echo "La imagen del contenedor no trae estas herramientas: revisa Containerfile" >&2
+        if [ "$TARGET_ARCH" = aarch64 ]; then
+            echo "La imagen del contenedor no trae estas herramientas: revisa Containerfile.aarch64" >&2
+        else
+            echo "La imagen del contenedor no trae estas herramientas: revisa Containerfile" >&2
+        fi
         echo "y reconstruye la imagen con CHURROS_CONTAINER_REBUILD=1." >&2
         exit 1
     elif churros_host_is_arch; then
@@ -283,24 +332,24 @@ echo "[2/5] Checking packages..."
 # instala ahora `noctalia` de [extra]. Los paquetes que dejó un build anterior
 # se copiarían a /root/packages y seguirían en el índice churros.db.
 for obsolete_pkg in noctalia-qs noctalia-qs-debug noctalia-shell; do
-    if compgen -G "archiso/packages/${obsolete_pkg}-*.pkg.tar.zst" >/dev/null; then
+    if compgen -G "${LOCAL_REPO}/${obsolete_pkg}-*.pkg.tar.zst" >/dev/null; then
         echo "  Removing obsolete local package: $obsolete_pkg"
-        rm -f archiso/packages/"${obsolete_pkg}"-*.pkg.tar.zst
+        rm -f "$LOCAL_REPO"/"${obsolete_pkg}"-*.pkg.tar.zst
     fi
-    if [ -f archiso/packages/churros.db.tar.gz ] &&
-        tar -tzf archiso/packages/churros.db.tar.gz 2>/dev/null | grep -qE "^${obsolete_pkg}-[^-/]+-[^-/]+/desc$"; then
-        repo-remove -q archiso/packages/churros.db.tar.gz "$obsolete_pkg"
+    if [ -f "$LOCAL_REPO/churros.db.tar.gz" ] &&
+        tar -tzf "$LOCAL_REPO/churros.db.tar.gz" 2>/dev/null | grep -qE "^${obsolete_pkg}-[^-/]+-[^-/]+/desc$"; then
+        repo-remove -q "$LOCAL_REPO/churros.db.tar.gz" "$obsolete_pkg"
     fi
 done
 
 # Always invoke: rebuilds if the package is missing or linked against a
 # different libpython than the ISO's `python` package (pacstrap).
 bash scripts/build-calamares.sh
-CALAMARES_PKG=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
-PYWAL_PKG=$(ls archiso/packages/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-YAY_PKG=$(ls archiso/packages/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-BAZAAR_PKG=$(ls archiso/packages/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-WLOGOUT_PKG=$(ls archiso/packages/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+CALAMARES_PKG=$(ls "$LOCAL_REPO"/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
+PYWAL_PKG=$(ls "$LOCAL_REPO"/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+YAY_PKG=$(ls "$LOCAL_REPO"/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+BAZAAR_PKG=$(ls "$LOCAL_REPO"/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+WLOGOUT_PKG=$(ls "$LOCAL_REPO"/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
 
 if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ]; then
     echo "  AUR extras not found — building..."
@@ -333,9 +382,9 @@ if [ -n "$CALAMARES_PKG" ]; then
     fi
 
     mkdir -p archiso/airootfs/root/packages
-    cp archiso/packages/*.pkg.tar.zst archiso/airootfs/root/packages/
-    cp archiso/packages/churros.db* archiso/airootfs/root/packages/ 2>/dev/null || true
-    cp archiso/packages/churros.files* archiso/airootfs/root/packages/ 2>/dev/null || true
+    cp "$LOCAL_REPO"/*.pkg.tar.zst archiso/airootfs/root/packages/
+    cp "$LOCAL_REPO"/churros.db* archiso/airootfs/root/packages/ 2>/dev/null || true
+    cp "$LOCAL_REPO"/churros.files* archiso/airootfs/root/packages/ 2>/dev/null || true
 else
     echo "  Calamares not available — building without installer."
 fi
@@ -361,14 +410,15 @@ echo "[5/5] Building ISO...";
 # El repo local [churros] usa Server = file:///root/packages. Durante pacstrap
 # file:// se resuelve contra el root del HOST (no el chroot), así que exponemos
 # el repo local en /root/packages del host para que el build lo encuentre.
-if sudo test -L /root/packages && [ "$(sudo readlink /root/packages)" = "$PWD/archiso/packages" ]; then
+LOCAL_REPO_LINK="$(cd "$LOCAL_REPO" && pwd)"
+if sudo test -L /root/packages && [ "$(sudo readlink /root/packages)" = "$LOCAL_REPO_LINK" ]; then
     echo "  /root/packages symlink already in place."
     HOST_REPO_SYMLINK=1
 elif sudo test -e /root/packages || sudo test -L /root/packages; then
     echo "  WARNING: /root/packages exists but is not our symlink — leaving as is."
 else
     echo "  Exposing local repo at host /root/packages..."
-    sudo ln -sfn "$PWD/archiso/packages" /root/packages
+    sudo ln -sfn "$LOCAL_REPO_LINK" /root/packages
     HOST_REPO_SYMLINK=1
 fi
 

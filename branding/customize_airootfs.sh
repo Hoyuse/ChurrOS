@@ -112,6 +112,15 @@ if ls /root/packages/*.pkg.tar.zst 1>/dev/null 2>&1; then
     echo "  (paquetes del repo local quedan en /root/packages para Calamares/netinstall)"
 fi
 
+# linux-aarch64 instala /boot/Image. mkarchiso, justo después de este
+# script, copia /boot/vmlinuz-* al arranque de la ISO. Sin esta copia el
+# glob falla y la ISO no arranca. Se mira el fichero y no uname: dentro de
+# qemu-user, uname a veces sigue diciendo la arquitectura del host.
+if [ -f /boot/Image ]; then
+    echo "Publishing aarch64 kernel names..."
+    /usr/share/churros/scripts/publish-aarch64-kernel --require
+fi
+
 echo "Cleaning..."
 bash /root/scripts/cleanup.sh
 

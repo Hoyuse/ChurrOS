@@ -3,7 +3,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-PACKAGE_DIR="$PROJECT_DIR/archiso/packages"
+# shellcheck source=scripts/lib/local-repo.sh
+source "$SCRIPT_DIR/lib/local-repo.sh"
+PACKAGE_DIR="$(churros_local_repo_dir)"
 
 choose_work_dir() {
     local parent="$PROJECT_DIR/work"
@@ -37,6 +39,7 @@ build_aur() {
     git clone "https://aur.archlinux.org/${name}.git" "$package_dir"
     (
         cd "$package_dir"
+        churros_pkgbuild_allow_arch PKGBUILD
         makepkg -sf --noconfirm --skippgpcheck
     )
     cp "$package_dir"/*.pkg.tar.zst "$PACKAGE_DIR/"

@@ -206,7 +206,8 @@ Mejoras previstas:
 |----------|-------------|----------|
 | `ci.yml` | `ubuntu-latest` | `./churros check` y `cargo test -p churros-services` (rápido, sin GTK) |
 | `rust.yml` | imagen del `Containerfile`: `archlinux:latest` en `ubuntu-latest` y `menci/archlinuxarm` en `ubuntu-24.04-arm` | Compila el workspace completo (`--all-targets`), ejecuta sus tests y pasa clippy, en x86_64 y en ARM64 |
+| `iso-arm64.yml` | `ubuntu-24.04-arm`, contenedor `Containerfile.aarch64` | `./churros build --container --arch arm64` y sube la ISO como artefacto. Manual (`workflow_dispatch`) y en PRs que tocan el perfil arm64. No es un check obligatorio |
 
-Las apps GTK no se compilan en `ubuntu-latest`: gtk4-rs 0.11 exige GTK ≥ 4.22 y libadwaita-rs 0.9 exige libadwaita ≥ 1.9, versiones que Ubuntu no alcanza. `rust.yml` corre dentro de una imagen Arch, que es el mismo entorno donde se construye la ISO.
+Las apps GTK no se compilan en `ubuntu-latest`: gtk4-rs 0.11 exige GTK ≥ 4.22 y libadwaita-rs 0.9 exige libadwaita ≥ 1.9, versiones que Ubuntu no alcanza. `rust.yml` corre dentro de una imagen Arch, que es el mismo entorno donde se construye la ISO x86_64.
 
-ARM64 se compila en un runner arm64 nativo con Arch Linux ARM, no con `cargo check --target aarch64-unknown-linux-gnu` desde x86_64: glib-sys y gtk4-sys buscan con pkg-config las bibliotecas de aarch64, que el runner x86_64 no tiene. Arch Linux ARM no empaqueta archiso, así que esa imagen no lleva las herramientas de la ISO y el job ARM64 no las comprueba.
+ARM64 de las apps se compila en un runner arm64 nativo con Arch Linux ARM, no con `cargo check --target aarch64-unknown-linux-gnu` desde x86_64: glib-sys y gtk4-sys buscan con pkg-config las bibliotecas de aarch64, que el runner x86_64 no tiene. Esa imagen de `rust.yml` no instala archiso (Arch Linux ARM no lo empaqueta). La ISO aarch64 es otro contenedor, `Containerfile.aarch64`: instala el `archiso` de extra de Arch (`arch=any`) y corre el build entero de forma nativa en `ubuntu-24.04-arm`. En un host x86_64 el mismo contenedor usa qemu-user.

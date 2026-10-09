@@ -40,3 +40,25 @@ churros_host_name() {
 churros_in_container() {
     [ "${CHURROS_IN_CONTAINER:-0}" = 1 ]
 }
+
+# Un host que no es aarch64 necesita qemu-user + binfmt para correr el
+# contenedor de la ISO ARM. En un host aarch64 el mismo contenedor es nativo.
+churros_need_aarch64_emulation() {
+    [ "$(uname -m)" != aarch64 ]
+}
+
+# Cierto si binfmt tiene registrada la interpretación de binarios aarch64 y
+# el intérprete existe. Acepta qemu-aarch64 y qemu-aarch64-static.
+churros_aarch64_emulation_ready() {
+    local entry interp
+    for entry in /proc/sys/fs/binfmt_misc/qemu-aarch64 \
+                 /proc/sys/fs/binfmt_misc/qemu-aarch64-static; do
+        [ -r "$entry" ] || continue
+        grep -q '^enabled$' "$entry" || continue
+        interp=$(awk '/^interpreter / { print $2; exit }' "$entry")
+        if [ -n "$interp" ] && [ -x "$interp" ]; then
+            return 0
+        fi
+    done
+    return 1
+}

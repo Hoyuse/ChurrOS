@@ -15,12 +15,17 @@ El comando principal es:
 ```
 
 Sin `--arch`, `run` usa la arquitectura del equipo, igual que `./churros build`.
-Para validar la ISO ARM64 en un host x86_64 usa `--arch arm64`. Esta ruta emplea TCG,
-porque un host x86_64 no puede usar KVM para un guest aarch64:
+Para validar la ISO ARM64 en un host x86_64:
 
 ```bash
+./churros doctor --arch arm64          # qemu-user-static + binfmt
+./churros build --container --arch arm64
 ./churros run --arch arm64 --fresh
 ```
+
+El build corre entero dentro de un contenedor Arch Linux ARM (`Containerfile.aarch64`, `--platform linux/arm64`). En x86_64 eso necesita qemu-user-static con binfmt registrado; `./install-deps.sh --arch arm64` lo instala. En un host aarch64 el mismo contenedor es nativo y no hace falta emulación.
+
+QEMU del guest ARM usa TCG en un host x86_64 (no hay KVM para aarch64). La máquina es `virt`: no tiene IDE ni teclado PS/2, así que el CD va por virtio-scsi, el disco por virtio-blk y el teclado por USB. La consola serie es PL011 (`ttyAMA0` en el kernel; el log sigue en `vm_serial.log`). CODE y VARS del firmware pflash tienen que medir lo mismo (un `AAVMF_CODE` de 64 MiB con un `VARS` de otro tamaño aborta el arranque). `run` elige la ISO cuyo nombre lleva la arquitectura, para no arrancar una ISO x86_64 que haya quedado en `out/`.
 
 Este script vive en `scripts/cli/run.sh` y se encarga de:
 
@@ -36,7 +41,7 @@ Flags opcionales:
 | `--nokvm` | Desactiva KVM y emula por software (CPU de 2 hilos, q35 sin `accel`). |
 | `--fresh` | Borra `vm/OVMF_VARS.fd` antes de arrancar para que OVMF parta limpio y arranque desde el CD-ROM en vez del disco. Útil tras instalar ChurrOS en la VM y necesitar probar de nuevo la ISO live. |
 | `--clean` | Borra `vm/ChurrOS.qcow2` y `vm/OVMF_VARS.fd` antes de arrancar (disco + variables EFI). |
-| `--arch arm64` | Ejecuta la ISO aarch64 con `qemu-system-aarch64`, máquina `virt` y CPU `cortex-a72`. Usa `vm/ChurrOS-arm64.qcow2` y variables EFI ARM independientes. |
+| `--arch arm64` | Ejecuta la ISO `*aarch64*.iso` con `qemu-system-aarch64`, máquina `virt`, CPU `cortex-a72` (o KVM si el host ya es aarch64), CD virtio-scsi y teclado USB. Usa `vm/ChurrOS-arm64.qcow2` y `vm/OVMF_VARS_arm64.fd`. |
 
 > **Consejo:** Si acabas de instalar ChurrOS en la VM, OVMF guarda la entrada `Boot0009 "ChurrOS"` en `OVMF_VARS.fd`, así que el siguiente arranque dirá `BdsDxe: starting Boot0009 "ChurrOS"` y entrará al sistema instalado. Ejecuta `./churros run --fresh` para arrancar limpio del CD-ROM, o simplemente `rm vm/OVMF_VARS.fd`.
 

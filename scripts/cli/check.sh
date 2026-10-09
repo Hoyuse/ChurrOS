@@ -83,7 +83,7 @@ section "ISO package list"
 
 # Una lista por edicion (packages.<edicion>.x86_64). Se recorren todas para
 # que anadir una edicion no obligue a tocar este script.
-for pkg_list in archiso/packages*.x86_64; do
+for pkg_list in archiso/packages*.x86_64 archiso/packages.aarch64; do
     [ -f "$pkg_list" ] || continue
 
     dups=$(grep -v '^#' "$pkg_list" | grep -v '^$' | sort | uniq -d)
@@ -677,6 +677,45 @@ elif grep -qE 'Type[[:space:]]*=[[:space:]]*Package' "$BOOT_GRUB_HOOK" \
 else
     pass "GRUB btrfs /boot rewrite is wired (install + pacman hook)"
 fi
+
+# linux-aarch64 instala /boot/Image. mkarchiso y grub-mkconfig buscan vmlinuz-*.
+PUBLISH_KERNEL=archiso/airootfs/usr/share/churros/scripts/publish-aarch64-kernel
+publish_ok=1
+if [ ! -x "$PUBLISH_KERNEL" ]; then
+    fail "$PUBLISH_KERNEL missing or not executable"
+    publish_ok=0
+fi
+if ! grep -q 'publish-aarch64-kernel --require' branding/customize_airootfs.sh \
+    || ! grep -q 'publish-aarch64-kernel --require' installer/calamares/modules/aarch64/shellprocess-fixboot.conf \
+    || ! grep -q 'publish-aarch64-kernel' "$BOOT_GRUB_SCRIPT" \
+    || ! grep -q 'boot/Image' "$BOOT_GRUB_HOOK" \
+    || ! grep -q 'initramfs-linux-aarch64.img' installer/calamares/modules/aarch64/shellprocess-fixboot.conf \
+    || ! grep -q 'vmlinuz-linux-aarch64' archiso/grub/grub.cfg \
+    || ! grep -q 'vmlinuz-linux' archiso/grub/grub.cfg; then
+    fail "aarch64 kernel names are not wired (Image -> vmlinuz-linux-aarch64, x86 menu kept)"
+    publish_ok=0
+fi
+if [ -x "$PUBLISH_KERNEL" ]; then
+    publish_tmp=$(mktemp -d)
+    mkdir -p "$publish_tmp/boot"
+    printf 'kernel\n' > "$publish_tmp/boot/Image"
+    printf 'old-initrd\n' > "$publish_tmp/boot/initramfs-linux.img"
+    if ! CHURROS_ROOT="$publish_tmp" "$PUBLISH_KERNEL" --require \
+        || ! cmp -s "$publish_tmp/boot/Image" "$publish_tmp/boot/vmlinuz-linux-aarch64" \
+        || ! cmp -s "$publish_tmp/boot/initramfs-linux.img" "$publish_tmp/boot/initramfs-linux-aarch64.img"; then
+        fail "publish-aarch64-kernel did not copy Image and initramfs-linux.img"
+        publish_ok=0
+    fi
+    printf 'installed-initrd\n' > "$publish_tmp/boot/initramfs-linux-aarch64.img"
+    touch -d '2020-01-01' "$publish_tmp/boot/initramfs-linux.img"
+    if ! CHURROS_ROOT="$publish_tmp" "$PUBLISH_KERNEL" \
+        || ! grep -qx 'installed-initrd' "$publish_tmp/boot/initramfs-linux-aarch64.img"; then
+        fail "publish-aarch64-kernel overwrote a newer initramfs-linux-aarch64.img"
+        publish_ok=0
+    fi
+    rm -rf "$publish_tmp"
+fi
+[ "$publish_ok" -eq 1 ] && pass "aarch64 kernel is published as vmlinuz-linux-aarch64"
 
 # ------------------------------------------- Rollback (churros-snapshot)
 
