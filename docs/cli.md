@@ -53,7 +53,7 @@ Construye una nueva imagen ISO de ChurrOS.
 
 Opciones:
 - `--arch <x86_64|arm64>` (o `-a`): arquitectura de la ISO. Por defecto, la del equipo (`uname -m`); en un host x86_64 la ISO ARM se pide con `--arch arm64`. En aarch64 solo existe la edición niri. Un host que no es aarch64 no puede construir esa ISO fuera del contenedor.
-- `--container`: construye dentro del contenedor Arch (podman, o docker si no hay podman; con `sudo` y `--privileged`). Sirve en cualquier distro y la ISO queda igualmente en `out/`. x86_64 usa `Containerfile`. `--arch arm64` usa `Containerfile.aarch64` (`--platform linux/arm64`): en x86_64 hace falta qemu-user-static con binfmt; en aarch64 el contenedor es nativo. Detalle en `docs/getting-started.md`.
+- `--container`: construye dentro del contenedor Arch (podman, o docker si no hay podman; con `sudo` y `--privileged`). Sirve en cualquier distro y la ISO queda igualmente en `out/`. x86_64 usa `Containerfile`. `--arch arm64` usa `Containerfile.aarch64` (`--platform linux/arm64`): en x86_64 hace falta qemu-user-static con binfmt y la bandera `C`; en aarch64 el contenedor es nativo. Detalle en `docs/getting-started.md` y `docs/vm.md`.
 - `--edition <niri|xfce|kde|server>` (o `-e`): Selecciona la edición de la ISO (por defecto: `niri`). La edición `server` instala un sistema sin escritorio, accesible por SSH.
   - `niri`: Compositor Wayland con tiling dinámico horizontal (Noctalia Shell, foot, Fuzzel, Mako).
   - `xfce`: Entorno de escritorio clásico X11 (XFCE 4, panel ChurrOS, xfwm4, xfce4-terminal).

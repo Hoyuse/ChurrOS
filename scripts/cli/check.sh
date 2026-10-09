@@ -980,13 +980,62 @@ fi
 
 # ------------------------------------------- Calamares Python ABI
 
+# ----------------------------------------- Package extension and binfmt C
+
+# shellcheck source=scripts/lib/local-repo.sh
+source scripts/lib/local-repo.sh
+
+section "Package archives and aarch64 binfmt"
+
+if grep -q "PKGEXT='.pkg.tar.zst'" Containerfile.aarch64; then
+    pass "aarch64 image forces PKGEXT=.pkg.tar.zst"
+else
+    fail "Containerfile.aarch64 does not set PKGEXT=.pkg.tar.zst (ALARM defaults to .xz)"
+fi
+
+pkg_tmp="$(mktemp -d)"
+: > "$pkg_tmp/calamares-3.3.14-1-aarch64.pkg.tar.xz"
+: > "$pkg_tmp/calamares-debug-3.3.14-1-aarch64.pkg.tar.xz"
+: > "$pkg_tmp/calamares-3.3.14-1-aarch64.pkg.tar.xz.sig"
+: > "$pkg_tmp/yay-12.1.3-1-x86_64.pkg.tar.zst"
+found="$(churros_first_pkg "$pkg_tmp" 'calamares-[0-9]*' || true)"
+if [ "$found" = "$pkg_tmp/calamares-3.3.14-1-aarch64.pkg.tar.xz" ]; then
+    pass "cache detection accepts .pkg.tar.xz and skips debug packages and signatures"
+else
+    fail "churros_first_pkg returned '${found:-empty}' for a .pkg.tar.xz cache"
+fi
+mapfile -t pkg_all < <(churros_pkg_archives "$pkg_tmp")
+if [ "${#pkg_all[@]}" -eq 2 ]; then
+    pass "package listing keeps real .xz and .zst archives"
+else
+    fail "expected 2 package archives, got ${#pkg_all[@]}"
+fi
+rm -rf "$pkg_tmp"
+
+binfmt_tmp="$(mktemp -d)"
+printf '%s\n' enabled 'interpreter /bin/true' 'flags: POF' > "$binfmt_tmp/qemu-aarch64"
+CHURROS_BINFMT_DIR="$binfmt_tmp"
+if churros_aarch64_emulation_ready; then
+    fail "binfmt flags POF (no C) were treated as ready"
+else
+    pass "binfmt without flag C is not ready for sudo inside makepkg"
+fi
+printf '%s\n' enabled 'interpreter /bin/true' 'flags: FPOC' > "$binfmt_tmp/qemu-aarch64"
+if churros_aarch64_emulation_ready; then
+    pass "binfmt flags FPOC count as ready"
+else
+    fail "binfmt flags FPOC were rejected"
+fi
+unset CHURROS_BINFMT_DIR
+rm -rf "$binfmt_tmp"
+
 section "Calamares libpython"
 
 # El python del host solo representa al de la ISO en Arch. En otra distro
 # (paquete construido con ./churros build --container) la comparación daría un
 # fallo falso: build-calamares.sh ya recompila dentro del contenedor si la
 # versión de python de Arch cambia.
-CALAMARES_LOCAL=$(ls archiso/packages/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
+CALAMARES_LOCAL="$(churros_first_pkg archiso/packages 'calamares-[0-9]*' || true)"
 if [ -z "$CALAMARES_LOCAL" ]; then
     notice "no local calamares package (ISO build will compile it)"
 elif ! churros_host_is_arch; then
@@ -1000,8 +1049,14 @@ else
         bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
             bsdtar -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
     else
-        tar --zstd -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
-            tar --zstd -xf "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
+        case "$CALAMARES_LOCAL" in
+            *.zst) tar_cmd=(tar --zstd -xf) ;;
+            *.xz) tar_cmd=(tar -Jxf) ;;
+            *.gz) tar_cmd=(tar -zxf) ;;
+            *) tar_cmd=(tar -xf) ;;
+        esac
+        "${tar_cmd[@]}" "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so.3.4.2 2>/dev/null || \
+            "${tar_cmd[@]}" "$CALAMARES_LOCAL" -C "$abi_tmp" usr/lib/libcalamares.so 2>/dev/null || true
     fi
     abi_so=$(find "$abi_tmp" -name 'libcalamares.so*' -type f | head -1 || true)
     pkg_python=""

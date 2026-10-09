@@ -23,7 +23,18 @@ Para validar la ISO ARM64 en un host x86_64:
 ./churros run --arch arm64 --fresh
 ```
 
-El build corre entero dentro de un contenedor Arch Linux ARM (`Containerfile.aarch64`, `--platform linux/arm64`). En x86_64 eso necesita qemu-user-static con binfmt registrado; `./install-deps.sh --arch arm64` lo instala. En un host aarch64 el mismo contenedor es nativo y no hace falta emulación.
+El build corre entero dentro de un contenedor Arch Linux ARM (`Containerfile.aarch64`, `--platform linux/arm64`). En x86_64 eso necesita qemu-user-static con binfmt registrado y la bandera `C` (credentials). Sin `C`, el kernel calcula las credenciales del intérprete y no las del binario emulado: `sudo` dentro de makepkg se queda con el euid del usuario `builder` y falla con `effective uid is not 0`. La entrada que instala Debian (`flags: POF` en `/proc/sys/fs/binfmt_misc/qemu-aarch64`) no vale. `./churros doctor --arch arm64` lo comprueba. Para registrarla de nuevo, como root:
+
+```bash
+echo -1 | sudo tee /proc/sys/fs/binfmt_misc/qemu-aarch64
+echo ':qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-aarch64-static:FPOC' | sudo tee /proc/sys/fs/binfmt_misc/register
+```
+
+`echo` deja las secuencias `\x` como texto: es el kernel quien las decodifica. `printf '%b'` las convierte antes y mete NUL en el magic; el registro queda truncado y pasa a casar con cualquier ELF de 64 bits.
+
+Si existe `/usr/share/binfmts/qemu-aarch64`, lo mismo se hace con `update-binfmts --unimport qemu-aarch64` y `--import` después de añadir `C` a las flags de la plantilla. Con systemd-binfmt, se copia `/usr/lib/binfmt.d/qemu-aarch64.conf` a `/etc/binfmt.d/qemu-aarch64.conf`, las flags pasan a `FPOC` (tienen que incluir `F` y `C`) y se reinicia `systemd-binfmt`. `./install-deps.sh --arch arm64` instala el paquete, pero no cambia unas flags que la distro haya dejado sin `C`. En un host aarch64 el mismo contenedor es nativo y no hace falta emulación.
+
+La imagen aarch64 escribe `PKGEXT='.pkg.tar.zst'` en `/etc/makepkg.conf.d/churros.conf`. ALARM trae `.pkg.tar.xz`; con esa extensión el build no encontraba el paquete de Calamares y lo recompilaba cada vez. Los scripts buscan `*.pkg.tar.*`, así que un paquete `.xz` que ya esté en `archiso/packages/aarch64/` también se reutiliza.
 
 QEMU del guest ARM usa TCG en un host x86_64 (no hay KVM para aarch64). La máquina es `virt`: no tiene IDE ni teclado PS/2, así que el CD va por virtio-scsi, el disco por virtio-blk y el teclado por USB. La consola serie es PL011 (`ttyAMA0` en el kernel; el log sigue en `vm_serial.log`). CODE y VARS del firmware pflash tienen que medir lo mismo (un `AAVMF_CODE` de 64 MiB con un `VARS` de otro tamaño aborta el arranque). `run` elige la ISO cuyo nombre lleva la arquitectura, para no arrancar una ISO x86_64 que haya quedado en `out/`.
 
