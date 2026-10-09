@@ -167,9 +167,9 @@ path = sys.argv[1]
 text = open(path, encoding="utf-8").read()
 text = re.sub(r"\nprovides=\('libdex'\)", "", text)
 text = re.sub(r"\nconflicts=\('libdex'\)", "", text)
-new, count = re.subn(r"^(\s*)libdex\s*$", r"\1libdex>=1.2.0", text, count=1, flags=re.M)
+new, count = re.subn(r"^(\s*)['\"]?libdex['\"]?\s*$", r"\1'libdex>=1.2.0'", text, count=1, flags=re.M)
 if count != 1:
-    if re.search(r"^\s*libdex>=1\.2\.0\s*$", text, flags=re.M):
+    if re.search(r"^\s*['\"]?libdex>=1\.2\.0['\"]?\s*$", text, flags=re.M):
         new = text
     else:
         raise SystemExit("PKGBUILD: no libdex depend to pin")
