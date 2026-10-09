@@ -17,17 +17,61 @@
 ARG BASE_IMAGE=docker.io/menci/archlinuxarm:latest
 FROM ${BASE_IMAGE}
 
-# pacman no puede aplicar su sandbox de Landlock dentro del contenedor.
-RUN grep -q '^DisableSandboxFilesystem' /etc/pacman.conf \
-    || sed -i '/^\[options\]/a DisableSandboxFilesystem' /etc/pacman.conf
+# qemu-user: con solo DisableSandboxFilesystem, pacman 7 sigue aplicando
+# seccomp y falla con "error restricting syscalls via seccomp: 22" antes de
+# bajar nada. Landlock también falla en este contenedor. Las tres directivas
+# tienen que quedar en [options]: la imagen trae una sección [aur] al final,
+# y una línea añadida ahí pacman la ignora.
+#
+# El mirrorlist de menci/archlinuxarm (nj.us, mirror.archlinuxarm.org) no
+# responde desde algunas redes. Se sustituye antes del primer pacman -Sy.
+# makepkg -s y el resto del build usan este mismo /etc/pacman.conf.
+# Sin variables de shell: Docker sustituye $nombre y podman 4 deja $$
+# como el PID. El $ de $arch/$repo sale de printf '\044'.
+RUN set -eu \
+    && sed -i \
+        -e 's/^#DisableSandboxFilesystem$/DisableSandboxFilesystem/' \
+        -e 's/^#DisableSandboxSyscalls$/DisableSandboxSyscalls/' \
+        -e 's/^#DisableSandbox$/DisableSandbox/' \
+        /etc/pacman.conf \
+    && grep -qx DisableSandboxFilesystem /etc/pacman.conf \
+        || sed -i '/^\[options\]/a DisableSandboxFilesystem' /etc/pacman.conf \
+    && grep -qx DisableSandboxSyscalls /etc/pacman.conf \
+        || sed -i '/^\[options\]/a DisableSandboxSyscalls' /etc/pacman.conf \
+    && grep -qx DisableSandbox /etc/pacman.conf \
+        || sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf \
+    && printf '%s\n' \
+        "Server = https://ftp.halifax.rwth-aachen.de/archlinux-arm/$(printf '\044')arch/$(printf '\044')repo" \
+        "Server = http://mirror.archlinuxarm.org/$(printf '\044')arch/$(printf '\044')repo" \
+        "Server = https://ca.us.mirror.archlinuxarm.org/$(printf '\044')arch/$(printf '\044')repo" \
+        "Server = https://mirror.csclub.uwaterloo.ca/archlinuxarm/$(printf '\044')arch/$(printf '\044')repo" \
+        > /etc/pacman.d/mirrorlist \
+    && grep -qx DisableSandbox /etc/pacman.conf \
+    && grep -qx DisableSandboxFilesystem /etc/pacman.conf \
+    && grep -qx DisableSandboxSyscalls /etc/pacman.conf \
+    && grep -q "ftp.halifax.rwth-aachen.de/archlinux-arm/$(printf '\044')arch/$(printf '\044')repo" /etc/pacman.d/mirrorlist
 
 # Keyring de Arch Linux ARM (repos de la imagen y de la ISO) y el de Arch
-# (firma el paquete archiso de extra).
-RUN pacman-key --init \
+# (firma el paquete archiso de extra). Tras -Su se reaplican las directivas:
+# el paquete pacman puede dejar el conf de fábrica, y el -S siguiente
+# volvería a chocar con seccomp. makepkg hereda este fichero.
+RUN set -eu \
+    && pacman-key --init \
     && pacman-key --populate archlinuxarm \
     && pacman -Sy --noconfirm --needed archlinuxarm-keyring archlinux-keyring \
     && pacman-key --populate archlinux \
     && pacman -Su --noconfirm \
+    && sed -i \
+        -e 's/^#DisableSandboxFilesystem$/DisableSandboxFilesystem/' \
+        -e 's/^#DisableSandboxSyscalls$/DisableSandboxSyscalls/' \
+        -e 's/^#DisableSandbox$/DisableSandbox/' \
+        /etc/pacman.conf \
+    && grep -qx DisableSandboxFilesystem /etc/pacman.conf \
+        || sed -i '/^\[options\]/a DisableSandboxFilesystem' /etc/pacman.conf \
+    && grep -qx DisableSandboxSyscalls /etc/pacman.conf \
+        || sed -i '/^\[options\]/a DisableSandboxSyscalls' /etc/pacman.conf \
+    && grep -qx DisableSandbox /etc/pacman.conf \
+        || sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf \
     && pacman -S --noconfirm --needed \
         base-devel \
         git \

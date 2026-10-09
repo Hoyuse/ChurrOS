@@ -141,6 +141,16 @@ for target in x86_64 aarch64; do
         fail "$target: $unpackfs does not unpack churros/$target/airootfs.sfs"
         profile_ok=0
     fi
+    # pacstrap usa este conf. Bajo qemu-user, pacman 7 falla en seccomp si
+    # falta DisableSandboxSyscalls (EINVAL 22) aunque Landlock esté apagado.
+    if [ "$target" = aarch64 ]; then
+        for sandbox_opt in DisableSandbox DisableSandboxFilesystem DisableSandboxSyscalls; do
+            if ! grep -qx "$sandbox_opt" "archiso/$p_conf"; then
+                fail "$target: archiso/$p_conf is missing $sandbox_opt (pacman sandbox breaks under qemu-user)"
+                profile_ok=0
+            fi
+        done
+    fi
 done
 [ "$profile_ok" -eq 1 ] && pass "x86_64 and aarch64 get their own pacman.conf, boot modes, squashfs options and unpackfs source"
 
