@@ -64,8 +64,17 @@ echo
 echo "======================================"
 echo "  AUR extras built."
 echo "======================================"
-ls -la "$PACKAGE_DIR"/python-pywal-*.pkg.tar.zst 2>/dev/null || echo "(pywal not built)"
-ls -la "$PACKAGE_DIR"/yay-*.pkg.tar.zst 2>/dev/null || echo "(yay not built)"
-ls -la "$PACKAGE_DIR"/wlogout-*.pkg.tar.zst 2>/dev/null || echo "(wlogout not built)"
+show_pkg() {
+    local label="$1"
+    local glob="$2"
+    if churros_first_pkg "$PACKAGE_DIR" "$glob" >/dev/null; then
+        churros_pkg_archives "$PACKAGE_DIR" "$glob"
+    else
+        echo "($label not built)"
+    fi
+}
+show_pkg pywal 'python-pywal-*'
+show_pkg yay 'yay-*'
+show_pkg wlogout 'wlogout-*'
 echo
 echo "  Run: ./churros build"

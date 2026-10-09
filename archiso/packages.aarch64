@@ -111,7 +111,8 @@ md4c
 webkitgtk-6.0
 json-glib
 graphene
-# bazaar se resuelve desde el repo local patcheado ([churros] en pacman.conf)
+# bazaar se resuelve desde el repo local ([churros]). Depende de libdex>=1.2;
+# ALARM trae 1.1.0, así que build-bazaar.sh publica también libdex 1.2.
 bazaar
 yay
 

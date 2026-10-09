@@ -108,8 +108,8 @@ if [ "$USE_CONTAINER" -eq 1 ] && ! churros_in_container; then
             echo "  Fedora:        sudo dnf install qemu-user-static" >&2
             echo "  Arch:          sudo pacman -S qemu-user-static qemu-user-static-binfmt" >&2
             echo "  o:             ./install-deps.sh --arch arm64" >&2
-            echo "Comprueba con: ./churros doctor --arch arm64" >&2
             fi
+            echo "Comprueba con: ./churros doctor --arch arm64" >&2
             exit 1
         fi
         echo "[container] Build de la edición $EDITION ($TARGET_ARCH) en el contenedor Arch Linux ARM."

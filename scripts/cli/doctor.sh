@@ -134,9 +134,20 @@ echo
 # (qemu-user). Sin --arch arm64 esto es un aviso: el build x86_64 no lo usa.
 if churros_need_aarch64_emulation; then
     if churros_aarch64_emulation_ready; then
-        echo "✓ qemu-user aarch64 (binfmt) — ./churros build --container --arch arm64"
+        echo "✓ qemu-user aarch64 (binfmt, flag C) — ./churros build --container --arch arm64"
+    elif churros_aarch64_binfmt_entry >/dev/null 2>&1 && ! churros_aarch64_binfmt_has_credentials; then
+        if [ "$WANT_ARCH" = aarch64 ]; then
+            echo "✗ qemu-user aarch64 (binfmt) — registrado sin la bandera C (credentials)"
+            echo "  flags: $(churros_aarch64_binfmt_flags) ($(churros_aarch64_binfmt_entry))"
+            echo "  sudo dentro de makepkg falla con: effective uid is not 0"
+            churros_print_aarch64_binfmt_help | sed 's/^/  /'
+            missing=$((missing + 1))
+        else
+            echo "! qemu-user aarch64 — binfmt sin bandera C; sudo en makepkg fallará"
+            echo "  Comprueba con: ./churros doctor --arch arm64"
+        fi
     elif [ "$WANT_ARCH" = aarch64 ]; then
-        echo "✗ qemu-user aarch64 (binfmt) — falta para ./churros build --container --arch arm64"
+            echo "✗ qemu-user aarch64 (binfmt) — falta para ./churros build --container --arch arm64"
         echo "  Debian/Ubuntu: sudo apt install qemu-user-static binfmt-support"
         echo "  Fedora:        sudo dnf install qemu-user-static"
         echo "  Arch:          sudo pacman -S qemu-user-static qemu-user-static-binfmt"

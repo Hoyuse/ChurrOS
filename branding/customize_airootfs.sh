@@ -70,12 +70,22 @@ echo "Configuring desktop..."
 bash /root/scripts/desktop.sh
 
 echo "Installing Calamares..."
-if ls /root/packages/calamares-[0-9]*.pkg.tar.zst 1>/dev/null 2>&1; then
+calamares_pkg=""
+shopt -s nullglob
+for calamares_candidate in /root/packages/calamares-[0-9]*.pkg.tar.*; do
+    case "$calamares_candidate" in
+        *.sig) continue ;;
+    esac
+    calamares_pkg="$calamares_candidate"
+    break
+done
+shopt -u nullglob
+if [ -n "$calamares_pkg" ]; then
     pacman -Scc --noconfirm 2>/dev/null || true
 
-    bsdtar -xf /root/packages/calamares-*.pkg.tar.zst -C /
+    bsdtar -xf "$calamares_pkg" -C /
 
-    rm -f /root/packages/calamares-*.pkg.tar.zst
+    rm -f /root/packages/calamares-[0-9]*.pkg.tar.* /root/packages/calamares-debug-*.pkg.tar.*
 
     cat > /usr/share/applications/calamares.desktop << 'DESKTOP'
 [Desktop Entry]
@@ -105,10 +115,10 @@ else
 fi
 
 echo "Installing Bazaar..."
-# Bazaar se instala desde packages.x86_64 via pacstrap (repo local [churros],
-# patcheado para fix de libdex). Ya no se usa bsdtar.
+# Bazaar se instala vía pacstrap desde el repo local [churros] y depende de
+# libdex>=1.2. Ya no se usa bsdtar.
 
-if ls /root/packages/*.pkg.tar.zst 1>/dev/null 2>&1; then
+if compgen -G '/root/packages/*.pkg.tar.*' >/dev/null; then
     echo "  (paquetes del repo local quedan en /root/packages para Calamares/netinstall)"
 fi
 

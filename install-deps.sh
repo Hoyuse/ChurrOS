@@ -280,7 +280,11 @@ fi
 
 if [ "$WANT_ARM64" -eq 1 ] && [ "$(uname -m)" != aarch64 ]; then
     if churros_aarch64_emulation_ready; then
-        echo "  [OK] qemu-user aarch64 (binfmt)"
+        echo "  [OK] qemu-user aarch64 (binfmt, flag C)"
+    elif churros_aarch64_binfmt_entry >/dev/null 2>&1 && ! churros_aarch64_binfmt_has_credentials; then
+        echo "  [FAIL] qemu-user aarch64 (binfmt sin bandera C; sudo en makepkg falla)"
+        churros_print_aarch64_binfmt_help | sed 's/^/  /'
+        FAILED=1
     else
         echo "  [FAIL] qemu-user aarch64 (binfmt no quedó registrado)"
         FAILED=1
