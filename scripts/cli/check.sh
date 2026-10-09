@@ -128,6 +128,16 @@ for target in x86_64 aarch64; do
         fail "$target: BIOS boot modes are x86-only"
         profile_ok=0
     fi
+    # uefi.systemd-boot y uefi-x64 también escriben EFI/BOOT/BOOTAA64.EFI.
+    # mkarchiso ya nombra ese binario vía uefi_arch[aarch64]=AA64.
+    if [ "$target" = aarch64 ] && [ "$p_boot" != "uefi.grub" ]; then
+        fail "$target: boot modes must be only uefi.grub (got: $p_boot)"
+        profile_ok=0
+    fi
+    if [ "$target" = x86_64 ] && [ "$p_boot" != "bios.syslinux uefi.grub" ]; then
+        fail "$target: boot modes must stay bios.syslinux and uefi.grub (got: $p_boot)"
+        profile_ok=0
+    fi
     # -Xbcj solo existe para xz: mksquashfs sale con error si va con zstd.
     if [[ " $p_sfs " == *" -Xbcj "* && " $p_sfs " != *" -comp xz "* ]]; then
         fail "$target: -Xbcj requires -comp xz in airootfs_image_tool_options"
@@ -816,6 +826,125 @@ else
     preset_ok=0
 fi
 [ "$preset_ok" -eq 1 ] && pass "aarch64 mkinitcpio preset uses /boot/Image; x86 preset unchanged"
+
+# archiso hardcodea grubmodules. En aarch64 el build filtra los .mod que
+# no existen. x86 no llama al parche. El menú no hace insmod de usbserial
+# cuando grub_cpu es arm64.
+section "aarch64 GRUB modules"
+
+grub_ok=1
+if ! grep -q 'patch-mkarchiso-grubmodules.sh /usr/bin/mkarchiso' scripts/cli/build.sh; then
+    fail "build.sh must patch mkarchiso's GRUB module list on aarch64"
+    grub_ok=0
+fi
+patch_line=$(grep -n 'patch-mkarchiso-grubmodules.sh' scripts/cli/build.sh | head -1 | cut -d: -f1)
+mkarchiso_line=$(grep -n 'mkarchiso -v' scripts/cli/build.sh | head -1 | cut -d: -f1)
+if [ -z "$patch_line" ] || [ -z "$mkarchiso_line" ] || [ "$patch_line" -ge "$mkarchiso_line" ]; then
+    fail "patch-mkarchiso-grubmodules.sh must run before mkarchiso"
+    grub_ok=0
+fi
+# El if que envuelve la llamada tiene que ser el de aarch64, y cerrarse
+# antes de mkarchiso. Hay más ifs de aarch64 arriba; no valen.
+if [ -z "${patch_line:-}" ]; then
+    :
+elif ! sed -n "$((patch_line - 3)),$((patch_line + 1))p" scripts/cli/build.sh | grep -q 'TARGET_ARCH.*= aarch64' \
+    || ! sed -n "$((patch_line + 1))p" scripts/cli/build.sh | grep -qx 'fi'; then
+    fail "the mkarchiso GRUB patch must run inside the aarch64 block, before mkarchiso"
+    grub_ok=0
+fi
+if [ "$(grep -c 'patch-mkarchiso-grubmodules.sh' scripts/cli/build.sh)" -ne 1 ]; then
+    fail "build.sh must call the GRUB module patch only from the aarch64 path"
+    grub_ok=0
+fi
+if ! awk '
+    /grub_cpu\}" != "arm64"/ { guard=1; next }
+    guard && /insmod usbserial_common/ { ok=1 }
+    guard && /^fi$/ { guard=0 }
+    END { exit ok ? 0 : 1 }
+' archiso/grub/grub.cfg; then
+    fail "archiso/grub/grub.cfg must skip usbserial_* when grub_cpu is arm64"
+    grub_ok=0
+fi
+if ! grep -q 'insmod serial' archiso/grub/grub.cfg \
+    || ! grep -q 'insmod usbserial_usbdebug' archiso/grub/grub.cfg; then
+    fail "archiso/grub/grub.cfg must keep serial and the x86 usbserial modules"
+    grub_ok=0
+fi
+if [ ! -x scripts/patch-mkarchiso-grubmodules.sh ]; then
+    fail "scripts/patch-mkarchiso-grubmodules.sh missing or not executable"
+    grub_ok=0
+else
+    grub_fix=$(mktemp -d)
+    cat > "$grub_fix/mkarchiso" <<'EOF'
+#!/usr/bin/env bash
+_msg_warning() { printf 'warn %s\n' "$1" >&2; }
+_msg_error() { printf 'err %s\n' "$1" >&2; exit "$2"; }
+grub_target="${arch}-efi"
+grubmodules=(all_video at_keyboard boot btrfs cat chain configfile echo efifwsetup efinet exfat ext2 f2fs fat font \
+                 gfxmenu gfxterm gzio halt hfsplus iso9660 jpeg keylayouts linux loadenv loopback lsefi lsefimmap \
+                 minicmd normal ntfs ntfscomp part_apple part_gpt part_msdos png read reboot regexp search \
+                 search_fs_file search_fs_uuid search_label serial sleep tpm udf usb usbserial_common usbserial_ftdi \
+                 usbserial_pl2303 usbserial_usbdebug video xfs zstd)
+EOF
+    chmod 755 "$grub_fix/mkarchiso"
+    if ! bash scripts/patch-mkarchiso-grubmodules.sh "$grub_fix/mkarchiso" \
+        || ! bash -n "$grub_fix/mkarchiso" \
+        || ! grep -q 'churros: keep only GRUB modules that exist' "$grub_fix/mkarchiso" \
+        || ! grep -q 'at_keyboard' "$grub_fix/mkarchiso"; then
+        fail "patch-mkarchiso-grubmodules.sh did not insert the runtime filter"
+        grub_ok=0
+    fi
+    inserted=$(sed -n '/churros: keep only GRUB modules/,/unset -v _churros_grub_keep/p' "$grub_fix/mkarchiso")
+    if ! grep -q '/usr/lib/grub}/${grub_target}/' <<<"$inserted" \
+        || grep -q 'at_keyboard' <<<"$inserted"; then
+        fail "GRUB filter must test /usr/lib/grub/\${grub_target}/<mod>.mod and must not hardcode removals"
+        grub_ok=0
+    fi
+    cp -a "$grub_fix/mkarchiso" "$grub_fix/mkarchiso.once"
+    if ! bash scripts/patch-mkarchiso-grubmodules.sh "$grub_fix/mkarchiso" \
+        || ! cmp -s "$grub_fix/mkarchiso" "$grub_fix/mkarchiso.once"; then
+        fail "patch-mkarchiso-grubmodules.sh is not idempotent"
+        grub_ok=0
+    fi
+    printf 'echo untouched\n' > "$grub_fix/no-pattern"
+    if bash scripts/patch-mkarchiso-grubmodules.sh "$grub_fix/no-pattern" >/dev/null 2>&1; then
+        fail "patch-mkarchiso-grubmodules.sh must fail when grubmodules=( is absent"
+        grub_ok=0
+    fi
+    mkdir -p "$grub_fix/lib/arm64-efi"
+    touch "$grub_fix/lib/arm64-efi/boot.mod" "$grub_fix/lib/arm64-efi/linux.mod"
+    {
+        printf '%s\n' 'set -euo pipefail' \
+            '_msg_warning() { printf "warn %s\n" "$1" >&2; }' \
+            '_msg_error() { printf "err %s\n" "$1" >&2; exit "$2"; }' \
+            'grub_target=arm64-efi' \
+            'grubmodules=(at_keyboard boot linux serial)'
+        printf '%s\n' "$inserted"
+        printf '%s\n' 'printf "%s\n" "${grubmodules[@]}"'
+    } > "$grub_fix/run-filter.sh"
+    if ! filtered=$(CHURROS_GRUB_LIB="$grub_fix/lib" bash "$grub_fix/run-filter.sh" 2>"$grub_fix/warn") \
+        || [ "$filtered" != $'boot\nlinux' ] \
+        || ! grep -q 'at_keyboard' "$grub_fix/warn"; then
+        fail "GRUB filter did not drop missing modules and keep the ones on disk"
+        grub_ok=0
+    fi
+    mkdir -p "$grub_fix/empty/arm64-efi"
+    {
+        printf '%s\n' 'set -euo pipefail' \
+            '_msg_warning() { printf "warn %s\n" "$1" >&2; }' \
+            '_msg_error() { printf "err %s\n" "$1" >&2; exit "$2"; }' \
+            'grub_target=arm64-efi' \
+            'grubmodules=(boot)'
+        printf '%s\n' "$inserted"
+        printf '%s\n' 'printf "%s\n" "${grubmodules[@]}"'
+    } > "$grub_fix/run-empty.sh"
+    if CHURROS_GRUB_LIB="$grub_fix/empty" bash "$grub_fix/run-empty.sh" >/dev/null 2>&1; then
+        fail "GRUB filter must abort when no module file exists"
+        grub_ok=0
+    fi
+    rm -rf "$grub_fix"
+fi
+[ "$grub_ok" -eq 1 ] && pass "aarch64 drops missing GRUB modules; x86 boot modes and module list stay"
 
 # ------------------------------------------- Rollback (churros-snapshot)
 

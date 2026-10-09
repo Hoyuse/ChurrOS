@@ -436,8 +436,11 @@ fi
 # En aarch64 el preset x86 (vmlinuz-linux) y los hooks memdisk/pxe no sirven.
 # Hay que cambiarlos antes de que mkarchiso copie airootfs y pacstrap lance
 # mkinitcpio. El trap los devuelve al terminar.
+# archiso además lista módulos GRUB que ALARM no tiene en arm64-efi. El
+# parche deja solo los .mod que existen; si el array desaparece, falla.
 if [ "$TARGET_ARCH" = aarch64 ]; then
     bash scripts/apply-aarch64-mkinitcpio.sh apply
+    sudo bash scripts/patch-mkarchiso-grubmodules.sh /usr/bin/mkarchiso
 fi
 sudo env CHURROS_ARCH="$TARGET_ARCH" mkarchiso -v \
     -w work \
