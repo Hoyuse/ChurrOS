@@ -57,3 +57,90 @@ if new != text:
     print(f"    arch+=({arch})")
 PY
 }
+
+# Paquetes de makepkg. Arch usa .pkg.tar.zst; Arch Linux ARM trae
+# PKGEXT='.pkg.tar.xz'. El build acepta cualquiera de los dos (y gz) para
+# que un paquete ya compilado no se vuelva a construir ni falle el cp.
+# Las firmas y los paquetes -debug- no entran en el repo local.
+churros_pkg_archives() {
+    local dir="$1"
+    local name_glob="${2:-*}"
+    local f base
+    local restore_nullglob=0
+    shopt -q nullglob || restore_nullglob=1
+    shopt -s nullglob
+    # El glob del nombre es a propósito; no va entre comillas.
+    # shellcheck disable=SC2086
+    for f in "$dir"/${name_glob}.pkg.tar.*; do
+        base="$(basename "$f")"
+        case "$base" in
+            *.sig|*-debug-*.pkg.tar.*) continue ;;
+        esac
+        printf '%s\n' "$f"
+    done
+    if [ "$restore_nullglob" -eq 1 ]; then
+        shopt -u nullglob
+    fi
+}
+
+# Primer paquete que casa, o retorno 1 si no hay ninguno.
+churros_first_pkg() {
+    local f
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        printf '%s\n' "$f"
+        return 0
+    done < <(churros_pkg_archives "$@")
+    return 1
+}
+
+# Copia los paquetes (sin debug ni firmas) de src a dest. Falla si no hay.
+churros_copy_pkgs() {
+    local src="$1"
+    local dest="$2"
+    local name_glob="${3:-*}"
+    local f copied=0
+    mkdir -p "$dest"
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        cp -f "$f" "$dest/"
+        copied=1
+    done < <(churros_pkg_archives "$src" "$name_glob")
+    [ "$copied" -eq 1 ]
+}
+
+# Borra paquetes, debug y firmas que casen. No falla si no hay ninguno.
+churros_remove_pkgs() {
+    local dir="$1"
+    local name_glob="$2"
+    local f
+    local restore_nullglob=0
+    shopt -q nullglob || restore_nullglob=1
+    shopt -s nullglob
+    # shellcheck disable=SC2086
+    for f in "$dir"/${name_glob}.pkg.tar.*; do
+        rm -f "$f"
+    done
+    if [ "$restore_nullglob" -eq 1 ]; then
+        shopt -u nullglob
+    fi
+}
+
+# Regenera churros.db con los paquetes reales del directorio.
+churros_repo_add() {
+    local dir="$1"
+    local f
+    local -a pkgs=()
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        pkgs+=("$(basename "$f")")
+    done < <(churros_pkg_archives "$dir")
+    if [ "${#pkgs[@]}" -eq 0 ]; then
+        echo "repo-add: no packages in $dir" >&2
+        return 1
+    fi
+    (
+        cd "$dir"
+        repo-add churros.db.tar.gz "${pkgs[@]}"
+    )
+}

@@ -112,4 +112,12 @@ RUN db=$(mktemp) \
 RUN printf '%s\n' 'ALL ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/churros-builder \
     && chmod 0440 /etc/sudoers.d/churros-builder
 
+# ALARM deja PKGEXT='.pkg.tar.xz' en /etc/makepkg.conf. Los scripts aceptan
+# xz y zst, pero el paquete nuevo tiene que salir en zst: es lo que usa Arch
+# y lo que el repo local espera por defecto. conf.d se carga después de
+# makepkg.conf, así que este drop-in gana. SRCEXT (.src.tar.gz) no se toca:
+# nadie busca los fuentes por extensión.
+RUN mkdir -p /etc/makepkg.conf.d \
+    && printf '%s\n' "PKGEXT='.pkg.tar.zst'" > /etc/makepkg.conf.d/churros.conf
+
 WORKDIR /churros

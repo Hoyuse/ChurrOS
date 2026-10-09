@@ -23,7 +23,7 @@ session-*.md
 # Local pacman repo: built packages and repo databases.
 # These are produced by scripts/build-calamares.sh and scripts/build-aur.sh
 # and are not part of the source tree — each developer rebuilds them locally.
-archiso/packages/*.pkg.tar.zst
+archiso/packages/*.pkg.tar.*
 archiso/packages/churros.db
 archiso/packages/churros.db.tar.gz
 archiso/packages/churros.db.tar.gz.old
@@ -32,7 +32,7 @@ archiso/packages/churros.files.tar.gz
 archiso/packages/churros.files.tar.gz.old
 archiso/packages/.calamares-build.stamp
 archiso/packages/packages
-archiso/packages/aarch64/*.pkg.tar.zst
+archiso/packages/aarch64/*.pkg.tar.*
 archiso/packages/aarch64/churros.db
 archiso/packages/aarch64/churros.db.tar.gz
 archiso/packages/aarch64/churros.db.tar.gz.old
