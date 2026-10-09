@@ -41,7 +41,7 @@ impl PywalService {
     }
 
     pub fn enabled() -> bool {
-        settings::get_bool("theme.dynamic_colors", true)
+        settings::get_bool("theme.dynamic_colors", false)
     }
 
     fn current_wallpaper() -> Option<String> {

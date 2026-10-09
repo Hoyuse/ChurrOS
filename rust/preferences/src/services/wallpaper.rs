@@ -132,9 +132,33 @@ fn run_with_timeout(
 }
 
 impl WallpaperService {
-    /// Ruta del wallpaper actual (settings.json wallpaper.path)
+    /// Ruta del wallpaper que se está viendo.
+    ///
+    /// Con Noctalia, el fondo vivo está en `settings.toml` (`[wallpaper.default]`,
+    /// si no `[wallpaper.last]` o un monitor) y el de fábrica en `config.toml`.
+    /// `settings.json` solo cuenta si Noctalia no es el shell, o como último
+    /// recurso: si no, Apariencia se queda en «Sin fondo» tras un cambio hecho
+    /// con `noctalia msg wallpaper-set` o con la UI del shell.
     pub fn current() -> String {
-        settings::get_string("wallpaper.path", "")
+        let settings_path = settings::get_string("wallpaper.path", "");
+        let home = churros_services::home_dir();
+        let home = std::path::PathBuf::from(home);
+        let state = fs::read_to_string(home.join(".local/state/noctalia/settings.toml")).ok();
+        let config = fs::read_to_string(home.join(".config/noctalia/config.toml")).ok();
+        let niri = fs::read_to_string(home.join(".config/niri/config.kdl")).unwrap_or_default();
+        let running = churros_services::noctalia::running_shells();
+        let noctalia_is_shell = churros_services::noctalia::noctalia_is_shell(running, &niri);
+        for path in churros_services::noctalia::wallpaper_candidates(
+            &settings_path,
+            state.as_deref(),
+            config.as_deref(),
+            noctalia_is_shell,
+        ) {
+            if !path.is_empty() && Path::new(&path).is_file() {
+                return path;
+            }
+        }
+        String::new()
     }
 
     pub fn user_dir() -> PathBuf {

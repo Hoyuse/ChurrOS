@@ -360,6 +360,67 @@ else
     pass "churros-popup and churros-control-center are not bound in Niri"
 fi
 
+if grep -Eiq 'waybar' "$NIRI_CONFIG"; then
+    fail "Niri config mentions Waybar; this session does not run it"
+else
+    pass "Niri config does not mention Waybar"
+fi
+
+if grep -Eq '^[[:space:]]*hide-not-bound[[:space:]]+true[[:space:]]*$' "$NIRI_CONFIG"; then
+    pass "hotkey overlay hides actions that are not bound"
+else
+    fail "hotkey-overlay hide-not-bound is not set (unbound actions stay in English)"
+fi
+
+overlay_titles=(
+    "Cerrar la ventana"
+    "Salir de Niri"
+    "Maximizar la columna"
+    "Pantalla completa"
+    "Alternar el bloqueo de atajos"
+    "Mostrar los atajos"
+    "Abrir la vista general"
+    "Cambiar el ancho de columna"
+    "Alternar ventana flotante"
+    "Cambiar entre flotante y mosaico"
+    "Capturar la pantalla"
+    "Capturar toda la pantalla"
+    "Capturar la ventana"
+    "Enfocar la columna izquierda"
+    "Enfocar la columna derecha"
+    "Mover la columna a la izquierda"
+    "Mover la columna a la derecha"
+)
+missing_titles=0
+for title in "${overlay_titles[@]}"; do
+    if ! grep -Fq "hotkey-overlay-title=\"${title}\"" "$NIRI_CONFIG"; then
+        fail "hotkey overlay is missing the Spanish title: ${title}"
+        missing_titles=$((missing_titles + 1))
+    fi
+done
+if [ "$missing_titles" -eq 0 ]; then
+    pass "hotkey overlay entries that Niri shows have a Spanish title"
+fi
+
+if grep -Fq 'noctalia::uses_waybar()' rust/preferences/src/window.rs &&
+   grep -Fq 'noctalia::uses_mako()' rust/preferences/src/window.rs &&
+   grep -Fq 'noctalia::uses_waybar()' rust/preferences/src/pages/appearance.rs &&
+   grep -Fq 'noctalia::uses_mako()' rust/preferences/src/pages/appearance.rs; then
+    pass "Waybar and Mako settings pages follow the running shell"
+else
+    fail "Waybar or Mako settings are still shown for every Niri edition"
+fi
+
+if grep -Fq '"dynamic_colors": false' rust/preferences/src/services/settings.rs &&
+   grep -Fq 'get_bool("theme.dynamic_colors", false)' rust/preferences/src/services/pywal.rs &&
+   grep -Fq 'get_bool("theme.dynamic_colors", false)' rust/preferences/src/pages/appearance.rs &&
+   ! grep -Fq '"dynamic_colors": true' rust/preferences/src/services/settings.rs &&
+   ! grep -Fq '"dynamic_colors": true' rust/preferences/src/services/backup_service.rs; then
+    pass "dynamic colors default off so pywal does not replace the ChurrOS accent"
+else
+    fail "theme.dynamic_colors still defaults to true"
+fi
+
 if python3 - "$NIRI_CONFIG" <<'PY'
 import json
 import sys
@@ -405,6 +466,12 @@ if not isinstance(scale, (int, float)) or not 0.5 <= float(scale) <= 2.5:
     fail("accessibility.ui_scale is outside the Noctalia 5.2.1 range 0.5..2.5")
 if config.get("shell", {}).get("launcher", {}).get("compact") is not False:
     fail("launcher compact should stay off (comfortable density)")
+panel_mode = config.get("shell", {}).get("panel", {}).get("transparency_mode")
+if panel_mode != "soft":
+    fail(
+        f"panel transparency_mode is {panel_mode!r}; "
+        "glass drops the floating panel to 55% and dark mode turns muddy over a light wallpaper"
+    )
 wallpaper = config.get("wallpaper", {})
 default = wallpaper.get("default", {}).get("path")
 if default != "/usr/share/churros/wallpapers/default.png":

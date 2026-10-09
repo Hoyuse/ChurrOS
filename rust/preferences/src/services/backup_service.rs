@@ -284,7 +284,7 @@ impl BackupService {
 
     fn restore_settings() {
         let defaults = serde_json::json!({
-            "theme": { "dark": false, "dynamic_colors": true },
+            "theme": { "dark": false, "dynamic_colors": false },
             "accent": { "color": "Orange" },
             "wallpaper": { "path": "" },
             "icons": { "theme": "Papirus" },
@@ -345,7 +345,7 @@ impl BackupService {
     #[allow(dead_code)]
     pub fn defaults() -> Value {
         serde_json::json!({
-            "theme": { "dark": false, "dynamic_colors": true },
+            "theme": { "dark": false, "dynamic_colors": false },
             "accent": { "color": "Orange" },
             "wallpaper": { "path": "" },
             "icons": { "theme": "Papirus" },

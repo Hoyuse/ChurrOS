@@ -29,9 +29,11 @@ clipboard_auto_paste  = "off"
 speed = 1.25
 
 [shell.panel]
-# "glass" acerca los paneles al cristal de las apps GTK (fondo con alpha).
-# Las tarjetas siguen lo bastante opacas para leer el texto.
-transparency_mode              = "glass"
+# "soft" deja el panel flotante al 80 % y las tarjetas entre 82 % y 92 %.
+# "glass" baja el fondo al 55 %: en oscuro, sobre un wallpaper claro, el
+# midnight se mezcla hasta un gris ilegible (el lanzador cae a ~#7C7C72
+# encima del crema por defecto).
+transparency_mode              = "soft"
 open_near_click_control_center = true
 # Menú de sesión flotante y centrado, como en v4.
 session_placement              = "floating"

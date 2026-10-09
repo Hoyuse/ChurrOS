@@ -20,8 +20,11 @@ fn config_file() -> PathBuf {
 }
 
 fn defaults() -> Value {
+    // dynamic_colors arranca apagado: pywal recolorea el acento GTK y pierde
+    // el naranja de ChurrOS. Noctalia usa su paleta propia y pywal no la
+    // toca; se puede activar en Apariencia.
     serde_json::json!({
-        "theme": { "dark": false, "dynamic_colors": true },
+        "theme": { "dark": false, "dynamic_colors": false },
         "accent": { "color": "Orange" },
         "wallpaper": { "path": "" },
         "icons": { "theme": "Papirus" },

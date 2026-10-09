@@ -124,7 +124,7 @@ El fondo lo pinta Noctalia (`[wallpaper.default]` en `config.toml`, `default.png
 - Historial de portapapeles propio de Noctalia (sin `cliphist`), sin pegado automático.
 - Wallpapers desde `/usr/share/churros/wallpapers` (por defecto `default.png`, recorte `crop`), relleno `#111827`.
 - Paleta propia `palettes/ChurrOS.json` (naranja `#F97316`, midnight `#111827`, grafito `#1F2937`, texto `#F8FAFC`), con variante clara y oscura. `shell_mode = "follow"`: Ajustes → Apariencia → Modo oscuro llama a `noctalia msg theme-mode-set` y el shell cambia con las apps.
-- Fuente `Inter` (paquete `inter-font`), densidad cómoda (`ui_scale = 1.0`, lanzador no compacto), esquinas `corner_radius_scale = 1.2`, barra al 0.85 y paneles en modo `glass`.
+- Fuente `Inter` (paquete `inter-font`), densidad cómoda (`ui_scale = 1.0`, lanzador no compacto), esquinas `corner_radius_scale = 1.2`, barra al 0.85 y paneles en modo `soft` (el modo `glass` deja el fondo al 55 % y, en oscuro sobre un wallpaper claro, el texto se vuelve ilegible).
 - Sin asistente de primer arranque, sin telemetría, sin clima ni geolocalización y sin sonidos de interfaz.
 - Idle/lock gestionado por Noctalia (pantalla 600 s, bloqueo 660 s, suspensión 28800 s); dock flotante que se oculta solo.
 - El agente de polkit sigue siendo `polkit-gnome` (`polkit_agent = false`).
