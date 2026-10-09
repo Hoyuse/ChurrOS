@@ -71,3 +71,7 @@ archiso/airootfs/usr/share/churros/grub-theme/
 # Build-time backups of versioned files (restored by the cleanup trap)
 archiso/packages.*.orig
 archiso/airootfs/etc/greetd/config.toml.bak
+archiso/airootfs/etc/mkinitcpio.d/linux.preset.x86-stash
+archiso/airootfs/etc/mkinitcpio.d/linux-aarch64.preset
+archiso/airootfs/etc/mkinitcpio.conf.d/archiso.conf.x86-stash
+archiso/airootfs/usr/share/churros/mkinitcpio/

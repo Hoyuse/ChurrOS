@@ -187,6 +187,9 @@ cleanup_temp() {
     rm -f archiso/airootfs/usr/bin/churros-tour 2>/dev/null || true
     # GRUB theme copiado al airootfs para que esté disponible en el sistema instalado
     rm -rf --one-file-system archiso/airootfs/usr/share/churros/grub-theme 2>/dev/null || true
+    # Preset y hooks de mkinitcpio que apply-aarch64-mkinitcpio.sh mete solo
+    # en el build ARM. En x86 restore no encuentra el stash y no toca nada.
+    bash scripts/apply-aarch64-mkinitcpio.sh restore
 }
 
 trap cleanup_temp EXIT
@@ -430,6 +433,12 @@ fi
 
 # profiledef.sh elige arch, bootmodes, compresión y pacman.<arch>.conf a partir
 # de CHURROS_ARCH. sudo limpia el entorno: la variable se pasa con env.
+# En aarch64 el preset x86 (vmlinuz-linux) y los hooks memdisk/pxe no sirven.
+# Hay que cambiarlos antes de que mkarchiso copie airootfs y pacstrap lance
+# mkinitcpio. El trap los devuelve al terminar.
+if [ "$TARGET_ARCH" = aarch64 ]; then
+    bash scripts/apply-aarch64-mkinitcpio.sh apply
+fi
 sudo env CHURROS_ARCH="$TARGET_ARCH" mkarchiso -v \
     -w work \
     -o out \

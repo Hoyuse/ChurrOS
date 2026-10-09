@@ -126,7 +126,23 @@ fi
 # script, copia /boot/vmlinuz-* al arranque de la ISO. Sin esta copia el
 # glob falla y la ISO no arranca. Se mira el fichero y no uname: dentro de
 # qemu-user, uname a veces sigue diciendo la arquitectura del host.
+#
+# pacstrap extrae linux-aarch64.preset del paquete (no es un fichero backup)
+# y mkinitcpio corre con ese preset. Aquí se vuelve a poner el preset de
+# archiso (ALL_kver=/boot/Image, imagen initramfs-linux.img) y se regenera
+# el initramfs antes de publicarlo como initramfs-linux-aarch64.img.
 if [ -f /boot/Image ]; then
+    echo "Installing aarch64 mkinitcpio preset..."
+    a64_preset=/usr/share/churros/mkinitcpio/aarch64/linux-aarch64.preset
+    a64_hooks=/usr/share/churros/mkinitcpio/aarch64/archiso.conf
+    if [ ! -f "$a64_preset" ] || [ ! -f "$a64_hooks" ]; then
+        printf 'customize_airootfs: missing aarch64 mkinitcpio files\n' >&2
+        exit 1
+    fi
+    install -D -m 644 "$a64_hooks" /etc/mkinitcpio.conf.d/archiso.conf
+    install -D -m 644 "$a64_preset" /etc/mkinitcpio.d/linux-aarch64.preset
+    rm -f /etc/mkinitcpio.d/linux.preset
+    mkinitcpio -p linux-aarch64
     echo "Publishing aarch64 kernel names..."
     /usr/share/churros/scripts/publish-aarch64-kernel --require
 fi

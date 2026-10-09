@@ -727,6 +727,93 @@ if [ -x "$PUBLISH_KERNEL" ]; then
 fi
 [ "$publish_ok" -eq 1 ] && pass "aarch64 kernel is published as vmlinuz-linux-aarch64"
 
+# Preset aarch64: ALL_kver=/boot/Image, imagen initramfs-linux.img (la que
+# publica publish-aarch64-kernel). Los hooks memdisk y pxe se quedan en x86.
+A64_PRESET=archiso/mkinitcpio/aarch64/linux-aarch64.preset
+A64_HOOKS=archiso/mkinitcpio/aarch64/archiso.conf
+X64_PRESET=archiso/airootfs/etc/mkinitcpio.d/linux.preset
+X64_HOOKS=archiso/airootfs/etc/mkinitcpio.conf.d/archiso.conf
+preset_ok=1
+if [ ! -f "$A64_PRESET" ] \
+    || ! grep -q "ALL_kver='/boot/Image'" "$A64_PRESET" \
+    || ! grep -q 'archiso_image="/boot/initramfs-linux.img"' "$A64_PRESET" \
+    || ! grep -q "PRESETS=('archiso')" "$A64_PRESET"; then
+    fail "aarch64 preset must set ALL_kver=/boot/Image and archiso_image=initramfs-linux.img"
+    preset_ok=0
+fi
+a64_hooks_line=""
+[ -f "$A64_HOOKS" ] && a64_hooks_line=$(grep -E '^HOOKS=' "$A64_HOOKS" || true)
+x64_hooks_line=""
+[ -f "$X64_HOOKS" ] && x64_hooks_line=$(grep -E '^HOOKS=' "$X64_HOOKS" || true)
+if [ -z "$a64_hooks_line" ] \
+    || grep -Eq '(^|[[:space:]])memdisk([[:space:]]|$)' <<<"$a64_hooks_line" \
+    || grep -q 'archiso_pxe' <<<"$a64_hooks_line" \
+    || ! grep -q ' archiso ' <<<"$a64_hooks_line" \
+    || ! grep -q 'archiso_loop_mnt' <<<"$a64_hooks_line"; then
+    fail "aarch64 archiso hooks must keep archiso and archiso_loop_mnt and drop memdisk and archiso_pxe_*"
+    preset_ok=0
+fi
+if ! grep -q "ALL_kver='/boot/vmlinuz-linux'" "$X64_PRESET" \
+    || ! grep -Eq '(^|[[:space:]])memdisk([[:space:]]|$)' <<<"$x64_hooks_line" \
+    || ! grep -q 'archiso_pxe_common' <<<"$x64_hooks_line"; then
+    fail "x86_64 preset and hooks must keep vmlinuz-linux, memdisk and pxe"
+    preset_ok=0
+fi
+if [ -f "$A64_PRESET" ]; then
+    preset_sed=$(mktemp)
+    cp "$A64_PRESET" "$preset_sed"
+    sed -i "s/PRESETS=('archiso')/PRESETS=('default')/" "$preset_sed"
+    sed -i 's|archiso_config=.*|default_config="/etc/mkinitcpio.conf"|' "$preset_sed"
+    sed -i 's|archiso_image=|default_image=|' "$preset_sed"
+    sed -i 's|^default_image=.*|default_image="/boot/initramfs-linux-aarch64.img"|' "$preset_sed"
+    if ! grep -q "PRESETS=('default')" "$preset_sed" \
+        || ! grep -q "ALL_kver='/boot/Image'" "$preset_sed" \
+        || ! grep -q 'default_image="/boot/initramfs-linux-aarch64.img"' "$preset_sed"; then
+        fail "Calamares sed does not turn the aarch64 preset into initramfs-linux-aarch64.img"
+        preset_ok=0
+    fi
+    rm -f "$preset_sed"
+fi
+if ! grep -q 'mkinitcpio -p linux-aarch64' branding/customize_airootfs.sh \
+    || ! grep -q 'publish-aarch64-kernel --require' branding/customize_airootfs.sh; then
+    fail "customize_airootfs.sh must rebuild linux-aarch64 before publishing kernel names"
+    preset_ok=0
+else
+    mkinit_line=$(grep -n 'mkinitcpio -p linux-aarch64' branding/customize_airootfs.sh | head -1 | cut -d: -f1)
+    publish_line=$(grep -n 'publish-aarch64-kernel --require' branding/customize_airootfs.sh | head -1 | cut -d: -f1)
+    if [ -z "$mkinit_line" ] || [ -z "$publish_line" ] || [ "$mkinit_line" -ge "$publish_line" ]; then
+        fail "mkinitcpio -p linux-aarch64 must run before publish-aarch64-kernel"
+        preset_ok=0
+    fi
+fi
+if ! grep -q 'apply-aarch64-mkinitcpio.sh apply' scripts/cli/build.sh \
+    || ! grep -q 'apply-aarch64-mkinitcpio.sh restore' scripts/cli/build.sh; then
+    fail "build.sh must apply the aarch64 mkinitcpio files and restore them"
+    preset_ok=0
+fi
+if [ -x scripts/apply-aarch64-mkinitcpio.sh ]; then
+    if ! bash scripts/apply-aarch64-mkinitcpio.sh apply \
+        || [ -e archiso/airootfs/etc/mkinitcpio.d/linux.preset ] \
+        || ! grep -q "ALL_kver='/boot/Image'" archiso/airootfs/etc/mkinitcpio.d/linux-aarch64.preset \
+        || grep -q 'archiso_pxe' <<<"$(grep -E '^HOOKS=' archiso/airootfs/etc/mkinitcpio.conf.d/archiso.conf)" \
+        || ! grep -q "ALL_kver='/boot/Image'" archiso/airootfs/usr/share/churros/mkinitcpio/aarch64/linux-aarch64.preset; then
+        fail "apply-aarch64-mkinitcpio.sh apply did not swap in the ARM preset"
+        preset_ok=0
+    fi
+    if ! bash scripts/apply-aarch64-mkinitcpio.sh restore \
+        || [ -e archiso/airootfs/etc/mkinitcpio.d/linux-aarch64.preset ] \
+        || [ -e archiso/airootfs/usr/share/churros/mkinitcpio ] \
+        || ! grep -q "ALL_kver='/boot/vmlinuz-linux'" archiso/airootfs/etc/mkinitcpio.d/linux.preset \
+        || ! grep -q 'archiso_pxe_common' archiso/airootfs/etc/mkinitcpio.conf.d/archiso.conf; then
+        fail "apply-aarch64-mkinitcpio.sh restore did not put the x86 preset back"
+        preset_ok=0
+    fi
+else
+    fail "scripts/apply-aarch64-mkinitcpio.sh missing or not executable"
+    preset_ok=0
+fi
+[ "$preset_ok" -eq 1 ] && pass "aarch64 mkinitcpio preset uses /boot/Image; x86 preset unchanged"
+
 # ------------------------------------------- Rollback (churros-snapshot)
 
 section "Rollback snapshots btrfs"
