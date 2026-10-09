@@ -229,7 +229,7 @@ impl WallpaperService {
             .map(|(k, v)| (k.as_str(), v.as_str()))
             .collect();
 
-        // Noctalia pinta el fondo. Si el IPC falla o el script pasa de 10 s,
+        // Noctalia pinta el fondo. Si el IPC falla o el script pasa de 15 s,
         // no arrancar swaybg: se queda debajo del shell aunque Noctalia
         // haya aplicado la imagen.
         if churros_services::noctalia::running_shells().noctalia {
@@ -354,7 +354,7 @@ fn apply_with_noctalia(path: &str, env_refs: &[(&str, &str)]) -> bool {
     if which("churros-apply-wallpaper") {
         let r = run_with_timeout(
             &["churros-apply-wallpaper", path],
-            Duration::from_secs(10),
+            Duration::from_secs(15),
             env_refs,
         );
         return match r {

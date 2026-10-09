@@ -279,6 +279,11 @@ impl BackupService {
         Self::restore_settings();
         Self::restore_dotfiles();
         Self::reload_services();
+        // settings.json vuelve a Orange, pero accent.css (y el acento de KDE)
+        // se quedan con el hex de pywal. El selector de color reescribe ambos.
+        crate::services::accent::AccentService::set(
+            &crate::services::accent::AccentService::current(),
+        );
         Ok(true)
     }
 

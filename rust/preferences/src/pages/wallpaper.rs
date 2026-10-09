@@ -146,7 +146,7 @@ fn build_grid(content: &gtk::Box, current: &str, wallpapers: &[std::path::PathBu
         .cloned();
     for wallpaper in wallpapers {
         let is_current = selected.as_ref().is_some_and(|path| path == wallpaper);
-        let thumb = build_thumbnail(wallpaper, is_current, navigator);
+        let thumb = build_thumbnail(wallpaper, is_current, navigator, content);
         flow.insert(&thumb, -1);
     }
 
@@ -170,7 +170,12 @@ fn wallpaper_matches(path: &Path, current: &str) -> bool {
     }
 }
 
-fn build_thumbnail(wallpaper: &Path, is_current: bool, navigator: &gtk::Stack) -> gtk::Box {
+fn build_thumbnail(
+    wallpaper: &Path,
+    is_current: bool,
+    navigator: &gtk::Stack,
+    content: &gtk::Box,
+) -> gtk::Box {
     let box_ = gtk::Box::new(gtk::Orientation::Vertical, 6);
 
     let name = wallpaper
@@ -204,8 +209,9 @@ fn build_thumbnail(wallpaper: &Path, is_current: bool, navigator: &gtk::Stack) -
 
     let target = wallpaper.to_string_lossy().to_string();
     let nav = navigator.clone();
+    let content_for_select = content.clone();
     button.connect_clicked(move |_| {
-        select(&target, &nav);
+        select(&target, &nav, &content_for_select);
     });
 
     let label = gtk::Label::new(Some(&name));
@@ -350,21 +356,22 @@ fn show_error(navigator: &gtk::Stack, message: &str, detail: &str) {
 }
 
 /// Equivalente a WallpaperPage.select: aplicar fondo + volver a apariencia.
-/// Se ejecuta en un hilo secundario para no bloquear el loop de eventos Wayland de GTK4.
-fn select(wallpaper: &str, navigator: &gtk::Stack) {
+/// El grid y Apariencia se actualizan solo cuando `set` ya escribió el fondo,
+/// para no marcar el thumb anterior y el nuevo a la vez.
+fn select(wallpaper: &str, navigator: &gtk::Stack, content: &gtk::Box) {
     println!("[wallpaper-page] seleccion: {wallpaper}");
 
     let nav = navigator.clone();
+    let content = content.clone();
     let wp = wallpaper.to_string();
 
-    // Navegación inmediata a Apariencia para respuesta visual instantánea
-    glib::idle_add_local_once(move || {
-        nav.set_visible_child_name("appearance");
-    });
-
-    // Aplicar wallpaper y colores pywal en segundo plano de forma no bloqueante
-    std::thread::spawn(move || {
-        let success = WallpaperService::set(&wp);
+    glib::spawn_future_local(async move {
+        let outcome = gio::spawn_blocking(move || WallpaperService::set(&wp)).await;
+        let Ok(success) = outcome else {
+            return;
+        };
         println!("[wallpaper-page] set retorno: {success}");
+        populate(&content, &nav);
+        nav.set_visible_child_name("appearance");
     });
 }

@@ -353,9 +353,13 @@ switch slider {
 }
 
 switch:checked {
-    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--switch-track, var(--accent)), var(--switch-track-strong, var(--accent-strong)));
+    border-color: var(--switch-track, var(--accent));
     box-shadow: var(--accent-glow);
+}
+
+switch:checked slider {
+    background: var(--switch-knob, #ffffff);
 }
 
 /* ── Slider ──────────────────────────────────────────── */
@@ -679,4 +683,20 @@ entry:focus {
     min-width: 36px;
     min-height: 36px;
     border-radius: 8px;
+}
+
+/* ── Confirmación de restablecer ─────────────────────── */
+.reset-confirm {
+    background: var(--bg-window);
+}
+
+.reset-heading {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.reset-body {
+    font-size: 14px;
+    color: var(--text-secondary);
 }
