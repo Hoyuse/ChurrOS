@@ -96,17 +96,23 @@ RUN set -eu \
     && pacman -Scc --noconfirm
 
 # El nombre exacto (archiso-<ver>-any.pkg.tar.zst) se resuelve al construir
-# la imagen para no dejar una versión clavada.
-RUN db=$(mktemp) \
-    && curl -fsSL -o "$db" https://geo.mirror.pkgbuild.com/extra/os/x86_64/extra.db \
-    && fname=$(tar -xOf "$db" --wildcards 'archiso-*/desc' \
-        | awk 'f { print; exit } $0 == "%FILENAME%" { f = 1 }') \
-    && rm -f "$db" \
-    && test -n "$fname" \
-    && curl -fsSL -o "/tmp/$fname" "https://geo.mirror.pkgbuild.com/extra/os/x86_64/$fname" \
-    && pacman -U --noconfirm "/tmp/$fname" \
-    && rm -f "/tmp/$fname" \
-    && command -v mkarchiso >/dev/null
+# la imagen para no dejar una versión clavada. Cada descarga reintenta y, si
+# un espejo corta la conexión, pasa al siguiente.
+RUN set -e; \
+    mirrors="https://geo.mirror.pkgbuild.com https://mirror.rackspace.com/archlinux https://mirrors.kernel.org/archlinux https://ftp.fau.de/archlinux"; \
+    fetch() { for m in $mirrors; do \
+        if curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors --connect-timeout 20 -o "$2" "$m/extra/os/x86_64/$1"; then return 0; fi; \
+        echo "fallo $m, probando el siguiente espejo" >&2; done; return 1; }; \
+    db=$(mktemp); \
+    fetch extra.db "$db"; \
+    fname=$(tar -xOf "$db" --wildcards 'archiso-*/desc' \
+        | awk 'f { print; exit } $0 == "%FILENAME%" { f = 1 }'); \
+    rm -f "$db"; \
+    test -n "$fname"; \
+    fetch "$fname" "/tmp/$fname"; \
+    pacman -U --noconfirm "/tmp/$fname"; \
+    rm -f "/tmp/$fname"; \
+    command -v mkarchiso >/dev/null
 
 # makepkg no corre como root y build.sh llama a sudo (mkarchiso, pacman).
 RUN printf '%s\n' 'ALL ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/churros-builder \
