@@ -792,12 +792,15 @@ if ! grep -q 'apply-aarch64-mkinitcpio.sh apply' scripts/cli/build.sh \
     preset_ok=0
 fi
 if [ -x scripts/apply-aarch64-mkinitcpio.sh ]; then
+    # linux-aarch64 owns etc/mkinitcpio.d/linux-aarch64.preset. apply must
+    # not create it; customize_airootfs.sh copies it after pacstrap.
     if ! bash scripts/apply-aarch64-mkinitcpio.sh apply \
         || [ -e archiso/airootfs/etc/mkinitcpio.d/linux.preset ] \
-        || ! grep -q "ALL_kver='/boot/Image'" archiso/airootfs/etc/mkinitcpio.d/linux-aarch64.preset \
+        || [ -e archiso/airootfs/etc/mkinitcpio.d/linux-aarch64.preset ] \
         || grep -q 'archiso_pxe' <<<"$(grep -E '^HOOKS=' archiso/airootfs/etc/mkinitcpio.conf.d/archiso.conf)" \
-        || ! grep -q "ALL_kver='/boot/Image'" archiso/airootfs/usr/share/churros/mkinitcpio/aarch64/linux-aarch64.preset; then
-        fail "apply-aarch64-mkinitcpio.sh apply did not swap in the ARM preset"
+        || ! grep -q "ALL_kver='/boot/Image'" archiso/airootfs/usr/share/churros/mkinitcpio/aarch64/linux-aarch64.preset \
+        || ! grep -q 'archiso_loop_mnt' archiso/airootfs/usr/share/churros/mkinitcpio/aarch64/archiso.conf; then
+        fail "apply-aarch64-mkinitcpio.sh apply must stage the preset under /usr/share and not under /etc/mkinitcpio.d"
         preset_ok=0
     fi
     if ! bash scripts/apply-aarch64-mkinitcpio.sh restore \

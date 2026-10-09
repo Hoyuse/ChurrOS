@@ -127,10 +127,10 @@ fi
 # glob falla y la ISO no arranca. Se mira el fichero y no uname: dentro de
 # qemu-user, uname a veces sigue diciendo la arquitectura del host.
 #
-# pacstrap extrae linux-aarch64.preset del paquete (no es un fichero backup)
-# y mkinitcpio corre con ese preset. Aquí se vuelve a poner el preset de
-# archiso (ALL_kver=/boot/Image, imagen initramfs-linux.img) y se regenera
-# el initramfs antes de publicarlo como initramfs-linux-aarch64.img.
+# linux-aarch64 posee /etc/mkinitcpio.d/linux-aarch64.preset y no es un
+# backup: si el fichero ya está, pacstrap aborta. Se copia después, desde
+# /usr/share/churros, se regenera el initramfs (ALL_kver=/boot/Image,
+# initramfs-linux.img) y se publica como initramfs-linux-aarch64.img.
 if [ -f /boot/Image ]; then
     echo "Installing aarch64 mkinitcpio preset..."
     a64_preset=/usr/share/churros/mkinitcpio/aarch64/linux-aarch64.preset

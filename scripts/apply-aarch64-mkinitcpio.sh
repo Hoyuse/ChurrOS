@@ -2,7 +2,12 @@
 # Install or remove the aarch64 mkinitcpio preset and hook list.
 #
 # mkarchiso copies airootfs before pacstrap. The x86 linux.preset would make
-# mkinitcpio look for /boot/vmlinuz-linux. apply swaps in the ARM files;
+# mkinitcpio look for /boot/vmlinuz-linux, so apply moves it aside. The ARM
+# preset is NOT written to /etc/mkinitcpio.d/: linux-aarch64 owns that path
+# and pacstrap aborts with "exists in filesystem". It is staged under
+# /usr/share/churros, and customize_airootfs.sh installs it after pacstrap.
+# etc/mkinitcpio.conf.d/archiso.conf is not owned by any ALARM package, so
+# replacing it here is safe and the package hook sees the ARM hooks.
 # restore puts the tree back so an x86 build is unchanged.
 #
 #   apply-aarch64-mkinitcpio.sh apply
@@ -36,9 +41,9 @@ apply_aarch64() {
 
     cp -a "$SRC/linux-aarch64.preset" "$SHARE_DIR/linux-aarch64.preset"
     cp -a "$SRC/archiso.conf" "$SHARE_DIR/archiso.conf"
-    cp -a "$SRC/linux-aarch64.preset" "$PRESET_DIR/linux-aarch64.preset"
+    # archiso.conf is not shipped by mkinitcpio or mkinitcpio-archiso.
     cp -a "$SRC/archiso.conf" "$CONF_DIR/archiso.conf"
-    rm -f "$PRESET_DIR/linux.preset"
+    rm -f "$PRESET_DIR/linux.preset" "$PRESET_DIR/linux-aarch64.preset"
 }
 
 restore_x86() {
