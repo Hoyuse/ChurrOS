@@ -4,6 +4,8 @@ set -e
 
 # shellcheck source=scripts/lib/host.sh
 source "$(dirname "$0")/../lib/host.sh"
+# shellcheck source=scripts/lib/local-repo.sh
+source "$(dirname "$0")/../lib/local-repo.sh"
 
 HOST_REPO_SYMLINK=0
 EDITION="niri"
@@ -96,12 +98,18 @@ if [ "$USE_CONTAINER" -eq 1 ] && ! churros_in_container; then
     if [ "$TARGET_ARCH" = aarch64 ]; then
         container_use_arch aarch64
         if churros_need_aarch64_emulation && ! churros_aarch64_emulation_ready; then
+            if churros_aarch64_binfmt_entry >/dev/null 2>&1 && ! churros_aarch64_binfmt_has_credentials; then
+                echo "Error: qemu-aarch64 binfmt está registrado sin la bandera C (credentials)." >&2
+                echo "sudo dentro de makepkg falla con 'effective uid is not 0'." >&2
+                churros_print_aarch64_binfmt_help >&2
+            else
             echo "Error: falta qemu-user aarch64 (binfmt) para construir la ISO ARM en este host." >&2
             echo "  Debian/Ubuntu: sudo apt install qemu-user-static binfmt-support" >&2
             echo "  Fedora:        sudo dnf install qemu-user-static" >&2
             echo "  Arch:          sudo pacman -S qemu-user-static qemu-user-static-binfmt" >&2
             echo "  o:             ./install-deps.sh --arch arm64" >&2
             echo "Comprueba con: ./churros doctor --arch arm64" >&2
+            fi
             exit 1
         fi
         echo "[container] Build de la edición $EDITION ($TARGET_ARCH) en el contenedor Arch Linux ARM."
@@ -332,9 +340,9 @@ echo "[2/5] Checking packages..."
 # instala ahora `noctalia` de [extra]. Los paquetes que dejó un build anterior
 # se copiarían a /root/packages y seguirían en el índice churros.db.
 for obsolete_pkg in noctalia-qs noctalia-qs-debug noctalia-shell; do
-    if compgen -G "${LOCAL_REPO}/${obsolete_pkg}-*.pkg.tar.zst" >/dev/null; then
+    if compgen -G "${LOCAL_REPO}/${obsolete_pkg}-*.pkg.tar.*" >/dev/null; then
         echo "  Removing obsolete local package: $obsolete_pkg"
-        rm -f "$LOCAL_REPO"/"${obsolete_pkg}"-*.pkg.tar.zst
+        churros_remove_pkgs "$LOCAL_REPO" "${obsolete_pkg}-*"
     fi
     if [ -f "$LOCAL_REPO/churros.db.tar.gz" ] &&
         tar -tzf "$LOCAL_REPO/churros.db.tar.gz" 2>/dev/null | grep -qE "^${obsolete_pkg}-[^-/]+-[^-/]+/desc$"; then
@@ -345,21 +353,19 @@ done
 # Always invoke: rebuilds if the package is missing or linked against a
 # different libpython than the ISO's `python` package (pacstrap).
 bash scripts/build-calamares.sh
-CALAMARES_PKG=$(ls "$LOCAL_REPO"/calamares-[0-9]*.pkg.tar.zst 2>/dev/null | head -1 || true)
-PYWAL_PKG=$(ls "$LOCAL_REPO"/python-pywal-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-YAY_PKG=$(ls "$LOCAL_REPO"/yay-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-BAZAAR_PKG=$(ls "$LOCAL_REPO"/bazaar-*.pkg.tar.zst 2>/dev/null | head -1 || true)
-WLOGOUT_PKG=$(ls "$LOCAL_REPO"/wlogout-*.pkg.tar.zst 2>/dev/null | head -1 || true)
+CALAMARES_PKG="$(churros_first_pkg "$LOCAL_REPO" 'calamares-[0-9]*' || true)"
+PYWAL_PKG="$(churros_first_pkg "$LOCAL_REPO" 'python-pywal-*' || true)"
+YAY_PKG="$(churros_first_pkg "$LOCAL_REPO" 'yay-*' || true)"
+WLOGOUT_PKG="$(churros_first_pkg "$LOCAL_REPO" 'wlogout-*' || true)"
 
 if [ -z "$PYWAL_PKG" ] || [ -z "$YAY_PKG" ] || [ -z "$WLOGOUT_PKG" ]; then
     echo "  AUR extras not found — building..."
     bash scripts/build-aur.sh
 fi
 
-if [ -z "$BAZAAR_PKG" ]; then
-    echo "  Bazaar not found — building (patched to fix libdex conflict)..."
-    bash scripts/build-bazaar.sh
-fi
+# Siempre: el script reutiliza el paquete si ya depende de libdex>=1.2.
+echo "  Bazaar (libdex >= 1.2)..."
+bash scripts/build-bazaar.sh
 
 if [ -n "$CALAMARES_PKG" ]; then
     echo "  Integrating Calamares installer..."
@@ -382,7 +388,7 @@ if [ -n "$CALAMARES_PKG" ]; then
     fi
 
     mkdir -p archiso/airootfs/root/packages
-    cp "$LOCAL_REPO"/*.pkg.tar.zst archiso/airootfs/root/packages/
+    churros_copy_pkgs "$LOCAL_REPO" archiso/airootfs/root/packages
     cp "$LOCAL_REPO"/churros.db* archiso/airootfs/root/packages/ 2>/dev/null || true
     cp "$LOCAL_REPO"/churros.files* archiso/airootfs/root/packages/ 2>/dev/null || true
 else

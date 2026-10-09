@@ -29,7 +29,7 @@ build_aur() {
     local name="$1"
     local package_dir="$WORK_DIR/$name"
 
-    if ls "$PACKAGE_DIR"/"$name"-*.pkg.tar.zst 1>/dev/null 2>&1; then
+    if [ -n "$(churros_first_pkg "$PACKAGE_DIR" "$name-*" || true)" ]; then
         echo "[skip] $name already built"
         return
     fi
@@ -42,8 +42,8 @@ build_aur() {
         churros_pkgbuild_allow_arch PKGBUILD
         makepkg -sf --noconfirm --skippgpcheck
     )
-    cp "$package_dir"/*.pkg.tar.zst "$PACKAGE_DIR/"
-    rm -f "$PACKAGE_DIR"/"$name"-debug-*.pkg.tar.zst 2>/dev/null || true
+    churros_copy_pkgs "$package_dir" "$PACKAGE_DIR" "$name-*"
+    churros_remove_pkgs "$PACKAGE_DIR" "$name-debug-*"
     echo "[done] $name built"
 }
 
@@ -55,7 +55,7 @@ echo
 echo "Updating churros local repo..."
 (
     cd "$PACKAGE_DIR"
-    repo-add churros.db.tar.gz *.pkg.tar.zst
+    churros_repo_add "$PACKAGE_DIR"
 )
 
 rm -rf "$WORK_DIR"
