@@ -318,15 +318,19 @@ fn apply_wallpaper(src: &str, navigator: &gtk::Stack, content: &gtk::Box) {
         return;
     };
 
-    let dest_clone = dest.clone();
+    // Solo la ruta viaja al hilo de trabajo: los widgets GTK no son Send.
+    // El futuro local corre en el hilo principal y reconstruye la página.
     let content = content.clone();
     let nav = navigator.clone();
-    std::thread::spawn(move || {
-        let success = WallpaperService::set(&dest_clone);
-        println!("[wallpaper] import+set retorno: {success} dest: {dest_clone}");
-        glib::idle_add_local_once(move || {
-            populate(&content, &nav);
-        });
+    glib::spawn_future_local(async move {
+        let dest_for_worker = dest.clone();
+        let outcome =
+            gio::spawn_blocking(move || WallpaperService::set(&dest_for_worker)).await;
+        let Ok(success) = outcome else {
+            return;
+        };
+        println!("[wallpaper] import+set retorno: {success} dest: {dest}");
+        populate(&content, &nav);
     });
 }
 

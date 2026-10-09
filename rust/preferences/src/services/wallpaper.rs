@@ -388,7 +388,8 @@ fn apply_with_noctalia(path: &str, env_refs: &[(&str, &str)]) -> bool {
             return true;
         }
         if attempt < 3 {
-            std::thread::sleep(Duration::from_millis(200 * u64::from(attempt)));
+            let wait_ms = u64::try_from(attempt).unwrap_or(0);
+            std::thread::sleep(Duration::from_millis(200 * wait_ms));
         }
     }
     println!("[wallpaper] noctalia no acepto el fondo; swaybg no se arranca");
