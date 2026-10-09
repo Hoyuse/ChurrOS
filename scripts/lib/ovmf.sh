@@ -5,8 +5,9 @@
 #
 # QEMU aborta si las dos imágenes pflash miden distinto. En Debian el
 # QEMU_EFI.fd de qemu-efi-aarch64 ocupa unos 3 MiB y AAVMF_VARS.fd ocupa
-# 64 MiB: no se pueden mezclar. El primer par en el que ambos ficheros
-# existen y miden igual gana. Si en aarch64 solo está el QEMU_EFI.fd crudo,
+# 64 MiB: no se pueden mezclar. En aarch64 gana el primer par en el que
+# ambos ficheros existen y miden igual (siguiendo symlinks); en x86 basta
+# con que existan los dos del par. Si en aarch64 solo está el QEMU_EFI.fd crudo,
 # se rellenan copias a 64 MiB (el tamaño del pflash de AAVMF).
 
 # Imprime dos rutas (CODE y plantilla VARS) y devuelve 0.
@@ -54,8 +55,11 @@ churros_resolve_pflash() {
         vars="${entry#*|}"
         code_path="${root}${code}"
         vars_path="${root}${vars}"
-        if [ -f "$code_path" ] && [ -f "$vars_path" ] \
-            && [ "$(stat -c %s "$code_path")" -eq "$(stat -c %s "$vars_path")" ]; then
+        [ -f "$code_path" ] && [ -f "$vars_path" ] || continue
+        # Solo aarch64 exige mismo tamaño (pflash de 64 MiB). En x86 CODE y
+        # VARS miden distinto legítimamente; se emparejan por nombre.
+        if [ "$arch" != aarch64 ] \
+            || [ "$(stat -L -c %s "$code_path")" -eq "$(stat -L -c %s "$vars_path")" ]; then
             printf '%s\n%s\n' "$code_path" "$vars_path"
             return 0
         fi
@@ -107,9 +111,9 @@ _churros_pflash_pad_aarch64() {
         fi
     done
 
-    code_bytes=$(stat -c %s "$code_src")
+    code_bytes=$(stat -L -c %s "$code_src")
     if [ -n "$vars_src" ]; then
-        vars_bytes=$(stat -c %s "$vars_src")
+        vars_bytes=$(stat -L -c %s "$vars_src")
     fi
     if (( code_bytes > pad )); then
         pad=$code_bytes
