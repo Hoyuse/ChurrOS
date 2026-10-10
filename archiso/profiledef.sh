@@ -66,6 +66,7 @@ file_permissions=(
   ["/usr/bin/churros-pkexec"]="0:0:755"
   ["/usr/bin/churros-portal-start"]="0:0:755"
   ["/usr/bin/churros-apply-wallpaper"]="0:0:755"
+  ["/usr/bin/churros-pi-session"]="0:0:755"
   ["/usr/share/churros/scripts/make-boot-grub-readable"]="0:0:755"
   ["/usr/share/churros/scripts/configure-greeter-locale"]="0:0:755"
   ["/usr/share/churros/scripts/configure-greetd-session"]="0:0:755"
