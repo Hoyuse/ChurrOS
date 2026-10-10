@@ -105,7 +105,7 @@ else
 fi
 
 echo "Installing Bazaar..."
-# Bazaar se instala desde packages.x86_64 via pacstrap (repo local [churros],
+# Bazaar se instala desde la lista de paquetes del perfil (packages.<arch>) via pacstrap (repo local [churros],
 # patcheado para fix de libdex). Ya no se usa bsdtar.
 
 if ls /root/packages/*.pkg.tar.zst 1>/dev/null 2>&1; then
