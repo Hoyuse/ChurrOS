@@ -319,6 +319,242 @@ for command in "${COMMANDS[@]}"; do
 done
 [ "$missing" -eq 0 ] && pass "${#COMMANDS[@]} commands resolve"
 
+# ------------------------------------------------------- Noctalia integration
+
+section "Noctalia shell integration"
+
+# The Niri session must not stack swaybg under Noctalia's wallpaper, and the
+# launcher / control center binds have to call the Noctalia 5.2.1 IPC
+# (`noctalia msg panel-toggle <id>`). spawn-sh keeps the whole command in one
+# string so churros-settings can round-trip it.
+if grep -Eq '^[[:space:]]*spawn-at-startup[[:space:]]+"swaybg"' "$NIRI_CONFIG"; then
+    fail "Niri autostart still launches swaybg (Noctalia owns the wallpaper)"
+else
+    pass "Niri autostart leaves the wallpaper to Noctalia"
+fi
+
+if grep -Fq 'spawn-sh "noctalia msg panel-toggle launcher"' "$NIRI_CONFIG" &&
+   grep -Fq 'hotkey-overlay-title="Abrir el lanzador"' "$NIRI_CONFIG"; then
+    pass "Mod+Space opens the Noctalia launcher and is listed in the hotkey overlay"
+else
+    fail "Mod+Space does not open the Noctalia launcher via panel-toggle"
+fi
+
+if grep -Fq 'spawn "fuzzel"' "$NIRI_CONFIG" &&
+   grep -Fq 'hotkey-overlay-title="Lanzador alternativo (Fuzzel)"' "$NIRI_CONFIG"; then
+    pass "Fuzzel stays available as the Mod+Shift+Space fallback"
+else
+    fail "Fuzzel fallback bind is missing"
+fi
+
+if grep -Fq 'spawn-sh "noctalia msg panel-toggle control-center"' "$NIRI_CONFIG" &&
+   grep -Fq 'hotkey-overlay-title="Abrir el centro de control"' "$NIRI_CONFIG"; then
+    pass "Mod+C opens the Noctalia control center and is listed in the hotkey overlay"
+else
+    fail "Mod+C does not open the Noctalia control center via panel-toggle"
+fi
+
+if grep -vE '^[[:space:]]*//' "$NIRI_CONFIG" | grep -Eq 'churros-popup|churros-control-center'; then
+    fail "Niri still binds churros-popup or churros-control-center (Noctalia panels cover them)"
+else
+    pass "churros-popup and churros-control-center are not bound in Niri"
+fi
+
+if grep -Eiq 'waybar' "$NIRI_CONFIG"; then
+    fail "Niri config mentions Waybar; this session does not run it"
+else
+    pass "Niri config does not mention Waybar"
+fi
+
+if grep -Eq '^[[:space:]]*hide-not-bound[[:space:]]+true[[:space:]]*$' "$NIRI_CONFIG"; then
+    pass "hotkey overlay hides actions that are not bound"
+else
+    fail "hotkey-overlay hide-not-bound is not set (unbound actions stay in English)"
+fi
+
+overlay_titles=(
+    "Cerrar la ventana"
+    "Salir de Niri"
+    "Maximizar la columna"
+    "Pantalla completa"
+    "Alternar el bloqueo de atajos"
+    "Mostrar los atajos"
+    "Abrir la vista general"
+    "Cambiar el ancho de columna"
+    "Alternar ventana flotante"
+    "Cambiar entre flotante y mosaico"
+    "Capturar la pantalla"
+    "Capturar toda la pantalla"
+    "Capturar la ventana"
+    "Enfocar la columna izquierda"
+    "Enfocar la columna derecha"
+    "Mover la columna a la izquierda"
+    "Mover la columna a la derecha"
+)
+missing_titles=0
+for title in "${overlay_titles[@]}"; do
+    if ! grep -Fq "hotkey-overlay-title=\"${title}\"" "$NIRI_CONFIG"; then
+        fail "hotkey overlay is missing the Spanish title: ${title}"
+        missing_titles=$((missing_titles + 1))
+    fi
+done
+if [ "$missing_titles" -eq 0 ]; then
+    pass "hotkey overlay entries that Niri shows have a Spanish title"
+fi
+
+if grep -Fq 'noctalia::uses_waybar()' rust/preferences/src/window.rs &&
+   grep -Fq 'noctalia::uses_mako()' rust/preferences/src/window.rs &&
+   grep -Fq 'noctalia::uses_waybar()' rust/preferences/src/pages/appearance.rs &&
+   grep -Fq 'noctalia::uses_mako()' rust/preferences/src/pages/appearance.rs; then
+    pass "Waybar and Mako settings pages follow the running shell"
+else
+    fail "Waybar or Mako settings are still shown for every Niri edition"
+fi
+
+if grep -Fq '"dynamic_colors": false' rust/preferences/src/services/settings.rs &&
+   grep -Fq 'get_bool("theme.dynamic_colors", false)' rust/preferences/src/services/pywal.rs &&
+   grep -Fq 'get_bool("theme.dynamic_colors", false)' rust/preferences/src/pages/appearance.rs &&
+   ! grep -Fq '"dynamic_colors": true' rust/preferences/src/services/settings.rs &&
+   ! grep -Fq '"dynamic_colors": true' rust/preferences/src/services/backup_service.rs; then
+    pass "dynamic colors default off so pywal does not replace the ChurrOS accent"
+else
+    fail "theme.dynamic_colors still defaults to true"
+fi
+
+if python3 - "$NIRI_CONFIG" <<'PY'
+import json
+import sys
+import tomllib
+from pathlib import Path
+
+errors = 0
+
+def fail(msg: str) -> None:
+    global errors
+    errors += 1
+    print(f"    {msg}")
+
+def contrast(a: str, b: str) -> float:
+    def channel(h: str, i: int) -> float:
+        c = int(h[i:i + 2], 16) / 255
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    def lum(h: str) -> float:
+        h = h.lstrip("#")
+        return 0.2126 * channel(h, 0) + 0.7152 * channel(h, 2) + 0.0722 * channel(h, 4)
+
+    hi, lo = sorted((lum(a), lum(b)), reverse=True)
+    return (hi + 0.05) / (lo + 0.05)
+
+skel = Path("archiso/airootfs/etc/skel/.config/noctalia")
+config = tomllib.loads((skel / "config.toml").read_text(encoding="utf-8"))
+theme = config["theme"]
+shell = config["shell"]
+if theme.get("source") != "custom" or theme.get("custom_palette") != "ChurrOS":
+    fail("Noctalia theme is not the ChurrOS custom palette")
+if theme.get("shell_mode") != "follow":
+    fail("shell_mode must follow mode so churros-settings switches the shell")
+if theme.get("mode") not in {"dark", "light"}:
+    fail("theme.mode must be dark or light")
+if shell.get("font_family") != "Inter":
+    fail("Noctalia font_family is not Inter")
+radius = shell.get("corner_radius_scale")
+if not isinstance(radius, (int, float)) or not 0 <= float(radius) <= 2:
+    fail("corner_radius_scale is outside the Noctalia 5.2.1 range 0..2")
+scale = config.get("accessibility", {}).get("ui_scale")
+if not isinstance(scale, (int, float)) or not 0.5 <= float(scale) <= 2.5:
+    fail("accessibility.ui_scale is outside the Noctalia 5.2.1 range 0.5..2.5")
+if config.get("shell", {}).get("launcher", {}).get("compact") is not False:
+    fail("launcher compact should stay off (comfortable density)")
+panel_mode = config.get("shell", {}).get("panel", {}).get("transparency_mode")
+if panel_mode != "soft":
+    fail(
+        f"panel transparency_mode is {panel_mode!r}; "
+        "glass drops the floating panel to 55% and dark mode turns muddy over a light wallpaper"
+    )
+wallpaper = config.get("wallpaper", {})
+default = wallpaper.get("default", {}).get("path")
+if default != "/usr/share/churros/wallpapers/default.png":
+    fail(f"wallpaper.default.path is {default!r}")
+elif not Path("archiso/airootfs" + default).is_file():
+    fail("default wallpaper file is missing from the ISO root")
+if wallpaper.get("fill_mode") != "crop":
+    fail("wallpaper fill_mode should be crop (same coverage as the old swaybg -m fill)")
+
+palette_path = skel / "palettes" / "ChurrOS.json"
+palette = json.loads(palette_path.read_text(encoding="utf-8"))
+required = [
+    "mPrimary", "mOnPrimary", "mSecondary", "mOnSecondary", "mTertiary", "mOnTertiary",
+    "mError", "mOnError", "mSurface", "mOnSurface", "mSurfaceVariant", "mOnSurfaceVariant",
+    "mOutline", "mShadow", "mHover", "mOnHover",
+]
+for mode in ("dark", "light"):
+    colors = palette.get(mode)
+    if not isinstance(colors, dict):
+        fail(f"palette is missing the {mode} variant")
+        continue
+    missing = [key for key in required if not isinstance(colors.get(key), str)]
+    if missing:
+        fail(f"{mode} palette is missing {', '.join(missing)}")
+        continue
+    pairs = (
+        ("mOnSurface", "mSurface", 4.5),
+        ("mOnSurfaceVariant", "mSurfaceVariant", 4.5),
+        ("mOnPrimary", "mPrimary", 4.5),
+        ("mOnSecondary", "mSecondary", 4.5),
+        ("mOnHover", "mHover", 4.5),
+        ("mOnError", "mError", 4.5),
+    )
+    for fg, bg, minimum in pairs:
+        ratio = contrast(colors[fg], colors[bg])
+        if ratio < minimum:
+            fail(f"{mode} {fg} on {bg} contrast {ratio:.2f} is below {minimum}")
+
+apply = Path("archiso/airootfs/usr/bin/churros-apply-wallpaper").read_text(encoding="utf-8")
+apply_fn = apply.split("apply() {", 1)[-1]
+noctalia_at = apply_fn.find("if noctalia_running")
+sway_at = apply_fn.find("apply_swaybg")
+if "for attempt in 1 2 3" not in apply or "noctalia msg wallpaper-set" not in apply:
+    fail("churros-apply-wallpaper must retry noctalia msg wallpaper-set three times")
+elif noctalia_at < 0 or sway_at < 0 or noctalia_at > sway_at:
+    fail("swaybg must stay behind the Noctalia guard in apply()")
+elif "return" not in apply_fn[noctalia_at:sway_at]:
+    fail("a running Noctalia must return before swaybg, even when wallpaper-set fails")
+
+wallpaper_rs = Path("rust/preferences/src/services/wallpaper.rs").read_text(encoding="utf-8")
+noctalia_rs = wallpaper_rs.find("running_shells().noctalia")
+sway_rs = wallpaper_rs.find('"-m", "fill"')
+if noctalia_rs < 0 or sway_rs < 0 or noctalia_rs > sway_rs:
+    fail("wallpaper.rs must notice a running Noctalia before starting swaybg")
+elif "return apply_with_noctalia" not in wallpaper_rs[noctalia_rs:sway_rs]:
+    fail("wallpaper.rs must return without swaybg when Noctalia is running")
+
+for pkg_list in ("archiso/packages.x86_64", "archiso/packages.aarch64"):
+    names = [
+        line.strip()
+        for line in Path(pkg_list).read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    if "inter-font" not in names:
+        fail(f"{pkg_list} does not install inter-font (Noctalia font_family = Inter)")
+    if "noctalia" not in names:
+        fail(f"{pkg_list} does not install noctalia")
+
+sys.exit(1 if errors else 0)
+PY
+then
+    pass "Noctalia config, palette, wallpaper and Inter font check out"
+else
+    fail "Noctalia integration check failed"
+fi
+
+if wallpaper_out=$(bash scripts/test-apply-wallpaper.sh 2>&1); then
+    pass "Noctalia en marcha no arranca swaybg (scripts/test-apply-wallpaper.sh)"
+else
+    fail "scripts/test-apply-wallpaper.sh"
+    printf '%s\n' "$wallpaper_out" | sed 's/^/    /'
+fi
+
 # -------------------------------------------------- Niri Xwayland integration
 
 section "Niri Xwayland integration"
