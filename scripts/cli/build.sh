@@ -61,7 +61,7 @@ esac
 PACKAGE_LIST="archiso/packages.${TARGET_ARCH}"
 
 EDITION=$(echo "$EDITION" | tr '[:upper:]' '[:lower:]')
-if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ] && [ "$EDITION" != "server" ]; then
+if [ "$EDITION" != "niri" ] && [ "$EDITION" != "xfce" ] && [ "$EDITION" != "kde" ] && [ "$EDITION" != "server" ] && [ "$EDITION" != "pi" ]; then
     echo "Error: unsupported edition '$EDITION' (supported: niri, xfce, kde, server)" >&2
     exit 1
 fi
@@ -282,6 +282,7 @@ case "$EDITION" in
     niri)                SESSION_CMD="niri" ;;
     xfce|server)         SESSION_CMD="startxfce4" ;;
     kde)                 SESSION_CMD="startplasma-wayland" ;;
+    pi)                SESSION_CMD="/usr/bin/churros-pi-session" ;;
     *)
         echo "Error: sin comando de sesión definido para la edición '$EDITION'" >&2
         exit 1
@@ -381,6 +382,7 @@ if [ -n "$CALAMARES_PKG" ]; then
         xfce)   EDITION_NAME="XFCE" ;;
         kde)    EDITION_NAME="KDE Plasma" ;;
         server) EDITION_NAME="Servidor" ;;
+    pi)   EDITION_NAME="Raspberry Pi Lite" ;;
         *)      EDITION_NAME="Niri" ;;
     esac
 
